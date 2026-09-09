@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}Sponsors - Show Talent{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sponsors-page {
+        background: #0B1120;
+        min-height: 100vh;
+    }
+    
+    .sponsor-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 32px 24px;
+        text-align: center;
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+    }
+    
+    .sponsor-card:hover {
+        transform: translateY(-6px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(252, 211, 77, 0.15);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .sponsor-card .sponsor-logo {
+        max-height: 100px;
+        max-width: 200px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        opacity: 0.85;
+        transition: all 0.4s ease;
+        margin-bottom: 16px;
+    }
+    
+    .sponsor-card:hover .sponsor-logo {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    
+    .sponsor-card .sponsor-name {
+        color: #f8fafc;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .sponsor-card:hover .sponsor-name {
+        color: #fcd34d;
+    }
+    
+    .sponsor-card .sponsor-website {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        transition: color 0.3s ease;
+    }
+    
+    .sponsor-card .sponsor-website:hover {
+        color: #fcd34d;
+    }
+    
+    .sponsor-card .sponsor-placeholder {
+        width: 120px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        color: #475569;
+        font-size: 2rem;
+    }
+    
+    .sponsors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    /* Carrousel infini */
+    .sponsor-carousel {
+        overflow: hidden;
+        position: relative;
+        padding: 20px 0;
+        margin-bottom: 40px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .sponsor-carousel .carousel-track {
+        display: flex;
+        gap: 40px;
+        width: max-content;
+        animation: scroll 30s linear infinite;
+    }
+    
+    .sponsor-carousel .carousel-track .carousel-item {
+        flex: 0 0 180px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+    }
+    
+    .sponsor-carousel .carousel-track .carousel-item img {
+        max-height: 60px;
+        max-width: 150px;
+        object-fit: contain;
+        opacity: 0.6;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sponsor-carousel .carousel-track .carousel-item:hover img {
+        opacity: 1;
+    }
+    
+    .sponsor-carousel .carousel-track .carousel-item .carousel-name {
+        color: #475569;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    @keyframes scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+    
+    .sponsor-carousel::before,
+    .sponsor-carousel::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        width: 80px;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
+    
+    .sponsor-carousel::before {
+        left: 0;
+        background: linear-gradient(to right, #0B1120, transparent);
+    }
+    
+    .sponsor-carousel::after {
+        right: 0;
+        background: linear-gradient(to left, #0B1120, transparent);
+    }
+    
+    @media (max-width: 768px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+        
+        .sponsor-card {
+            padding: 20px 16px;
+            min-height: 160px;
+        }
+        
+        .sponsor-card .sponsor-logo {
+            max-height: 70px;
+            max-width: 140px;
+        }
+        
+        .sponsor-carousel .carousel-track .carousel-item {
+            flex: 0 0 140px;
+            height: 60px;
+        }
+        
+        .sponsor-carousel .carousel-track .carousel-item img {
+            max-height: 45px;
+            max-width: 110px;
+        }
+        
+        .sponsor-carousel::before,
+        .sponsor-carousel::after {
+            width: 50px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        
+        .sponsor-card {
+            padding: 16px 12px;
+            min-height: 130px;
+            border-radius: 14px;
+        }
+        
+        .sponsor-card .sponsor-logo {
+            max-height: 55px;
+            max-width: 110px;
+        }
+        
+        .sponsor-card .sponsor-name {
+            font-size: 0.9rem;
+        }
+        
+        .sponsor-carousel .carousel-track {
+            gap: 20px;
+        }
+        
+        .sponsor-carousel .carousel-track .carousel-item {
+            flex: 0 0 110px;
+            height: 50px;
+        }
+        
+        .sponsor-carousel .carousel-track .carousel-item img {
+            max-height: 35px;
+            max-width: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sponsors-page py-12 md:py-16">
+    <div class="container mx-auto px-4">
+
+        <!-- ============================================================
+             EN-TÊTE
+             ============================================================ -->
+        <div class="text-center mb-12">
+            <span class="text-yellow-400 text-sm uppercase tracking-wider font-semibold">Nos partenaires</span>
+            <h1 class="text-3xl md:text-4xl font-bold text-white mt-2">Nos sponsors</h1>
+            <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-3 rounded-full"></div>
+            <p class="text-gray-400 text-sm md:text-base mt-4 max-w-2xl mx-auto">
+                Découvrez les entreprises et organisations qui soutiennent le concours Show Talent
+            </p>
+        </div>
+
+        <!-- ============================================================
+             GRILLE DES SPONSORS
+             ============================================================ -->
+        {% if sponsors %}
+        <div class="sponsors-grid">
+            {% for sponsor in sponsors %}
+            <div class="sponsor-card">
+                {% if sponsor.logo %}
+                <img class="sponsor-logo" src="{{ sponsor.logo|upload_url('sponsors') }}" alt="{{ sponsor.name }}" loading="lazy">
+                {% else %}
+                <div class="sponsor-placeholder">
+                    <i class="fas fa-building"></i>
+                </div>
+                {% endif %}
+                <div class="sponsor-name">{{ sponsor.name }}</div>
+                {% if sponsor.website %}
+                <a href="{{ sponsor.website }}" target="_blank" rel="noopener noreferrer" class="sponsor-website">
+                    <i class="fas fa-external-link-alt mr-1"></i>{{ sponsor.website|replace('https://', '')|replace('http://', '')|truncate(25, true) }}
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Nombre total -->
+        <div class="text-center mt-8">
+            <p class="text-gray-500 text-sm">
+                <span class="text-yellow-400 font-semibold">{{ sponsors|length }}</span> sponsors partenaires
+            </p>
+        </div>
+        
+        <!-- ============================================================
+             CARROUSEL INFINI (LOGO DUPLIQUÉS)
+             ============================================================ -->
+        {% if sponsors|length > 4 %}
+        <div class="sponsor-carousel mt-12">
+            <div class="carousel-track" id="sponsorCarouselTrack">
+                {% for sponsor in sponsors + sponsors %}
+                <div class="carousel-item">
+                    {% if sponsor.logo %}
+                    <img src="{{ sponsor.logo|upload_url('sponsors') }}" alt="{{ sponsor.name }}" loading="lazy">
+                    {% else %}
+                    <span class="carousel-name">{{ sponsor.name }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- ============================================================
+             BOUTON RETOUR
+             ============================================================ -->
+        <div class="text-center mt-12">
+            <a href="{{ url_for('main.index') }}" class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-8 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20">
+                <i class="fas fa-arrow-left mr-2"></i>Retour à l'accueil
+            </a>
+        </div>
+        
+        {% else %}
+        <!-- Aucun sponsor -->
+        <div class="text-center py-16">
+            <div class="text-6xl mb-4 text-gray-600">🏢</div>
+            <h3 class="text-xl font-bold text-white mb-2">Aucun sponsor pour le moment</h3>
+            <p class="text-gray-400">Revenez bientôt pour découvrir nos partenaires</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================================
+// SPONSORS - PAUSE AU SURVOL DU CARROUSEL
+// ============================================================
+(function() {
+    var track = document.getElementById('sponsorCarouselTrack');
+    var carousel = track ? track.closest('.sponsor-carousel') : null;
+    
+    if (carousel) {
+        carousel.addEventListener('mouseenter', function() {
+            track.style.animationPlayState = 'paused';
+        });
+        
+        carousel.addEventListener('mouseleave', function() {
+            track.style.animationPlayState = 'running';
+        });
+    }
+})();
+</script>
+{% endblock %}

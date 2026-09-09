@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Moments Forts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-container:hover {
+        border-color: rgba(124, 58, 237, 0.15);
+    }
+    
+    .form-label {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 6px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-input::placeholder {
+        color: #475569;
+    }
+    
+    select.form-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 40px;
+        cursor: pointer;
+    }
+    
+    select.form-input option {
+        background: #0B1120;
+        color: #e2e8f0;
+    }
+    
+    .form-file {
+        width: 100%;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .form-file:hover {
+        border-color: rgba(124, 58, 237, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-file::-webkit-file-upload-button {
+        background: rgba(124, 58, 237, 0.15);
+        color: #a78bfa;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-right: 12px;
+    }
+    
+    .form-file::-webkit-file-upload-button:hover {
+        background: rgba(124, 58, 237, 0.25);
+    }
+    
+    .form-helper {
+        color: #475569;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    }
+    
+    .btn-delete {
+        padding: 6px 14px;
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .moment-card {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        transition: all 0.3s ease;
+    }
+    
+    .moment-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(124, 58, 237, 0.15);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .moment-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .moment-card:hover img {
+        transform: scale(1.05);
+    }
+    
+    .moment-card .moment-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    }
+    
+    .moment-card .moment-caption {
+        color: #f8fafc;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .moment-card .moment-meta {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    
+    .moment-card .moment-delete {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 5;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 16px;
+        }
+        
+        .moment-card img {
+            height: 160px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8" style="background: #0B1120;">
+    <div class="container mx-auto px-4">
+        
+        <div class="flex items-center gap-3 mb-6">
+            <h1 class="text-2xl font-bold text-white">Moments Forts</h1>
+            <span class="text-sm text-gray-400">({{ moments|length }} photos)</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Formulaire d'ajout -->
+            <div class="lg:col-span-1">
+                <div class="form-container">
+                    <h2 class="text-lg font-bold text-white mb-4">
+                        <i class="fas fa-plus-circle text-purple-400 mr-2"></i>Ajouter une photo
+                    </h2>
+                    <form method="POST" action="{{ url_for('admin.create_moment') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label">Image <span class="required">*</span></label>
+                                <input type="file" name="image" accept="image/*" required class="form-file">
+                                <div class="form-helper">Format: PNG, JPG, JPEG, GIF, WEBP (Max: 16MB)</div>
+                            </div>
+                            <div>
+                                <label class="form-label">Légende</label>
+                                <input type="text" name="caption" class="form-input" placeholder="Description de la photo">
+                            </div>
+                            <div>
+                                <label class="form-label">Dimanche associé</label>
+                                <select name="session_id" class="form-input">
+                                    <option value="">Aucun</option>
+                                    {% for session in sessions %}
+                                    <option value="{{ session.id }}">Dimanche {{ session.number }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-upload mr-2"></i>Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Galerie -->
+            <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for moment in moments %}
+                    <div class="moment-card">
+                        <img src="{{ moment.image|upload_url('moments') }}" alt="{{ moment.caption or 'Moment fort' }}" loading="lazy">
+                        <div class="moment-overlay">
+                            <div class="moment-caption">{{ moment.caption or 'Moment fort du concours' }}</div>
+                            {% if moment.session %}
+                            <div class="moment-meta">
+                                <i class="fas fa-calendar mr-1"></i>Dimanche {{ moment.session.number }}
+                            </div>
+                            {% endif %}
+                            <div class="moment-meta text-xs">
+                                {{ moment.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </div>
+                        </div>
+                        <div class="moment-delete">
+                            <form method="POST" action="{{ url_for('admin.delete_moment', moment_id=moment.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Supprimer ce moment ?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <i class="fas fa-images text-4xl mb-3 block text-gray-600"></i>
+                        <p>Aucun moment enregistré</p>
+                        <p class="text-sm text-gray-600 mt-1">Ajoutez des photos pour immortaliser les moments forts</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

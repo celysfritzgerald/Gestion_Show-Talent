@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifier' if jury else 'Créer' }} un Jury{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 32px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-container:hover {
+        border-color: rgba(59, 130, 246, 0.15);
+    }
+    
+    .form-label {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 6px;
+    }
+    
+    .form-label .required {
+        color: #f87171;
+        margin-left: 2px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-input::placeholder {
+        color: #475569;
+    }
+    
+    .form-helper {
+        color: #475569;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 20px;
+        }
+        
+        .form-input {
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8" style="background: #0B1120;">
+    <div class="container mx-auto px-4 max-w-2xl">
+        
+        <div class="flex items-center gap-3 mb-6">
+            <a href="{{ url_for('admin.juries') }}" class="text-gray-400 hover:text-white transition">
+                <i class="fas fa-arrow-left text-xl"></i>
+            </a>
+            <h1 class="text-2xl font-bold text-white">{{ 'Modifier' if jury else 'Créer' }} un Jury</h1>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" action="{% if jury %}{{ url_for('admin.edit_jury', user_id=jury.id) }}{% else %}{{ url_for('admin.create_jury') }}{% endif %}">
+                
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="space-y-5">
+                    <!-- Prénom & Nom -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">Prénom <span class="required">*</span></label>
+                            <input type="text" name="first_name" required 
+                                   value="{{ jury.first_name if jury else '' }}" 
+                                   class="form-input" placeholder="Marie">
+                        </div>
+                        <div>
+                            <label class="form-label">Nom <span class="required">*</span></label>
+                            <input type="text" name="last_name" required 
+                                   value="{{ jury.last_name if jury else '' }}" 
+                                   class="form-input" placeholder="Martin">
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" name="email" required 
+                               value="{{ jury.email if jury else '' }}" 
+                               class="form-input" placeholder="marie.martin@email.com">
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label class="form-label">Nom d'utilisateur <span class="required">*</span></label>
+                        <input type="text" name="username" required 
+                               value="{{ jury.username if jury else '' }}" 
+                               class="form-input" placeholder="mariemartin">
+                    </div>
+
+                    <!-- Mot de passe -->
+                    <div>
+                        <label class="form-label">
+                            Mot de passe {% if jury %}<span class="text-xs text-gray-500">(laisser vide pour ne pas changer)</span>{% else %}<span class="required">*</span>{% endif %}
+                        </label>
+                        <input type="password" name="password" {% if not jury %}required{% endif %} minlength="8"
+                               class="form-input" placeholder="Minimum 8 caractères">
+                        <div class="form-helper">Minimum 8 caractères</div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save mr-2"></i>{{ 'Mettre à jour' if jury else 'Créer le jury' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

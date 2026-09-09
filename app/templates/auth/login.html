@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - Show Talent{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       SECTION CONNEXION - DARK GLASSMORPHISM
+    ============================================================ */
+    .login-section {
+        min-height: 85vh;
+        padding: 60px 20px;
+        background-color: #0d1117;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Carte effet de verre */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Champs de formulaire */
+    .input-field {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15) !important;
+        outline: none !important;
+    }
+
+    @media (max-width: 640px) {
+        .login-section {
+            padding: 40px 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-section">
+    <div class="max-w-md w-full">
+        <!-- Header Connexion -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-4xl mb-4 shadow-lg shadow-yellow-500/10">
+                🎤
+            </div>
+            <h2 class="text-3xl font-bold text-white tracking-wide">Connexion</h2>
+            <p class="mt-2 text-gray-400 text-sm">Accédez à votre espace personnel Show Talent</p>
+        </div>
+        
+        <!-- Formulaire Glassmorphism -->
+        <div class="glass-card rounded-2xl p-8 relative overflow-hidden" style="border-top: 4px solid #facc15;">
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                {{ form.hidden_tag() }}
+                <div class="space-y-6">
+                    <!-- Champ Nom d'utilisateur -->
+                    <div>
+                        <label for="username" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                            <i class="fas fa-user mr-2 text-yellow-400"></i>Nom d'utilisateur
+                        </label>
+                        {{ form.username(class="w-full px-4 py-3 rounded-xl input-field font-medium text-sm transition") }}
+                        {% if form.username.errors %}
+                            <p class="text-rose-400 text-xs mt-1.5 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.username.errors[0] }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Champ Mot de passe -->
+                    <div>
+                        <label for="password" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                            <i class="fas fa-lock mr-2 text-yellow-400"></i>Mot de passe
+                        </label>
+                        {{ form.password(class="w-full px-4 py-3 rounded-xl input-field font-medium text-sm transition") }}
+                        {% if form.password.errors %}
+                            <p class="text-rose-400 text-xs mt-1.5 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.password.errors[0] }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Bouton Soumettre -->
+                    <button type="submit" class="w-full py-3 px-6 rounded-xl font-bold text-sm text-black bg-gradient-to-r from-yellow-400 to-amber-500 hover:brightness-110 transition duration-300 flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20 cursor-pointer">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Se connecter</span>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Informations complémentaires -->
+            <div class="mt-8 pt-6 border-t border-white/5 text-center text-xs text-gray-400 space-y-1.5">
+                <p class="font-medium text-gray-300">Espaces disponibles : Administrateur • Jury • Artiste</p>
+                <p class="text-gray-500">Contactez l'administrateur pour obtenir vos identifiants</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

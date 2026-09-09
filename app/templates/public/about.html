@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}À propos - Show Talent{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">À propos du Show Talent</h1>
+            <div class="w-20 h-1 gradient-gold mx-auto"></div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-purple-600 mb-3">Le concours</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        Show Talent est un concours de chant organisé par l'ACDA (Association Culturelle de Desbas d'Aquin). 
+                        Cette 4e édition promet d'être exceptionnelle avec des talents venus de toute la région.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-purple-600 mb-3">Le déroulement</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        Le concours se déroule sur <span class="font-bold text-purple-600">6 dimanches</span>. 
+                        Chaque participant est évalué selon <span class="font-bold text-purple-600">10 critères</span> 
+                        par un jury professionnel. Les résultats sont transparents et publiés en temps réel.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-list-check"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-purple-600 mb-3">Les critères d'évaluation</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
+                            <span class="font-semibold">Technique vocale</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
+                            <span class="font-semibold">Interprétation</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
+                            <span class="font-semibold">Présence scénique</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">4</span>
+                            <span class="font-semibold">Maîtrise du rythme</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">5</span>
+                            <span class="font-semibold">Justesse</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">6</span>
+                            <span class="font-semibold">Originalité</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">7</span>
+                            <span class="font-semibold">Expression</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">8</span>
+                            <span class="font-semibold">Qualité vocale</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">9</span>
+                            <span class="font-semibold">Contrôle vocal</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3 flex items-center">
+                            <span class="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">10</span>
+                            <span class="font-semibold">Impact</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-purple-600 mb-3">L'ACDA</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        L'Association Culturelle de Desbas d'Aquin œuvre pour la promotion des talents artistiques 
+                        dans la région. À travers des événements comme Show Talent, l'ACDA contribue au 
+                        développement culturel et à l'émergence de nouveaux artistes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

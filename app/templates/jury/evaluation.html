@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+
+{% block title %}Évaluation - Dimanche {{ session.number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       SECTION ÉVALUATION - DARK GLASSMORPHISM
+    ============================================================ */
+    .evaluation-section {
+        padding: 60px 20px;
+        background-color: #0d1117;
+        min-height: 100vh;
+    }
+
+    /* Carte effet de verre */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Champs de saisie des notes */
+    .score-input {
+        width: 65px;
+        text-align: center;
+        transition: all 0.3s ease;
+        -moz-appearance: textfield;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .score-input::-webkit-outer-spin-button,
+    .score-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .score-input:focus {
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
+        outline: none;
+    }
+    .score-input.saved {
+        border-color: #22c55e !important;
+        background-color: rgba(34, 197, 94, 0.15) !important;
+    }
+    .score-input.error {
+        border-color: #ef4444 !important;
+        background-color: rgba(239, 68, 68, 0.15) !important;
+    }
+    .score-input:disabled {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.05);
+        color: #64748b;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Zone de texte des commentaires */
+    .comment-textarea {
+        width: 100%;
+        min-height: 50px;
+        resize: vertical;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+    }
+    .comment-textarea:focus {
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
+        outline: none;
+    }
+    .comment-textarea.saved {
+        border-color: #22c55e !important;
+        background-color: rgba(34, 197, 94, 0.15) !important;
+    }
+    .comment-textarea:disabled {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.05);
+        color: #64748b;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* En-tête des critères verticaux */
+    .criterion-header {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        padding: 8px 4px;
+        min-height: 90px;
+        color: #facc15;
+    }
+
+    /* Survol des lignes du tableau */
+    .table-row-hover {
+        transition: background-color 0.2s ease;
+    }
+    .table-row-hover:hover {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Statuts */
+    .badge-status {
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-completed { 
+        background: rgba(59, 130, 246, 0.15); 
+        color: #60a5fa; 
+        border: 1px solid rgba(59, 130, 246, 0.3); 
+    }
+    .badge-in-progress { 
+        background: rgba(250, 204, 21, 0.15); 
+        color: #facc15; 
+        border: 1px solid rgba(250, 204, 21, 0.3); 
+    }
+    .badge-pending { 
+        background: rgba(148, 163, 184, 0.15); 
+        color: #cbd5e1; 
+        border: 1px solid rgba(148, 163, 184, 0.3); 
+    }
+
+    @media (max-width: 768px) {
+        .evaluation-section { padding: 40px 12px; }
+        .score-input { width: 50px; font-size: 0.8rem; padding: 4px; }
+        .criterion-header { font-size: 0.65rem; min-height: 70px; padding: 4px 2px; }
+        .table-container { overflow-x: auto; }
+        .comment-textarea { min-height: 40px; font-size: 0.75rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="evaluation-section">
+    <div class="container mx-auto px-4 max-w-7xl">
+
+        <!-- ============================================================
+             SECTION HEADER & BOUTON RETOUR
+             ============================================================ -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 mb-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
+                            <i class="fas fa-clipboard-list mr-3 text-yellow-400"></i>
+                            Évaluation - Dimanche {{ session.number }}
+                        </h1>
+                    </div>
+                    <p class="text-gray-400 text-sm md:text-base flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-yellow-400"></i>
+                        {{ session.date.strftime('%d/%m/%Y') }}
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="badge-status 
+                        {% if session.status == 'COMPLETED' %}badge-completed
+                        {% elif session.status == 'IN_PROGRESS' %}badge-in-progress
+                        {% else %}badge-pending{% endif %}">
+                        {{ session.status }}
+                    </span>
+                    <a href="{{ url_for('jury.dashboard') }}" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40 transition inline-flex items-center text-sm md:text-base">
+                        <i class="fas fa-arrow-left mr-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             TABLEAU D'ÉVALUATION (GLASSMORPHISM)
+             ============================================================ -->
+        <div class="glass-card rounded-2xl overflow-hidden mb-6">
+            <div class="table-container overflow-x-auto">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-white/[0.02] border-b border-white/10">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider sticky left-0 bg-[#0f172a] z-20" style="min-width: 150px;">
+                                Artiste
+                            </th>
+                            {% for criterion in criteria %}
+                            <th class="px-2 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider" style="min-width: 75px;">
+                                <div class="criterion-header mx-auto">{{ criterion.name }}</div>
+                                <div class="text-[10px] text-gray-500 mt-1 font-mono">/10</div>
+                            </th>
+                            {% endfor %}
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider" style="min-width: 220px;">
+                                Commentaire
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for artist in artists %}
+                        <tr class="table-row-hover">
+                            <!-- Cellule Artiste Figeant à Gauche -->
+                            <td class="px-4 py-3 whitespace-nowrap sticky left-0 bg-[#0f172a] z-10 border-r border-white/5">
+                                <div class="flex items-center">
+                                    {% if artist.photo %}
+                                    <img src="{{ url_for('static', filename='uploads/artists/' + artist.photo) }}" 
+                                         alt="{{ artist.user.full_name() }}" 
+                                         class="w-9 h-9 rounded-full object-cover mr-3 ring-2 ring-yellow-400/30"
+                                         loading="lazy">
+                                    {% else %}
+                                    <div class="w-9 h-9 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mr-3 shrink-0">
+                                        <span class="text-sm">🎤</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="min-w-[80px]">
+                                        <p class="font-semibold text-sm text-white truncate max-w-[100px]">{{ artist.user.first_name }} {{ artist.user.last_name }}</p>
+                                        <span class="font-mono text-[10px] text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-1.5 py-0.5 rounded">
+                                            {{ artist.code }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Notes par critère -->
+                            {% for criterion in criteria %}
+                            <td class="px-2 py-3 text-center align-middle">
+                                <input type="number" 
+                                       class="score-input px-2 py-1.5 rounded-lg text-center"
+                                       min="0" max="10" step="0.1"
+                                       data-artist="{{ artist.id }}"
+                                       data-criterion="{{ criterion.id }}"
+                                       value="{{ scores.get(artist.id|string + '_' + criterion.id|string, '') }}"
+                                       {% if session.status == 'COMPLETED' %}disabled{% endif %}
+                                       placeholder="-"
+                                       autocomplete="off">
+                            </td>
+                            {% endfor %}
+                            
+                            <!-- Commentaire -->
+                            <td class="px-4 py-3 align-middle">
+                                <textarea class="comment-textarea px-3 py-2 rounded-lg"
+                                          data-artist="{{ artist.id }}"
+                                          placeholder="Conseil ou commentaire..."
+                                          {% if session.status == 'COMPLETED' %}disabled{% endif %}
+                                          rows="2">{{ comments.get(artist.id|string, '') }}</textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             BARRE D'INFORMATION DE SAUVEGARDE
+             ============================================================ -->
+        <div class="glass-card rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-info-circle text-yellow-400"></i>
+                <span>Les notes et commentaires sont enregistrés automatiquement.</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <span class="flex items-center gap-2 text-xs">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                    <span class="text-gray-300">Enregistré</span>
+                </span>
+                <span class="flex items-center gap-2 text-xs">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
+                    <span class="text-gray-300">En cours...</span>
+                </span>
+                <span class="flex items-center gap-2 text-xs">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
+                    <span class="text-gray-300">Erreur</span>
+                </span>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+    
+    // --- Variables globales depuis le template ---
+    var SESSION_ID = parseInt('{{ session.id }}', 10);
+    var CSRF_TOKEN = '{{ csrf_token() }}';
+    
+    // --- Fonction pour obtenir la valeur d'un attribut data ---
+    function getData(el, name) {
+        return el.getAttribute('data-' + name);
+    }
+    
+    // ================================================================
+    // 1. SAUVEGARDE DES NOTES
+    // ================================================================
+    var scoreInputs = document.querySelectorAll('.score-input:not([disabled])');
+    var scoreTimeouts = {};
+    
+    function saveScore(input) {
+        var artistId = parseInt(getData(input, 'artist'), 10);
+        var criterionId = parseInt(getData(input, 'criterion'), 10);
+        var score = parseFloat(input.value);
+        
+        // Validation
+        if (isNaN(score) || score < 0 || score > 10) {
+            input.className = input.className + ' error';
+            return;
+        }
+        
+        // Arrondir
+        score = Math.round(score * 10) / 10;
+        
+        // Désactiver pendant la sauvegarde
+        input.disabled = true;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/jury/api/save-score', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', CSRF_TOKEN);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                input.disabled = false;
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            input.className = input.className.replace(/error/g, '');
+                            input.className = input.className + ' saved';
+                            input.style.borderColor = '#22c55e';
+                            setTimeout(function() {
+                                input.className = input.className.replace(/saved/g, '');
+                                input.style.borderColor = '';
+                            }, 1500);
+                        } else {
+                            input.className = input.className + ' error';
+                            alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+                        }
+                    } catch (e) {
+                        input.className = input.className + ' error';
+                    }
+                } else {
+                    input.className = input.className + ' error';
+                }
+            }
+        };
+        xhr.send(JSON.stringify({
+            artist_id: artistId,
+            session_id: SESSION_ID,
+            criterion_id: criterionId,
+            score: score
+        }));
+    }
+    
+    // Attacher les événements
+    for (var i = 0; i < scoreInputs.length; i++) {
+        (function(input) {
+            var key = getData(input, 'artist') + '_' + getData(input, 'criterion');
+            
+            input.addEventListener('input', function() {
+                var val = this.value;
+                
+                if (val === '' || val === '-') {
+                    this.className = this.className.replace(/error/g, '');
+                    this.className = this.className.replace(/saved/g, '');
+                    this.style.borderColor = '';
+                    if (scoreTimeouts[key]) {
+                        clearTimeout(scoreTimeouts[key]);
+                        delete scoreTimeouts[key];
+                    }
+                    return;
+                }
+                
+                var num = parseFloat(val);
+                if (isNaN(num) || num < 0 || num > 10) {
+                    this.className = this.className + ' error';
+                    this.style.borderColor = '#ef4444';
+                    return;
+                } else {
+                    this.className = this.className.replace(/error/g, '');
+                    this.style.borderColor = '#22c55e';
+                }
+                
+                if (scoreTimeouts[key]) {
+                    clearTimeout(scoreTimeouts[key]);
+                }
+                scoreTimeouts[key] = setTimeout(function() {
+                    saveScore(input);
+                    delete scoreTimeouts[key];
+                }, 800);
+            });
+            
+            input.addEventListener('blur', function() {
+                var val = this.value;
+                if (val !== '' && val !== '-') {
+                    var num = parseFloat(val);
+                    if (!isNaN(num) && num >= 0 && num <= 10) {
+                        var k = getData(this, 'artist') + '_' + getData(this, 'criterion');
+                        if (scoreTimeouts[k]) {
+                            clearTimeout(scoreTimeouts[k]);
+                            delete scoreTimeouts[k];
+                        }
+                        saveScore(this);
+                    }
+                }
+            });
+        })(scoreInputs[i]);
+    }
+    
+    // ================================================================
+    // 2. SAUVEGARDE DES COMMENTAIRES
+    // ================================================================
+    var commentTextareas = document.querySelectorAll('.comment-textarea:not([disabled])');
+    var commentTimeouts = {};
+    
+    function saveComment(textarea) {
+        var artistId = parseInt(getData(textarea, 'artist'), 10);
+        var comment = textarea.value;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/jury/api/save-comment', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', CSRF_TOKEN);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            textarea.className = textarea.className + ' saved';
+                            textarea.style.borderColor = '#22c55e';
+                            setTimeout(function() {
+                                textarea.className = textarea.className.replace(/saved/g, '');
+                                textarea.style.borderColor = '';
+                            }, 1500);
+                        } else {
+                            textarea.style.borderColor = '#ef4444';
+                        }
+                    } catch (e) {
+                        textarea.style.borderColor = '#ef4444';
+                    }
+                } else {
+                    textarea.style.borderColor = '#ef4444';
+                }
+            }
+        };
+        xhr.send(JSON.stringify({
+            artist_id: artistId,
+            session_id: SESSION_ID,
+            comment: comment || ''
+        }));
+    }
+    
+    for (var j = 0; j < commentTextareas.length; j++) {
+        (function(textarea) {
+            var key = getData(textarea, 'artist');
+            
+            textarea.addEventListener('input', function() {
+                this.style.borderColor = '#f59e0b';
+                
+                if (commentTimeouts[key]) {
+                    clearTimeout(commentTimeouts[key]);
+                }
+                commentTimeouts[key] = setTimeout(function() {
+                    saveComment(textarea);
+                    delete commentTimeouts[key];
+                }, 1000);
+            });
+            
+            textarea.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    var k = getData(this, 'artist');
+                    if (commentTimeouts[k]) {
+                        clearTimeout(commentTimeouts[k]);
+                        delete commentTimeouts[k];
+                    }
+                    saveComment(this);
+                    this.style.borderColor = '#7c3aed';
+                }
+            });
+        })(commentTextareas[j]);
+    }
+    
+    // ================================================================
+    // 3. INFOS DANS LA CONSOLE
+    // ================================================================
+    var totalArtists = document.querySelectorAll('tbody tr').length;
+    var totalCriteria = document.querySelectorAll('thead tr th:not(:first-child):not(:last-child)').length;
+    console.log('📊 Show Talent - Évaluation chargée');
+    console.log('   Artistes: ' + totalArtists);
+    console.log('   Critères: ' + totalCriteria);
+    console.log('   Session: ' + SESSION_ID);
+    
+})();
+</script>
+{% endblock %}

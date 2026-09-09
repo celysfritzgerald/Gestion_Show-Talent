@@ -1,0 +1,968 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Dimanches{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ... styles existants inchangés ... */
+    .form-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-container:hover {
+        border-color: rgba(124, 58, 237, 0.15);
+    }
+    
+    .form-label {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 6px;
+    }
+    
+    .form-label .required {
+        color: #f87171;
+        margin-left: 2px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-input option {
+        background: #0B1120;
+        color: #e2e8f0;
+    }
+    
+    .form-input option:disabled {
+        color: #475569;
+        background: #1a1a2e;
+    }
+    
+    select.form-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 40px;
+        cursor: pointer;
+    }
+    
+    .btn-submit {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    }
+    
+    .btn-sm {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-edit-sm {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    
+    .btn-edit-sm:hover {
+        background: rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-delete-sm {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+    
+    .btn-delete-sm:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .btn-save-sm {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+    
+    .btn-save-sm:hover {
+        background: rgba(34, 197, 94, 0.25);
+    }
+    
+    .btn-cancel-sm {
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+    }
+    
+    .btn-cancel-sm:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-assign-sm {
+        padding: 4px 10px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-assign-sm:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+    
+    .btn-assign-sm:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .session-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .session-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(124, 58, 237, 0.1);
+    }
+    
+    .badge-status {
+        padding: 3px 12px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .badge-pending {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.1);
+    }
+    
+    .badge-in-progress {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+    }
+    
+    .badge-completed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+    
+    .jury-section {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        padding: 12px 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .jury-section:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .jury-section .jury-name {
+        color: #60a5fa;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .jury-section .criteria-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+    }
+    
+    .jury-section .criteria-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: rgba(124, 58, 237, 0.12);
+        color: #a78bfa;
+        border: 1px solid rgba(124, 58, 237, 0.1);
+    }
+    
+    .jury-section .criteria-tag .remove-criteria {
+        cursor: pointer;
+        color: #f87171;
+        font-size: 0.6rem;
+        margin-left: 4px;
+        transition: color 0.2s ease;
+    }
+    
+    .jury-section .criteria-tag .remove-criteria:hover {
+        color: #ef4444;
+    }
+    
+    .criteria-tag.admin-criteria {
+        background: rgba(252, 211, 77, 0.12) !important;
+        color: #fcd34d !important;
+        border-color: rgba(252, 211, 77, 0.15) !important;
+    }
+    
+    .badge-count {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 9999px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        margin-left: 6px;
+    }
+    
+    .criteria-available {
+        color: #4ade80;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .criteria-unavailable {
+        color: #f87171;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .empty-assignments {
+        color: #475569;
+        font-size: 0.8rem;
+        font-style: italic;
+        padding: 4px 0;
+    }
+    
+    .assign-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    
+    .assign-row select {
+        flex: 1;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        color: #e2e8f0;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    
+    .assign-row select:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+    
+    .assign-row select option {
+        background: #0B1120;
+        color: #e2e8f0;
+    }
+    
+    .assign-row select option:disabled {
+        color: #475569;
+        background: #1a1a2e;
+    }
+    
+    .assign-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 16px;
+        }
+        .session-card {
+            padding: 14px;
+        }
+        .jury-section {
+            padding: 10px 12px;
+        }
+        .assign-row {
+            flex-wrap: wrap;
+        }
+        .assign-actions {
+            margin-left: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8" style="background: #0B1120;">
+    <div class="container mx-auto px-4">
+        
+        <div class="flex items-center gap-3 mb-6">
+            <h1 class="text-2xl font-bold text-white">Gestion des Dimanches</h1>
+        </div>
+
+        <!-- Formulaire de création -->
+        <div class="form-container mb-6">
+            <h2 class="text-lg font-bold text-white mb-4">
+                <i class="fas fa-plus-circle text-purple-400 mr-2"></i>Créer un nouveau dimanche
+            </h2>
+            <form method="POST" action="{{ url_for('admin.create_sunday') }}" class="flex flex-wrap gap-4 items-end">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label class="form-label">Numéro <span class="required">*</span></label>
+                    <input type="number" name="number" min="1" max="6" required 
+                           class="form-input" style="width: 100px;" placeholder="1">
+                </div>
+                <div>
+                    <label class="form-label">Date <span class="required">*</span></label>
+                    <input type="date" name="date" required class="form-input">
+                </div>
+                <button type="submit" class="btn-submit" style="width: auto; padding: 12px 30px;">
+                    <i class="fas fa-plus mr-2"></i>Créer
+                </button>
+            </form>
+        </div>
+
+        <!-- Liste des dimanches -->
+        <div class="space-y-6">
+            {% for session in sessions %}
+            <div class="session-card">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Dimanche {{ session.number }}</h3>
+                        <p class="text-sm text-gray-400">{{ session.date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.update_session_status', session_id=session.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <select name="status" onchange="this.form.submit()" 
+                                class="form-input" style="padding: 6px 30px 6px 12px; font-size: 0.8rem; width: auto;">
+                            <option value="PENDING" {% if session.status == 'PENDING' %}selected{% endif %}>📌 En attente</option>
+                            <option value="IN_PROGRESS" {% if session.status == 'IN_PROGRESS' %}selected{% endif %}>⏳ En cours</option>
+                            <option value="COMPLETED" {% if session.status == 'COMPLETED' %}selected{% endif %}>✅ Terminé</option>
+                        </select>
+                    </form>
+                </div>
+                
+                <!-- GRILLE : FORMULAIRE À GAUCHE | VUE JURY À DROITE -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- COLONNE GAUCHE : FORMULAIRE D'ASSIGNATION -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-semibold text-gray-400">
+                                <i class="fas fa-tasks text-purple-400 mr-2"></i>Assigner des critères
+                            </h4>
+                            <span class="text-xs text-gray-500">
+                                {% set total_assigned = session_assignments.get(session.id, [])|length %}
+                                {{ total_assigned }} / {{ criteria|length }} assignés
+                            </span>
+                        </div>
+                        
+                        <!-- Indicateur de disponibilité -->
+                        <div class="mb-3 p-2 rounded-lg bg-white/5 text-xs flex flex-wrap gap-2 items-center">
+                            {% set available = 0 %}
+                            {% for criterion in criteria %}
+                                {% set is_assigned = false %}
+                                {% for assignment in session_assignments.get(session.id, []) %}
+                                    {% if assignment.criterion_id == criterion.id %}
+                                        {% set is_assigned = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not is_assigned %}
+                                    {% set available = available + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            <span class="criteria-available">
+                                <i class="fas fa-check-circle mr-1"></i>{{ available }} disponibles
+                            </span>
+                            <span class="text-gray-600">|</span>
+                            <span class="criteria-unavailable">
+                                <i class="fas fa-lock mr-1"></i>{{ criteria|length - available }} assignés
+                            </span>
+                        </div>
+                        
+                        <form method="POST" action="{{ url_for('admin.assign_criteria', session_id=session.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div class="max-h-[500px] overflow-y-auto pr-1 space-y-4">
+                                
+                                <!-- SECTION JURYS -->
+                                {% for jury in juries %}
+                                <div class="jury-section">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="jury-name">
+                                            <i class="fas fa-gavel mr-1"></i>
+                                            {{ jury.full_name() }}
+                                            <span class="badge-count">{{ jury_criteria_count.get(session.id, {}).get(jury.id, 0) }}/7</span>
+                                        </span>
+                                        <button type="button" class="btn-assign-sm" 
+                                                onclick="addCriterionRow('{{ session.id }}', '{{ jury.id }}')">
+                                            <i class="fas fa-plus"></i> Ajouter un critère
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="jury-{{ session.id }}-{{ jury.id }}-container" class="space-y-2">
+                                        {% set jury_criteria = jury_assignments.get(session.id, {}).get(jury.id, []) %}
+                                        {% if jury_criteria|length == 0 %}
+                                        <div class="assign-row">
+                                            <select name="jury_{{ jury.id }}_criteria[]" class="form-input" style="padding: 6px 10px; font-size: 0.8rem;">
+                                                <option value="">-- Sélectionner un critère --</option>
+                                                {% for criterion in criteria %}
+                                                    {% set is_assigned = false %}
+                                                    {% for assignment in session_assignments.get(session.id, []) %}
+                                                        {% if assignment.criterion_id == criterion.id %}
+                                                            {% set is_assigned = true %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if not is_assigned %}
+                                                        <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                    {% else %}
+                                                        <option value="{{ criterion.id }}" disabled style="color: #475569;">
+                                                            {{ criterion.name }} 🔒
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="assign-actions">
+                                                <button type="button" class="btn-delete-sm" onclick="removeRow(this)" style="padding: 4px 8px;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        {% for assignment in jury_criteria %}
+                                        <div class="assign-row">
+                                            <select name="jury_{{ jury.id }}_criteria[]" class="form-input" style="padding: 6px 10px; font-size: 0.8rem;">
+                                                <option value="">-- Sélectionner un critère --</option>
+                                                {% for criterion in criteria %}
+                                                    {% set is_assigned = false %}
+                                                    {% for existing in session_assignments.get(session.id, []) %}
+                                                        {% if existing.criterion_id == criterion.id and existing.id != assignment.id %}
+                                                            {% set is_assigned = true %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if criterion.id == assignment.criterion_id %}
+                                                        <option value="{{ criterion.id }}" selected>{{ criterion.name }}</option>
+                                                    {% elif not is_assigned %}
+                                                        <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                    {% else %}
+                                                        <option value="{{ criterion.id }}" disabled style="color: #475569;">
+                                                            {{ criterion.name }} 🔒
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="assign-actions">
+                                                <button type="button" class="btn-delete-sm" onclick="removeRow(this)" style="padding: 4px 8px;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                <!-- SECTION ADMIN -->
+                                <div class="jury-section" style="border-color: rgba(252, 211, 77, 0.15);">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="jury-name" style="color: #fcd34d;">
+                                            <i class="fas fa-crown mr-1"></i>
+                                            Administrateur
+                                            {% set admin_count = jury_assignments.get(session.id, {}).get(admin_user.id if admin_user else 0, [])|length %}
+                                            <span class="badge-count">{{ admin_count }}/3</span>
+                                        </span>
+                                        <button type="button" class="btn-assign-sm" 
+                                                onclick="addAdminCriterionRow('{{ session.id }}')"
+                                                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                            <i class="fas fa-plus"></i> Ajouter un critère
+                                        </button>
+                                    </div>
+                                    
+                                    <input type="hidden" name="admin_user_id" value="{{ admin_user.id if admin_user else '' }}">
+                                    
+                                    <div id="admin-{{ session.id }}-container" class="space-y-2">
+                                        {% set admin_criteria = jury_assignments.get(session.id, {}).get(admin_user.id if admin_user else 0, []) %}
+                                        {% if admin_criteria|length == 0 %}
+                                        <div class="assign-row">
+                                            <select name="admin_criteria[]" class="form-input" style="padding: 6px 10px; font-size: 0.8rem;">
+                                                <option value="">-- Sélectionner un critère --</option>
+                                                {% for criterion in criteria %}
+                                                    {% set is_assigned = false %}
+                                                    {% for assignment in session_assignments.get(session.id, []) %}
+                                                        {% if assignment.criterion_id == criterion.id %}
+                                                            {% set is_assigned = true %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if not is_assigned %}
+                                                        <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                    {% else %}
+                                                        <option value="{{ criterion.id }}" disabled style="color: #475569;">
+                                                            {{ criterion.name }} 🔒
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="assign-actions">
+                                                <button type="button" class="btn-delete-sm" onclick="removeRow(this)" style="padding: 4px 8px;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        {% for assignment in admin_criteria %}
+                                        <div class="assign-row">
+                                            <select name="admin_criteria[]" class="form-input" style="padding: 6px 10px; font-size: 0.8rem;">
+                                                <option value="">-- Sélectionner un critère --</option>
+                                                {% for criterion in criteria %}
+                                                    {% set is_assigned = false %}
+                                                    {% for existing in session_assignments.get(session.id, []) %}
+                                                        {% if existing.criterion_id == criterion.id and existing.id != assignment.id %}
+                                                            {% set is_assigned = true %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if criterion.id == assignment.criterion_id %}
+                                                        <option value="{{ criterion.id }}" selected>{{ criterion.name }}</option>
+                                                    {% elif not is_assigned %}
+                                                        <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                    {% else %}
+                                                        <option value="{{ criterion.id }}" disabled style="color: #475569;">
+                                                            {{ criterion.name }} 🔒
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div class="assign-actions">
+                                                <button type="button" class="btn-delete-sm" onclick="removeRow(this)" style="padding: 4px 8px;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            
+                            <button type="submit" class="btn-submit mt-4">
+                                <i class="fas fa-save mr-2"></i>Enregistrer toutes les affectations
+                            </button>
+                        </form>
+                        
+                        {% if session.status != 'COMPLETED' %}
+                        <div class="mt-3 text-center">
+                            <a href="{{ url_for('admin.admin_evaluate', session_id=session.id) }}" 
+                               class="text-sm text-yellow-400 hover:text-yellow-300 transition">
+                                <i class="fas fa-crown mr-1"></i>Évaluer avec mes 3 critères
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- COLONNE DROITE : VUE JURY + CRITÈRES -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-400 mb-3">
+                            <i class="fas fa-list text-blue-400 mr-2"></i>Affectations actuelles
+                            <span class="text-xs text-gray-500 ml-2">(CRUD)</span>
+                        </h4>
+                        
+                        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                            {% set has_assignments = false %}
+                            
+                            <!-- Jurys -->
+                            {% for jury in juries %}
+                                {% set jury_criteria = jury_assignments.get(session.id, {}).get(jury.id, []) %}
+                                <div class="jury-section">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <span class="jury-name">
+                                                <i class="fas fa-gavel mr-1"></i>
+                                                {{ jury.full_name() }}
+                                                <span class="badge-count">{{ jury_criteria|length }}/7</span>
+                                            </span>
+                                        </div>
+                                        {% if jury_criteria|length > 0 %}
+                                            <span class="text-xs text-green-400">✅</span>
+                                        {% else %}
+                                            <span class="text-xs text-gray-500">❌ Aucun</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="criteria-list">
+                                        {% for assignment in jury_criteria %}
+                                        <span class="criteria-tag">
+                                            {{ assignment.criterion.name }}
+                                            <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=assignment.id) }}" class="inline" 
+                                                  onsubmit="return confirm('Supprimer ce critère de {{ jury.full_name() }} ?')">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="remove-criteria" title="Supprimer">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </span>
+                                        {% else %}
+                                        <span class="empty-assignments">Aucun critère assigné</span>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="mt-2 flex gap-2">
+                                        <button class="btn-sm btn-edit-sm" onclick="toggleEditForm('{{ session.id }}', '{{ jury.id }}', 'jury')">
+                                            <i class="fas fa-edit mr-1"></i>Modifier
+                                        </button>
+                                        {% if jury_criteria|length > 0 %}
+                                        <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=jury_criteria[0].id) }}" class="inline"
+                                              onsubmit="return confirm('Supprimer toutes les affectations de {{ jury.full_name() }} ?')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn-sm btn-delete-sm">
+                                                <i class="fas fa-trash mr-1"></i>Supprimer tout
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div id="edit-form-{{ session.id }}-{{ jury.id }}" class="hidden mt-3 pt-3 border-t border-white/5">
+                                        <form method="POST" action="{{ url_for('admin.edit_assignment', assignment_id=jury_criteria[0].id if jury_criteria|length > 0 else 0) }}" class="space-y-2">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <select name="jury_id" class="form-input" style="padding: 6px 12px; font-size: 0.8rem;">
+                                                    <option value="{{ jury.id }}">{{ jury.full_name() }}</option>
+                                                    {% for other_jury in juries %}
+                                                        {% if other_jury.id != jury.id %}
+                                                        <option value="{{ other_jury.id }}">{{ other_jury.full_name() }}</option>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </select>
+                                                <select name="criterion_id" class="form-input" style="padding: 6px 12px; font-size: 0.8rem;">
+                                                    <option value="">-- Changer --</option>
+                                                    {% for criterion in criteria %}
+                                                        <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="submit" class="btn-sm btn-save-sm">
+                                                    <i class="fas fa-save mr-1"></i>Sauvegarder
+                                                </button>
+                                                <button type="button" class="btn-sm btn-cancel-sm" onclick="toggleEditForm('{{ session.id }}', '{{ jury.id }}', 'jury')">
+                                                    Annuler
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% set has_assignments = has_assignments or jury_criteria|length > 0 %}
+                            {% endfor %}
+                            
+                            <!-- Admin -->
+                            {% set admin_criteria = jury_assignments.get(session.id, {}).get(admin_user.id if admin_user else 0, []) %}
+                            {% if admin_user %}
+                            <div class="jury-section" style="border-color: rgba(252, 211, 77, 0.15);">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="jury-name" style="color: #fcd34d;">
+                                            <i class="fas fa-crown mr-1"></i>
+                                            {{ admin_user.full_name() }}
+                                            <span class="badge-count">{{ admin_criteria|length }}/3</span>
+                                        </span>
+                                    </div>
+                                    {% if admin_criteria|length > 0 %}
+                                        <span class="text-xs text-green-400">✅</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500">❌ Aucun</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="criteria-list">
+                                    {% for assignment in admin_criteria %}
+                                    <span class="criteria-tag admin-criteria">
+                                        {{ assignment.criterion.name }}
+                                        <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=assignment.id) }}" class="inline"
+                                              onsubmit="return confirm('Supprimer ce critère de l\'admin ?')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="remove-criteria" style="color: #f87171;" title="Supprimer">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </span>
+                                    {% else %}
+                                    <span class="empty-assignments">Aucun critère assigné</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="mt-2 flex gap-2">
+                                    <button class="btn-sm btn-edit-sm" onclick="toggleEditForm('{{ session.id }}', '{{ admin_user.id }}', 'admin')">
+                                        <i class="fas fa-edit mr-1"></i>Modifier
+                                    </button>
+                                    {% if admin_criteria|length > 0 %}
+                                    <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=admin_criteria[0].id) }}" class="inline"
+                                          onsubmit="return confirm('Supprimer toutes les affectations de l\'admin ?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-sm btn-delete-sm">
+                                            <i class="fas fa-trash mr-1"></i>Supprimer tout
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                
+                                <div id="edit-form-{{ session.id }}-admin" class="hidden mt-3 pt-3 border-t border-white/5">
+                                    <form method="POST" action="{{ url_for('admin.edit_assignment', assignment_id=admin_criteria[0].id if admin_criteria|length > 0 else 0) }}" class="space-y-2">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <select name="jury_id" class="form-input" style="padding: 6px 12px; font-size: 0.8rem;">
+                                                <option value="{{ admin_user.id }}">{{ admin_user.full_name() }}</option>
+                                            </select>
+                                            <select name="criterion_id" class="form-input" style="padding: 6px 12px; font-size: 0.8rem;">
+                                                <option value="">-- Changer --</option>
+                                                {% for criterion in criteria %}
+                                                    <option value="{{ criterion.id }}">{{ criterion.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="btn-sm btn-save-sm">
+                                                <i class="fas fa-save mr-1"></i>Sauvegarder
+                                            </button>
+                                            <button type="button" class="btn-sm btn-cancel-sm" onclick="toggleEditForm('{{ session.id }}', '{{ admin_user.id }}', 'admin')">
+                                                Annuler
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if not has_assignments and not admin_criteria %}
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-users text-3xl mb-2 block text-gray-600"></i>
+                                <p>Aucune affectation pour ce dimanche</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+    </div>
+</div>
+
+<script>
+// ============================================================
+// ✅ FONCTIONS CORRIGÉES - ACCESSIBLES GLOBALEMENT
+// ============================================================
+
+// ✅ Ajouter une ligne de critère pour un jury
+function addCriterionRow(sessionId, juryId) {
+    var container = document.getElementById('jury-' + sessionId + '-' + juryId + '-container');
+    if (!container) {
+        console.warn('Container non trouvé pour jury:', juryId);
+        return;
+    }
+    
+    // Créer une nouvelle ligne
+    var row = document.createElement('div');
+    row.className = 'assign-row';
+    
+    // Créer le select
+    var select = document.createElement('select');
+    select.name = 'jury_' + juryId + '_criteria[]';
+    select.className = 'form-input';
+    select.style.cssText = 'padding: 6px 10px; font-size: 0.8rem;';
+    
+    // Ajouter les options
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Sélectionner un critère --';
+    select.appendChild(defaultOption);
+    
+    // Récupérer les critères depuis un select existant
+    var existingSelect = container.querySelector('select');
+    if (existingSelect) {
+        var options = existingSelect.querySelectorAll('option');
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var newOpt = document.createElement('option');
+            newOpt.value = opt.value;
+            newOpt.textContent = opt.textContent;
+            newOpt.disabled = opt.disabled;
+            select.appendChild(newOpt);
+        }
+    }
+    
+    // Créer le bouton supprimer
+    var actionsDiv = document.createElement('div');
+    actionsDiv.className = 'assign-actions';
+    
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn-delete-sm';
+    deleteBtn.style.cssText = 'padding: 4px 8px;';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    deleteBtn.onclick = function() { 
+        var rowToRemove = this.closest('.assign-row');
+        var parent = rowToRemove.parentNode;
+        if (parent.children.length > 1) {
+            rowToRemove.remove();
+        } else {
+            var selectToReset = rowToRemove.querySelector('select');
+            if (selectToReset) {
+                selectToReset.value = '';
+            }
+        }
+    };
+    actionsDiv.appendChild(deleteBtn);
+    
+    row.appendChild(select);
+    row.appendChild(actionsDiv);
+    
+    container.appendChild(row);
+}
+
+// ✅ Ajouter une ligne de critère pour l'admin
+function addAdminCriterionRow(sessionId) {
+    var container = document.getElementById('admin-' + sessionId + '-container');
+    if (!container) {
+        console.warn('Container admin non trouvé pour session:', sessionId);
+        return;
+    }
+    
+    // Créer une nouvelle ligne
+    var row = document.createElement('div');
+    row.className = 'assign-row';
+    
+    // Créer le select
+    var select = document.createElement('select');
+    select.name = 'admin_criteria[]';
+    select.className = 'form-input';
+    select.style.cssText = 'padding: 6px 10px; font-size: 0.8rem;';
+    
+    // Ajouter les options
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Sélectionner un critère --';
+    select.appendChild(defaultOption);
+    
+    // Récupérer les critères depuis un select existant
+    var existingSelect = container.querySelector('select');
+    if (existingSelect) {
+        var options = existingSelect.querySelectorAll('option');
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var newOpt = document.createElement('option');
+            newOpt.value = opt.value;
+            newOpt.textContent = opt.textContent;
+            newOpt.disabled = opt.disabled;
+            select.appendChild(newOpt);
+        }
+    }
+    
+    // Créer le bouton supprimer
+    var actionsDiv = document.createElement('div');
+    actionsDiv.className = 'assign-actions';
+    
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn-delete-sm';
+    deleteBtn.style.cssText = 'padding: 4px 8px;';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    deleteBtn.onclick = function() {
+        var rowToRemove = this.closest('.assign-row');
+        var parent = rowToRemove.parentNode;
+        if (parent.children.length > 1) {
+            rowToRemove.remove();
+        } else {
+            var selectToReset = rowToRemove.querySelector('select');
+            if (selectToReset) {
+                selectToReset.value = '';
+            }
+        }
+    };
+    actionsDiv.appendChild(deleteBtn);
+    
+    row.appendChild(select);
+    row.appendChild(actionsDiv);
+    
+    container.appendChild(row);
+}
+
+// ✅ Supprimer une ligne (utilisée par les boutons existants)
+function removeRow(button) {
+    var row = button.closest('.assign-row');
+    var parent = row.parentNode;
+    if (parent.children.length > 1) {
+        row.remove();
+    } else {
+        var select = row.querySelector('select');
+        if (select) {
+            select.value = '';
+        }
+    }
+}
+
+// ✅ Toggle formulaire d'édition
+function toggleEditForm(sessionId, id, type) {
+    var formId;
+    if (type === 'admin') {
+        formId = 'edit-form-' + sessionId + '-admin';
+    } else {
+        formId = 'edit-form-' + sessionId + '-' + id;
+    }
+    var form = document.getElementById(formId);
+    if (form) {
+        form.classList.toggle('hidden');
+    }
+}
+</script>
+{% endblock %}

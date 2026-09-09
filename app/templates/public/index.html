@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+
+{% block title %}Show Talent 4e Édition - Accueil{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       IMAGE SLIDER
+    ============================================================ */
+    .image-slide {
+        transition: opacity 1.2s ease-in-out, transform 1.5s ease-in-out;
+    }
+    .image-slide:not(.active) {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    .image-slide.active {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* ============================================================
+       BOUTONS HERO - CÔTE À CÔTE SUR MOBILE
+    ============================================================ */
+    .hero-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .hero-buttons .btn {
+        flex: 1;
+        min-width: 140px;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    @media (max-width: 480px) {
+        .hero-buttons {
+            gap: 10px;
+        }
+        .hero-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* ============================================================
+       SPONSORS - 300px, ESPACE RÉDUIT
+    ============================================================ */
+    .sponsors-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+        align-items: center;
+    }
+    
+    .sponsor-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 15px;
+        height: 300px;
+        transition: all 0.3s ease;
+        cursor: default;
+        background: transparent;
+        border: none;
+    }
+    
+    .sponsor-item:hover {
+        transform: scale(1.08);
+    }
+    
+    .sponsor-item img {
+        max-height: 280px;
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        opacity: 0.75;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sponsor-item:hover img {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    
+    .sponsor-item .sponsor-name {
+        color: #94a3b8;
+        font-size: 1.6rem;
+        font-weight: 700;
+        text-align: center;
+        transition: color 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+    
+    .sponsor-item:hover .sponsor-name {
+        color: #fcd34d;
+    }
+    
+    @media (max-width: 1200px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .sponsor-item {
+            height: 260px;
+        }
+        .sponsor-item img {
+            max-height: 240px;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+        .sponsor-item {
+            height: 220px;
+            padding: 10px 12px;
+        }
+        .sponsor-item img {
+            max-height: 200px;
+        }
+        .sponsor-item .sponsor-name {
+            font-size: 1.3rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .sponsor-item {
+            height: 180px;
+            padding: 8px 10px;
+        }
+        .sponsor-item img {
+            max-height: 160px;
+        }
+        .sponsor-item .sponsor-name {
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .sponsors-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .sponsor-item {
+            height: 160px;
+            padding: 6px 8px;
+        }
+        .sponsor-item img {
+            max-height: 140px;
+        }
+        .sponsor-item .sponsor-name {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HERO SECTION
+     ============================================================ -->
+<section class="py-12 md:py-20" style="background: #0B1120;">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            <!-- Texte -->
+            <div class="order-1 lg:order-1">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4">
+                    Show <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Talent</span>
+                </h1>
+                <p class="text-gray-300 text-base md:text-lg leading-relaxed mb-3">
+                    Bienvenue sur la plateforme officielle du concours Show Talent, une compétition musicale conçue pour révéler les talents les plus prometteurs.
+                </p>
+                <p class="text-gray-300 text-base md:text-lg leading-relaxed mb-3">
+                    Chaque dimanche, des artistes passionnés montent sur scène pour partager leur voix, leurs émotions et leur univers. Derrière chaque performance se cache une histoire, une revue et une détermination à réussir.
+                </p>
+                <p class="text-yellow-400 text-base md:text-lg font-medium leading-relaxed mb-6">
+                    Rejoignez-nous et vivez une expérience unique où passion et créativité se rencontrent.
+                </p>
+                
+                <!-- ✅ BOUTONS CÔTE À CÔTE SUR MOBILE -->
+                <div class="hero-buttons">
+                    <a href="{{ url_for('main.results') }}" class="btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 inline-flex items-center gap-2">
+                        <i class="fas fa-trophy"></i> Voir les résultats
+                    </a>
+                    <a href="{{ url_for('main.artists') }}" class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-blue-500/30 inline-flex items-center gap-2">
+                        <i class="fas fa-users"></i> Voir les participants
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slider -->
+            <div class="order-2 lg:order-2">
+                <div class="relative w-full h-[450px] md:h-[450px] overflow-hidden rounded-2xl shadow-2xl border border-white/5" id="imageSlider">
+                    <img class="image-slide active absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Show Talent 1" onerror="this.src='https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=500&fit=crop'">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image2.jpg') }}" alt="Show Talent 2" onerror="this.src='https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=500&fit=crop'">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image3.jpg') }}" alt="Show Talent 3" onerror="this.src='https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&h=500&fit=crop'">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image4.jpg') }}" alt="Show Talent 4" onerror="this.src='https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=500&fit=crop'">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image5.jpg') }}" alt="Show Talent 5" onerror="this.src='https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&h=500&fit=crop'">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image6.jpg') }}" alt="Show Talent 6" onerror="this.src='https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&h=500&fit=crop'">
+
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot active bg-yellow-400 border-yellow-400" data-index="0"></button>
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="1"></button>
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="2"></button>
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="3"></button>
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="4"></button>
+                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="5"></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     ABOUT SECTION
+     ============================================================ -->
+<section id="about" class="py-16 md:py-20" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+            <div class="hidden lg:block rounded-2xl overflow-hidden shadow-2xl border border-white/5 hover:-translate-y-2 transition">
+                <img src="{{ url_for('static', filename='images/about-image.jpg') }}" alt="Show Talent" class="w-full h-[400px] object-cover hover:scale-105 transition duration-700" onerror="this.src='https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=400&fit=crop'">
+            </div>
+
+            <div>
+                <span class="text-yellow-400 font-semibold text-xs uppercase tracking-widest">À propos du concours</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mt-2 mb-4">
+                    La compétition qui <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">révèle</span> les talents
+                </h2>
+                <p class="text-gray-400 text-base md:text-lg leading-relaxed mb-3">
+                    Show Talent est bien plus qu'un simple concours de chant. C'est une véritable plateforme de révélation où les artistes peuvent exprimer leur passion et leur créativité.
+                </p>
+                <p class="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
+                    Organisé par l'<span class="text-white font-semibold">ACDA</span> (Association Culturelle de Desbas d'Aquin), cet événement rassemble chaque année les meilleurs talents de la région pour 6 dimanches de compétition intense, évalués selon 10 critères précis par un jury professionnel.
+                </p>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">6</span>
+                        <span class="block text-gray-400 text-sm font-medium mt-1">Dimanches</span>
+                    </div>
+                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">10</span>
+                        <span class="block text-gray-400 text-sm font-medium mt-1">Critères</span>
+                    </div>
+                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">100</span>
+                        <span class="block text-gray-400 text-sm font-medium mt-1">Points max</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SPONSORS SECTION - 300px, ESPACE RÉDUIT
+     ============================================================ -->
+<section id="sponsors" class="py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-8">
+            <span class="text-yellow-400 text-2xl uppercase tracking-wider font-semibold">Nos partenaires et sponsors</span>
+            <h2 class="text-3xl font-bold text-white mt-2">Qui rends possible cet édition</h2>
+            <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-3 rounded-full"></div>
+        </div>
+
+        <div class="sponsors-grid" id="sponsorGrid">
+            <!-- Sponsors injectés dynamiquement -->
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="{{ url_for('main.sponsors_page') }}" class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-6 py-2.5 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-sm">
+                <i class="fas fa-arrow-right mr-2"></i>Voir tous les sponsors
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     CONTACT SECTION - FORMULAIRE MODERNE
+     ============================================================ -->
+<section id="contact" class="py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto text-center">
+            <span class="text-yellow-400 text-sm uppercase tracking-wider font-semibold">Contactez-nous</span>
+            <h2 class="text-3xl font-bold text-white mt-2 mb-6">Une question ? Un projet ?</h2>
+            <p class="text-gray-400 mb-8">N'hésitez pas à nous contacter pour toute information concernant le concours.</p>
+
+            <form id="contactForm" class="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-left">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-400 text-sm font-medium mb-2" for="first_name">
+                            Prénom <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="first_name" name="first_name" 
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                               placeholder="Votre prénom" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm font-medium mb-2" for="last_name">
+                            Nom <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="last_name" name="last_name" 
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                               placeholder="Votre nom" required>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-gray-400 text-sm font-medium mb-2" for="email">
+                        Email <span class="text-red-400">*</span>
+                    </label>
+                    <input type="email" id="email" name="email" 
+                           class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                           placeholder="votre@email.com" required>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-gray-400 text-sm font-medium mb-2" for="message">
+                        Message <span class="text-red-400">*</span>
+                    </label>
+                    <textarea id="message" name="message" rows="5" 
+                              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none resize-y"
+                              placeholder="Votre message..." required></textarea>
+                </div>
+
+                <button type="submit" 
+                        class="mt-6 w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] font-bold py-4 px-6 rounded-xl hover:scale-[1.02] transition shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-3 text-lg">
+                    <i class="fas fa-paper-plane"></i>
+                    Envoyer le message
+                </button>
+
+                <div id="formSuccess" class="hidden mt-4 p-4 bg-green-900/30 border border-green-500/30 rounded-xl text-green-400 text-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Votre message a été envoyé avec succès !
+                </div>
+                <div id="formError" class="hidden mt-4 p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Une erreur est survenue. Veuillez réessayer.
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================================
+// SLIDER HERO
+// ============================================================
+(function() {
+    var slides = document.querySelectorAll('.image-slide');
+    var dots = document.querySelectorAll('.slider-dot');
+    var total = slides.length;
+    var current = 0;
+    var interval = null;
+
+    function showSlide(index) {
+        slides.forEach(function(s) { s.classList.remove('active'); });
+        dots.forEach(function(d) { d.classList.remove('active', 'bg-yellow-400', 'border-yellow-400'); });
+        slides[index].classList.add('active');
+        dots[index].classList.add('active', 'bg-yellow-400', 'border-yellow-400');
+        current = index;
+    }
+
+    function nextSlide() {
+        showSlide((current + 1) % total);
+    }
+
+    function goToSlide(index) {
+        showSlide(index);
+        resetInterval();
+    }
+
+    function resetInterval() {
+        if (interval) clearInterval(interval);
+        interval = setInterval(nextSlide, 5000);
+    }
+
+    if (total > 0) { showSlide(0); }
+    resetInterval();
+
+    dots.forEach(function(dot) {
+        dot.addEventListener('click', function() {
+            goToSlide(parseInt(this.dataset.index));
+        });
+    });
+
+    var container = document.getElementById('imageSlider');
+    if (container) {
+        container.addEventListener('mouseenter', function() { if (interval) clearInterval(interval); });
+        container.addEventListener('mouseleave', resetInterval);
+    }
+})();
+
+// ============================================================
+// SPONSORS - 300px, ESPACE RÉDUIT
+// ============================================================
+(function() {
+    'use strict';
+
+    var grid = document.getElementById('sponsorGrid');
+    if (!grid) return;
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    var sponsors = [];
+    {% for sponsor in sponsors %}
+    sponsors.push({
+        name: "{{ sponsor.name|escape }}",
+        logo: "{{ sponsor.logo|upload_url('sponsors') if sponsor.logo else '' }}",
+        website: "{{ sponsor.website|escape if sponsor.website else '' }}"
+    });
+    {% endfor %}
+
+    if (!sponsors || sponsors.length === 0) {
+        grid.innerHTML = '<div style="color: #94a3b8; padding: 30px; text-align: center; width: 100%; font-size: 1rem; grid-column: 1 / -1;">Aucun sponsor pour le moment</div>';
+        return;
+    }
+
+    function createSponsorItem(sponsor) {
+        var div = document.createElement('div');
+        div.className = 'sponsor-item';
+
+        if (sponsor.website && typeof sponsor.website === 'string' && sponsor.website.trim() !== '') {
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = sponsor.website.trim();
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            });
+        }
+
+        if (sponsor.logo && typeof sponsor.logo === 'string' && sponsor.logo.trim() !== '') {
+            var img = document.createElement('img');
+            img.src = sponsor.logo;
+            img.alt = escapeHTML(sponsor.name) + ' - Logo';
+            img.loading = 'lazy';
+            img.draggable = false;
+            img.onerror = function() {
+                this.style.display = 'none';
+                var span = document.createElement('span');
+                span.className = 'sponsor-name';
+                span.textContent = escapeHTML(sponsor.name);
+                div.appendChild(span);
+            };
+            div.appendChild(img);
+        } else {
+            var span = document.createElement('span');
+            span.className = 'sponsor-name';
+            span.textContent = escapeHTML(sponsor.name);
+            div.appendChild(span);
+        }
+
+        return div;
+    }
+
+    var fragment = document.createDocumentFragment();
+    for (var i = 0; i < sponsors.length; i++) {
+        fragment.appendChild(createSponsorItem(sponsors[i]));
+    }
+    
+    grid.appendChild(fragment);
+
+    console.log('🤝 ' + sponsors.length + ' sponsors chargés (300px, espace réduit)');
+})();
+
+// ============================================================
+// FORMULAIRE DE CONTACT
+// ============================================================
+(function() {
+    var form = document.getElementById('contactForm');
+    var successDiv = document.getElementById('formSuccess');
+    var errorDiv = document.getElementById('formError');
+
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        successDiv.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+
+        var formData = new FormData(form);
+        var data = {};
+        formData.forEach(function(value, key) {
+            data[key] = value;
+        });
+
+        var required = ['first_name', 'last_name', 'email', 'message'];
+        var valid = true;
+        for (var i = 0; i < required.length; i++) {
+            var field = form.querySelector('[name="' + required[i] + '"]');
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                valid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        }
+
+        if (!valid) {
+            errorDiv.textContent = 'Veuillez remplir tous les champs obligatoires.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        var btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi en cours...';
+
+        fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(result) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Envoyer le message';
+
+            if (result.success) {
+                successDiv.classList.remove('hidden');
+                form.reset();
+                setTimeout(function() {
+                    successDiv.classList.add('hidden');
+                }, 5000);
+            } else {
+                errorDiv.textContent = result.message || 'Une erreur est survenue.';
+                errorDiv.classList.remove('hidden');
+            }
+        })
+        .catch(function(error) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Envoyer le message';
+            errorDiv.textContent = 'Erreur de connexion. Veuillez réessayer.';
+            errorDiv.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('.form-input').forEach(function(input) {
+        input.addEventListener('focus', function() {
+            this.classList.remove('error');
+        });
+    });
+})();
+</script>
+{% endblock %}

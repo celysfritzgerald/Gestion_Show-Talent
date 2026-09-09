@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Show Talent 4e Édition{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        
+        /* ============================================================
+           BACKGROUND PRINCIPAL - #0B1120
+           ============================================================ */
+        body {
+            background-color: #0B1120;
+            color: #e2e8f0;
+        }
+        
+        /* ============================================================
+           GRADIENTS
+           ============================================================ */
+        .gradient-bg {
+            background: linear-gradient(135deg, #0B1120 0%, #1a0a2e 50%, #0B1120 100%);
+        }
+        
+        .gradient-gold {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+        }
+        
+        /* ============================================================
+           COULEURS DES SECTIONS
+           ============================================================ */
+        /* Artistes - Violet */
+        .text-artist { color: #7c3aed; }
+        .bg-artist { background: #7c3aed; }
+        .border-artist { border-color: #7c3aed; }
+        .bg-artist-light { background: rgba(124, 58, 237, 0.1); }
+        .hover-bg-artist:hover { background: rgba(124, 58, 237, 0.15); }
+        
+        /* Jurys - Bleu */
+        .text-jury { color: #3b82f6; }
+        .bg-jury { background: #3b82f6; }
+        .border-jury { border-color: #3b82f6; }
+        .bg-jury-light { background: rgba(59, 130, 246, 0.1); }
+        .hover-bg-jury:hover { background: rgba(59, 130, 246, 0.15); }
+        
+        /* Dimanches - Orange */
+        .text-sunday { color: #f59e0b; }
+        .bg-sunday { background: #f59e0b; }
+        .border-sunday { border-color: #f59e0b; }
+        .bg-sunday-light { background: rgba(245, 158, 11, 0.1); }
+        .hover-bg-sunday:hover { background: rgba(245, 158, 11, 0.15); }
+        
+        /* Critères - Vert */
+        .text-criterion { color: #22c55e; }
+        .bg-criterion { background: #22c55e; }
+        .border-criterion { border-color: #22c55e; }
+        .bg-criterion-light { background: rgba(34, 197, 94, 0.1); }
+        .hover-bg-criterion:hover { background: rgba(34, 197, 94, 0.15); }
+        
+        /* Sponsors - Or */
+        .text-sponsor { color: #fcd34d; }
+        .bg-sponsor { background: #fcd34d; }
+        .border-sponsor { border-color: #fcd34d; }
+        .bg-sponsor-light { background: rgba(252, 211, 77, 0.1); }
+        .hover-bg-sponsor:hover { background: rgba(252, 211, 77, 0.15); }
+        
+        /* ============================================================
+           CARTES ET COMPOSANTS
+           ============================================================ */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        
+        /* ============================================================
+           BOUTONS
+           ============================================================ */
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            transition: all 0.3s ease;
+            color: #000;
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(247, 151, 30, 0.4);
+        }
+        
+        .btn-blue {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+        .btn-blue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-green {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-orange {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+        .btn-orange:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+        
+        /* ============================================================
+           BADGES
+           ============================================================ */
+        .badge-artist {
+            background: rgba(124, 58, 237, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .badge-jury {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .badge-sunday {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .badge-criterion {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .badge-sponsor {
+            background: rgba(252, 211, 77, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(252, 211, 77, 0.2);
+        }
+        
+        /* ============================================================
+           STATUTS
+           ============================================================ */
+        .badge-status {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-active { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.1); }
+        .badge-inactive { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.1); }
+        .badge-pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.1); }
+        .badge-completed { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.1); }
+        .badge-eliminated { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.1); }
+        .badge-in-progress { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.1); }
+        
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ============================================================
+           SCROLLBAR
+           ============================================================ */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0F1A2E; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6d28d9; }
+        
+        /* ============================================================
+           SIDEBAR
+           ============================================================ */
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            color: #94a3b8;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            padding-left: 1.5rem;
+            color: #f8fafc;
+        }
+        .sidebar-link.active {
+            background: rgba(124, 58, 237, 0.15);
+            color: #a78bfa;
+            border-left: 3px solid #7c3aed;
+        }
+        
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer-link {
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        .footer-link:hover {
+            color: #fcd34d;
+        }
+        
+        .footer-social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .footer-social-link:hover {
+            background: rgba(252, 211, 77, 0.12);
+            border-color: #fcd34d;
+            color: #fcd34d;
+            transform: translateY(-2px);
+        }
+        
+        .footer-divider {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            height: 1px;
+        }
+        
+        /* ============================================================
+           MENU MOBILE
+           ============================================================ */
+        #mobileMenu {
+            display: none;
+            background: rgba(11, 17, 32, 0.98);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px 0;
+        }
+        
+        #mobileMenu.open {
+            display: block;
+        }
+        
+        #mobileMenu a {
+            display: block;
+            padding: 10px 16px;
+            color: #cbd5e1;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        
+        #mobileMenu a:hover {
+            background: rgba(252, 211, 77, 0.1);
+            color: #fcd34d;
+        }
+        
+        #mobileMenu .btn-gold {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 8px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #000;
+        }
+        
+        #mobileMenu .btn-gold:hover {
+            transform: scale(1.02);
+        }
+        
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+        }
+        
+        .menu-overlay.open {
+            display: block;
+        }
+        
+        /* ============================================================
+           SECTIONS
+           ============================================================ */
+        .section-dark {
+            background-color: #0B1120;
+        }
+        
+        .section-dark-alt {
+            background-color: #0F1A2E;
+        }
+        
+        .section-light-dark {
+            background-color: #111B2E;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- ============================================================
+         OVERLAY MENU MOBILE
+         ============================================================ -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- ============================================================
+         NAVBAR
+         ============================================================ -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50 border-b border-white/5">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center space-x-2">
+                    <a href="{{ url_for('main.index') }}" class="text-2xl font-bold text-white hover:text-yellow-400 transition">
+                        🎤 Show Talent
+                    </a>
+                    <span class="text-xs gradient-gold text-black px-2 py-1 rounded-full font-bold">4e ÉDITION</span>
+                    {% if session.user_id %}
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                            {{ session.user_name }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{{ url_for('main.index') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.index' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
+                        Accueil
+                    </a>
+                    <a href="{{ url_for('main.index') }}#about" class="hover:text-yellow-400 transition">
+                        À propos
+                    </a>
+                    <a href="{{ url_for('main.artists') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.artists' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
+                        Participants
+                    </a>
+                    <a href="{{ url_for('main.results') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.results' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
+                        Résultat
+                    </a>
+                    <a href="{{ url_for('main.sponsors_page') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.sponsors_page' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
+                        Sponsor
+                    </a>
+                    <a href="{{ url_for('main.index') }}#contact" class="hover:text-yellow-400 transition">
+                        Contact
+                    </a>
+                    
+                    {% if session.user_id %}
+                        {% if session.user_role == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition">Dashboard</a>
+                        {% elif session.user_role == 'jury' %}
+                            <a href="{{ url_for('jury.dashboard') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition">Dashboard</a>
+                        {% elif session.user_role == 'artist' %}
+                            <a href="{{ url_for('artist.dashboard') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition">Dashboard</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="hover:text-yellow-400 transition">Déconnexion</a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn-gold text-black px-6 py-2 rounded-lg font-bold transition">Connexion</a>
+                    {% endif %}
+                </div>
+                
+                <button class="md:hidden text-white hover:text-yellow-400 transition focus:outline-none" onclick="toggleMobileMenu()" id="menuToggle">
+                    <i class="fas fa-bars text-2xl" id="menuIcon"></i>
+                </button>
+            </div>
+            
+            <!-- Menu Mobile -->
+            <div id="mobileMenu">
+                <a href="{{ url_for('main.index') }}" onclick="toggleMobileMenu()">🏠 Accueil</a>
+                <a href="{{ url_for('main.index') }}#about" onclick="toggleMobileMenu()">📖 À propos</a>
+                <a href="{{ url_for('main.artists') }}" onclick="toggleMobileMenu()">🎤 Participants</a>
+                <a href="{{ url_for('main.results') }}" onclick="toggleMobileMenu()">🏆 Résultat</a>
+                <a href="{{ url_for('main.sponsors_page') }}" onclick="toggleMobileMenu()">🤝 Sponsor</a>
+                <a href="{{ url_for('main.index') }}#contact" onclick="toggleMobileMenu()">📞 Contact</a>
+                
+                {% if session.user_id %}
+                    {% if session.user_role == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" onclick="toggleMobileMenu()" style="background: rgba(124, 58, 237, 0.2); color: #a78bfa;">⚙️ Dashboard</a>
+                    {% elif session.user_role == 'jury' %}
+                        <a href="{{ url_for('jury.dashboard') }}" onclick="toggleMobileMenu()" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">⚙️ Dashboard</a>
+                    {% elif session.user_role == 'artist' %}
+                        <a href="{{ url_for('artist.dashboard') }}" onclick="toggleMobileMenu()" style="background: rgba(124, 58, 237, 0.2); color: #a78bfa;">⚙️ Dashboard</a>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" onclick="toggleMobileMenu()" style="color: #f87171;">🚪 Déconnexion</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" onclick="toggleMobileMenu()" class="btn-gold">🔑 Connexion</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         FLASH MESSAGES
+         ============================================================ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg animate-fade-in {% if category == 'success' %}bg-green-900/50 text-green-300 border-l-4 border-green-500{% elif category == 'danger' %}bg-red-900/50 text-red-300 border-l-4 border-red-500{% elif category == 'warning' %}bg-yellow-900/50 text-yellow-300 border-l-4 border-yellow-500{% else %}bg-blue-900/50 text-blue-300 border-l-4 border-blue-500{% endif %}">
+                        <div class="flex items-center">
+                            {% if category == 'success' %}<i class="fas fa-check-circle mr-2"></i>{% elif category == 'danger' %}<i class="fas fa-exclamation-circle mr-2"></i>{% elif category == 'warning' %}<i class="fas fa-exclamation-triangle mr-2"></i>{% else %}<i class="fas fa-info-circle mr-2"></i>{% endif %}
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="gradient-bg text-white border-t border-white/5 py-6 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-4">
+                <h2 class="text-lg font-bold text-white inline-flex items-center gap-2">
+                    🎤 Show <span class="gradient-gold bg-clip-text text-transparent">Talent</span>
+                    <span class="text-xs gradient-gold text-black px-2 py-0.5 rounded-full font-bold">4e ÉDITION</span>
+                </h2>
+                <p class="text-gray-400 text-xs max-w-md mx-auto mt-1">
+                    Plateforme dédiée à la découverte et à la valorisation des talents.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-3">
+                <a href="{{ url_for('main.index') }}" class="footer-link">Accueil</a>
+                <span class="text-gray-600 text-xs">|</span>
+                <a href="{{ url_for('main.index') }}#about" class="footer-link">À propos</a>
+                <span class="text-gray-600 text-xs">|</span>
+                <a href="{{ url_for('main.artists') }}" class="footer-link">Participants</a>
+                <span class="text-gray-600 text-xs">|</span>
+                <a href="{{ url_for('main.sponsors_page') }}" class="footer-link">Sponsor</a>
+                <span class="text-gray-600 text-xs">|</span>
+                <a href="{{ url_for('main.index') }}#contact" class="footer-link">Contact</a>
+                <span class="text-gray-600 text-xs">|</span>
+                <a href="{{ url_for('main.results') }}" class="footer-link">Résultat</a>
+            </div>
+            
+            <div class="footer-divider max-w-md mx-auto mb-3"></div>
+            
+            <div class="flex flex-col md:flex-row justify-center items-center gap-3 text-xs">
+                <div class="flex items-center gap-4 text-gray-400">
+                    <span class="flex items-center gap-1">
+                        <i class="fas fa-envelope text-yellow-400 text-[10px]"></i>
+                        celysfritzgerald39@gmail.com
+                    </span>
+                    <span class="text-gray-600">|</span>
+                    <span class="flex items-center gap-1">
+                        <i class="fas fa-phone text-yellow-400 text-[10px]"></i>
+                        +509 3910-2160
+                    </span>
+                </div>
+                
+                <div class="flex gap-2">
+                    <a href="#" class="footer-social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="footer-social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="footer-social-link"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="footer-social-link"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <p class="text-gray-500 text-[10px]">
+                    © 2026 Show Talent | Tous droits réservés
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            var menu = document.getElementById('mobileMenu');
+            var overlay = document.getElementById('menuOverlay');
+            var icon = document.getElementById('menuIcon');
+            
+            if (menu) {
+                menu.classList.toggle('open');
+            }
+            if (overlay) {
+                overlay.classList.toggle('open');
+            }
+            if (icon) {
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            }
+            
+            document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var menu = document.getElementById('mobileMenu');
+                if (menu && menu.classList.contains('open')) {
+                    toggleMobileMenu();
+                }
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var flashMessages = document.querySelectorAll('.p-4.rounded-lg.animate-fade-in');
+            for (var i = 0; i < flashMessages.length; i++) {
+                (function(msg) {
+                    setTimeout(function() {
+                        msg.style.transition = 'opacity 0.5s ease';
+                        msg.style.opacity = '0';
+                        setTimeout(function() { 
+                            if (msg.parentNode) {
+                                msg.remove(); 
+                            }
+                        }, 500);
+                    }, 5000);
+                })(flashMessages[i]);
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

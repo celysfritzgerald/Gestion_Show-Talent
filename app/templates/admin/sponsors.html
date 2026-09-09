@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Sponsors{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-container:hover {
+        border-color: rgba(252, 211, 77, 0.15);
+    }
+    
+    .form-label {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 6px;
+    }
+    
+    .form-label .required {
+        color: #f87171;
+        margin-left: 2px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #fcd34d;
+        box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-input::placeholder {
+        color: #475569;
+    }
+    
+    .form-file {
+        width: 100%;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .form-file:hover {
+        border-color: rgba(252, 211, 77, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-file::-webkit-file-upload-button {
+        background: rgba(252, 211, 77, 0.15);
+        color: #fcd34d;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-right: 12px;
+    }
+    
+    .form-file::-webkit-file-upload-button:hover {
+        background: rgba(252, 211, 77, 0.25);
+    }
+    
+    .form-helper {
+        color: #475569;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #fcd34d, #f59e0b);
+        color: #0B1120;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(252, 211, 77, 0.4);
+    }
+    
+    .btn-delete {
+        padding: 6px 14px;
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .sponsor-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .sponsor-item:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(252, 211, 77, 0.1);
+    }
+    
+    .sponsor-item .sponsor-logo {
+        height: 50px;
+        width: auto;
+        max-width: 120px;
+        object-fit: contain;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sponsor-item:hover .sponsor-logo {
+        opacity: 1;
+    }
+    
+    .sponsor-item .sponsor-name {
+        color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .sponsor-item .sponsor-website {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+    
+    .sponsor-item .sponsor-website:hover {
+        color: #fcd34d;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 16px;
+        }
+        
+        .sponsor-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .sponsor-item .sponsor-logo {
+            height: 40px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .sponsor-item {
+            padding: 12px 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8" style="background: #0B1120;">
+    <div class="container mx-auto px-4">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-white">Gestion des Sponsors</h1>
+                    <span class="text-sm text-gray-400">({{ sponsors|length }} sponsors)</span>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">Ajoutez, modifiez ou supprimez les sponsors du concours</p>
+            </div>
+            <a href="{{ url_for('admin.dashboard') }}" class="text-gray-400 hover:text-white transition text-sm">
+                <i class="fas fa-arrow-left mr-1"></i>Retour
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Formulaire d'ajout -->
+            <div class="form-container">
+                <h2 class="text-lg font-bold text-white mb-4">
+                    <i class="fas fa-plus-circle text-yellow-400 mr-2"></i>Ajouter un sponsor
+                </h2>
+                <form method="POST" action="{{ url_for('admin.create_sponsor') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">Nom du sponsor <span class="required">*</span></label>
+                            <input type="text" name="name" required class="form-input" placeholder="Nom de l'entreprise">
+                        </div>
+                        <div>
+                            <label class="form-label">Site web</label>
+                            <input type="url" name="website" class="form-input" placeholder="https://www.exemple.com">
+                            <div class="form-helper">Laissez vide si non applicable</div>
+                        </div>
+                        <div>
+                            <label class="form-label">Logo <span class="required">*</span></label>
+                            <input type="file" name="logo" accept="image/*" required class="form-file">
+                            <div class="form-helper">Formats: PNG, JPG, JPEG, GIF, WEBP (Max: 16MB)</div>
+                        </div>
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-plus mr-2"></i>Ajouter le sponsor
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Liste des sponsors -->
+            <div class="form-container">
+                <h2 class="text-lg font-bold text-white mb-4">
+                    <i class="fas fa-list text-yellow-400 mr-2"></i>Sponsors existants
+                    {% if sponsors|length > 0 %}
+                    <span class="text-sm font-normal text-gray-400 ml-2">({{ sponsors|length }})</span>
+                    {% endif %}
+                </h2>
+                
+                <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                    {% if sponsors %}
+                        {% for sponsor in sponsors %}
+                        <div class="sponsor-item">
+                            <img class="sponsor-logo" src="{{ sponsor.logo|upload_url('sponsors') }}" alt="{{ sponsor.name }}" loading="lazy">
+                            <div class="flex-1 min-w-0">
+                                <div class="sponsor-name">{{ sponsor.name }}</div>
+                                {% if sponsor.website %}
+                                <a href="{{ sponsor.website }}" target="_blank" rel="noopener noreferrer" class="sponsor-website">
+                                    <i class="fas fa-external-link-alt mr-1"></i>{{ sponsor.website }}
+                                </a>
+                                {% endif %}
+                            </div>
+                            <form method="POST" action="{{ url_for('admin.delete_sponsor', sponsor_id=sponsor.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Supprimer ce sponsor ?')">
+                                    <i class="fas fa-trash mr-1"></i>Supprimer
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-building text-3xl mb-2 block text-gray-600"></i>
+                            <p>Aucun sponsor enregistré</p>
+                            <p class="text-sm text-gray-600 mt-1">Ajoutez votre premier sponsor</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if sponsors|length > 3 %}
+                <div class="mt-3 text-xs text-gray-500 text-center">
+                    <i class="fas fa-chevron-down mr-1"></i>Défilez pour voir plus
+                </div>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

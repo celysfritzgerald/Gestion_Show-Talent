@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Jurys{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold">Gestion des Jurys</h1>
+            <p class="text-gray-500">Total: {{ juries|length }} jurys</p>
+        </div>
+        <a href="{{ url_for('admin.create_jury') }}" class="btn-primary text-white px-6 py-3 rounded-xl font-bold transition inline-flex items-center">
+            <i class="fas fa-plus mr-2"></i>Ajouter un jury
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jury</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for jury in juries %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                    <span class="text-lg">⚖️</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">{{ jury.full_name() }}</p>
+                                    <p class="text-xs text-gray-500">{{ jury.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ jury.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="badge-status {% if jury.account_status == 'ACTIVE' %}badge-active{% else %}badge-inactive{% endif %}">
+                                {{ jury.account_status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <form method="POST" action="{{ url_for('admin.toggle_jury_status', user_id=jury.id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="{% if jury.account_status == 'ACTIVE' %}text-yellow-600 hover:text-yellow-800{% else %}text-green-600 hover:text-green-800{% endif %} transition text-sm font-medium">
+                                    {% if jury.account_status == 'ACTIVE' %}<i class="fas fa-user-slash mr-1"></i>Désactiver{% else %}<i class="fas fa-user-check mr-1"></i>Activer{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

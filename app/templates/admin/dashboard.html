@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+<div class="section-dark py-8">
+    <div class="container mx-auto px-4">
+
+        <!-- ============================================================
+             WELCOME SECTION
+             ============================================================ -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">👋 Bonjour, {{ session.user_name }}</h1>
+                        <span class="badge-jury px-3 py-1 rounded-full text-xs font-semibold">Administrateur</span>
+                    </div>
+                    <p class="text-gray-400 text-sm md:text-base">
+                        Bienvenue sur votre tableau de bord. Voici un résumé de l'activité du concours Show Talent.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-gray-400">
+                    <i class="fas fa-calendar-alt text-yellow-400"></i>
+                    <span>{{ now.strftime('%d %B %Y') if now else '' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             STATS CARDS
+             ============================================================ -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            
+            <!-- Artistes - Violet -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #7c3aed;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_artists|default(0) }}</div>
+                        <div class="text-sm text-gray-400">Artistes</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i>{{ active_artists|default(0) }} actifs
+                    </span>
+                </div>
+            </div>
+
+            <!-- Jurys - Bleu -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #3b82f6;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_juries|default(0) }}</div>
+                        <div class="text-sm text-gray-400">Jurys</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i>Actifs
+                    </span>
+                </div>
+            </div>
+
+            <!-- Dimanches - Orange -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #f59e0b;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_sessions|default(0) }}</div>
+                        <div class="text-sm text-gray-400">Dimanches</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i>{{ completed_sessions|default(0) }} terminés
+                    </span>
+                </div>
+            </div>
+
+            <!-- Critères - Vert -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #22c55e;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_criteria|default(0) }}</div>
+                        <div class="text-sm text-gray-400">Critères</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(34, 197, 94, 0.12); color: #22c55e;">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-star mr-1"></i>10 pts max
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sponsors - Or -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #fcd34d;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_sponsors|default(0) }}</div>
+                        <div class="text-sm text-gray-400">Sponsors</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(252, 211, 77, 0.12); color: #fcd34d;">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i>Partenaires
+                    </span>
+                </div>
+            </div>
+
+            <!-- Messages - Cyan -->
+            <div class="glass-card rounded-xl p-5 hover-lift" style="border-left: 3px solid #06b6d4;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-2xl font-bold text-white">{{ total_messages|default(messages|length if messages else 0) }}</div>
+                        <div class="text-sm text-gray-400">Messages</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-xs font-semibold text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded-full">
+                        <i class="fas fa-inbox mr-1"></i>Reçus
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================================================
+             QUICK ACTIONS
+             ============================================================ -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fas fa-bolt text-yellow-400"></i>
+                <h2 class="text-lg font-semibold text-white">Actions rapides</h2>
+                <div class="flex-1 h-px bg-gradient-to-r from-white/5 to-transparent"></div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <a href="{{ url_for('admin.artists') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #7c3aed;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+                        <i class="fas fa-user-plus text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Artistes</div>
+                    <div class="text-xs text-gray-400">Gérer les artistes</div>
+                </a>
+
+                <a href="{{ url_for('admin.juries') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #3b82f6;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">
+                        <i class="fas fa-user-tie text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Jurys</div>
+                    <div class="text-xs text-gray-400">Gérer les jurys</div>
+                </a>
+
+                <a href="{{ url_for('admin.criteria') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #22c55e;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(34, 197, 94, 0.12); color: #22c55e;">
+                        <i class="fas fa-list text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Critères</div>
+                    <div class="text-xs text-gray-400">Configurer les critères</div>
+                </a>
+
+                <a href="{{ url_for('admin.sundays') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #f59e0b;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                        <i class="fas fa-calendar-plus text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Dimanches</div>
+                    <div class="text-xs text-gray-400">Gérer les dimanches (CRUD)</div>
+                </a>
+
+                <a href="{{ url_for('admin.sponsors') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #fcd34d;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(252, 211, 77, 0.12); color: #fcd34d;">
+                        <i class="fas fa-handshake text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Sponsors</div>
+                    <div class="text-xs text-gray-400">Gérer les sponsors</div>
+                </a>
+
+                <a href="{{ url_for('admin.messages') }}" class="glass-card rounded-xl p-4 text-center hover-lift" style="border-left: 3px solid #06b6d4;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+                        <i class="fas fa-comments text-lg"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-white">Messages</div>
+                    <div class="text-xs text-gray-400">Voir la boîte de réception</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             MESSAGES RECUS SECTION
+             ============================================================ -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-envelope text-yellow-400"></i>
+                    <h2 class="text-lg font-semibold text-white">Messages récents de contact</h2>
+                    <span class="badge-jury px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                        {{ messages|length if messages else 0 }}
+                    </span>
+                </div>
+                <a href="{{ url_for('admin.messages') }}" class="text-xs text-yellow-400 hover:underline flex items-center gap-1">
+                    Voir tous les messages <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="glass-card rounded-xl p-4">
+                {% if messages %}
+                    <div class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                        {% for msg in messages %}
+                        <div class="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-semibold text-white text-sm">{{ msg.name or msg.nom }}</span>
+                                    <span class="text-xs text-gray-400">&lt;{{ msg.email }}&gt;</span>
+                                </div>
+                                <p class="text-sm text-gray-300 line-clamp-2">
+                                    {{ msg.message or msg.contenu }}
+                                </p>
+                            </div>
+                            <div class="text-xs text-gray-400 flex items-center gap-2 whitespace-nowrap self-end md:self-center">
+                                <i class="fas fa-clock text-gray-500"></i>
+                                <span>{{ msg.created_at.strftime('%d/%m/%Y %H:%M') if msg.created_at else (msg.date_envoi.strftime('%d/%m/%Y %H:%M') if msg.date_envoi else '') }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-6 text-gray-400 text-sm">
+                        <i class="fas fa-inbox text-2xl mb-2 block text-gray-600"></i>
+                        Aucun message reçu pour le moment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ============================================================
+             RECENT ACTIVITY & INFO
+             ============================================================ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Recent Activity -->
+            <div class="lg:col-span-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <i class="fas fa-clock text-yellow-400"></i>
+                    <h2 class="text-lg font-semibold text-white">Activité récente</h2>
+                    <div class="flex-1 h-px bg-gradient-to-r from-white/5 to-transparent"></div>
+                </div>
+
+                <div class="glass-card rounded-xl p-4">
+                    <div class="space-y-2 max-h-[300px] overflow-y-auto">
+                        <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-300"><strong class="text-white">Nouvel artiste</strong> ajouté à la compétition</div>
+                                <div class="text-xs text-gray-500">Il y a 2 heures</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-300"><strong class="text-white">Dimanche 3</strong> marqué comme terminé</div>
+                                <div class="text-xs text-gray-500">Il y a 5 heures</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-300"><strong class="text-white">Nouveau message</strong> reçu de contact</div>
+                                <div class="text-xs text-gray-500">Il y a 1 jour</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <i class="fas fa-info-circle text-yellow-400"></i>
+                    <h2 class="text-lg font-semibold text-white">Informations</h2>
+                    <div class="flex-1 h-px bg-gradient-to-r from-white/5 to-transparent"></div>
+                </div>
+
+                <div class="glass-card rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                        <span class="text-sm text-gray-400">Scores enregistrés</span>
+                        <span class="text-sm font-bold text-white">{{ total_scores|default(0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                        <span class="text-sm text-gray-400">Artistes actifs</span>
+                        <span class="text-sm font-bold text-green-400">{{ active_artists|default(0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                        <span class="text-sm text-gray-400">Dimanches enregistrés</span>
+                        <span class="text-sm font-bold text-yellow-400">{{ total_sessions|default(0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                        <span class="text-sm text-gray-400">Sponsors</span>
+                        <span class="text-sm font-bold text-white">{{ total_sponsors|default(0) }}</span>
+                    </div>
+                </div>
+
+                <div class="text-center text-xs text-gray-600 mt-4">
+                    Show Talent v4.0
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

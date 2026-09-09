@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Messages de contact{% endblock %}
+
+{% block extra_css %}
+<style>
+    .messages-container {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    
+    .message-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        transition: all 0.3s ease;
+    }
+    
+    .message-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .message-item:last-child {
+        border-bottom: none;
+    }
+    
+    .message-item .message-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: rgba(124, 58, 237, 0.15);
+        color: #a78bfa;
+    }
+    
+    .message-item .message-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .message-item .message-name {
+        color: #f8fafc;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .message-item .message-email {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+    
+    .message-item .message-text {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        margin-top: 4px;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .message-item .message-time {
+        color: #64748b;
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+    
+    .message-item .message-status {
+        padding: 2px 10px;
+        border-radius: 9999px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .message-status.new {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.1);
+    }
+    
+    .message-status.read {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+    
+    .message-status.replied {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-mark-read {
+        padding: 4px 12px;
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-mark-read:hover {
+        background: rgba(59, 130, 246, 0.25);
+    }
+    
+    .btn-delete-msg {
+        padding: 4px 12px;
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete-msg:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #1e293b;
+        margin-bottom: 16px;
+        display: block;
+    }
+    
+    .empty-state p {
+        color: #475569;
+        font-size: 1.1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .message-item {
+            flex-direction: column;
+            padding: 14px 16px;
+        }
+        
+        .message-item .message-avatar {
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8" style="background: #0B1120;">
+    <div class="container mx-auto px-4">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-white">Messages de contact</h1>
+                    <span class="text-sm text-gray-400">({{ messages|length }} messages)</span>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">Consultez et gérez les messages reçus via le formulaire de contact</p>
+            </div>
+            <a href="{{ url_for('admin.dashboard') }}" class="text-gray-400 hover:text-white transition text-sm">
+                <i class="fas fa-arrow-left mr-1"></i>Retour
+            </a>
+        </div>
+
+        <div class="messages-container">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="message-item">
+                    <!-- Avatar -->
+                    <div class="message-avatar">
+                        {{ message.first_name[0] }}{{ message.last_name[0] }}
+                    </div>
+                    
+                    <!-- Contenu -->
+                    <div class="message-content">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="message-name">{{ message.full_name() }}</span>
+                            <span class="message-email">
+                                <a href="mailto:{{ message.email }}" class="hover:text-yellow-400 transition">
+                                    <i class="fas fa-envelope mr-1"></i>{{ message.email }}
+                                </a>
+                            </span>
+                            <span class="message-status {{ message.status|lower }}">
+                                {{ message.status }}
+                            </span>
+                        </div>
+                        <div class="message-text">{{ message.message }}</div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span class="message-time">
+                            <i class="far fa-clock mr-1"></i>{{ message.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
+                        <div class="flex gap-2">
+                            {% if message.status == 'NEW' %}
+                            <form method="POST" action="{{ url_for('admin.mark_message_read', message_id=message.id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-mark-read">
+                                    <i class="fas fa-check mr-1"></i>Marquer lu
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('admin.delete_message', message_id=message.id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-delete-msg" onclick="return confirm('Supprimer ce message ?')">
+                                    <i class="fas fa-trash mr-1"></i>Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucun message de contact</p>
+                    <p class="text-sm text-gray-600 mt-1">Les messages apparaîtront ici lorsqu'un visiteur vous contactera</p>
+                </div>
+            {% endif %}
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
