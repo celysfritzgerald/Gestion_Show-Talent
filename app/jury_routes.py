@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, session, current_app
 from datetime import datetime
+import math
 from app import db
 from app.models import User, Artist, CompetitionSession, Assignment, Score, Comment, Criterion
 from app.permissions import jury_required, can_evaluate_criterion, get_jury_sessions, get_jury_criteria_for_session, rate_limit
@@ -83,7 +84,7 @@ def save_score():
     user_id = session['user_id']
     
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         if not data:
             return jsonify({'error': 'Données JSON invalides'}), 400
         
@@ -97,6 +98,8 @@ def save_score():
         
         try:
             score_value = float(score_value)
+            if not math.isfinite(score_value):
+                raise ValueError
             score_value = round(score_value, 1)
             if score_value < 0 or score_value > 10:
                 return jsonify({'error': 'La note doit être entre 0 et 10'}), 400
@@ -148,7 +151,8 @@ def save_score():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur sauvegarde note: {str(e)}")
-        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
+        current_app.logger.exception('Erreur serveur jury')
+        return jsonify({'error': 'Erreur serveur'}), 500
 
 @jury_bp.route('/api/delete-score', methods=['POST'])
 @jury_required
@@ -157,7 +161,7 @@ def delete_score():
     user_id = session['user_id']
     
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         if not data:
             return jsonify({'error': 'Données JSON invalides'}), 400
         
@@ -198,7 +202,8 @@ def delete_score():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression note: {str(e)}")
-        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
+        current_app.logger.exception('Erreur serveur jury')
+        return jsonify({'error': 'Erreur serveur'}), 500
 
 @jury_bp.route('/api/save-comment', methods=['POST'])
 @jury_required
@@ -207,7 +212,7 @@ def save_comment():
     user_id = session['user_id']
     
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         if not data:
             return jsonify({'error': 'Données JSON invalides'}), 400
         
@@ -233,8 +238,11 @@ def save_comment():
         if not assignment:
             return jsonify({'error': 'Vous n\'êtes pas autorisé'}), 403
         
-        if len(comment_text) > 500:
-            comment_text = comment_text[:500]
+        if not isinstance(comment_text, str):
+            return jsonify({'error': 'Commentaire invalide'}), 400
+        comment_text = comment_text.strip()
+        if not comment_text or len(comment_text) > 500:
+            return jsonify({'error': 'Le commentaire doit contenir entre 1 et 500 caractères'}), 400
         
         comment = Comment.query.filter_by(
             jury_id=user_id,
@@ -260,4 +268,5 @@ def save_comment():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur sauvegarde commentaire: {str(e)}")
-        return jsonify({'error': f'Erreur serveur: {str(e)}'}), 500
+        current_app.logger.exception('Erreur serveur jury')
+        return jsonify({'error': 'Erreur serveur'}), 500

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, current_app
 from app import db
 from app.models import Artist, CompetitionSession, Sponsor, Moment, User, Score, Criterion, ContactMessage
 from app.permissions import rate_limit
-from sqlalchemy import func
+from email_validator import EmailNotValidError, validate_email
 
 main_bp = Blueprint('main', __name__)
 
@@ -86,7 +86,7 @@ def sponsors_page():
 def contact():
     """API pour le formulaire de contact"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         first_name = data.get('first_name', '').strip()
         last_name = data.get('last_name', '').strip()
@@ -96,9 +96,14 @@ def contact():
         if not all([first_name, last_name, email, message]):
             return jsonify({'success': False, 'message': 'Tous les champs sont requis.'}), 400
         
-        if '@' not in email or '.' not in email:
+        try:
+            email = validate_email(email, check_deliverability=False).normalized
+        except EmailNotValidError:
             return jsonify({'success': False, 'message': 'Email invalide.'}), 400
         
+        if len(first_name) > 100 or len(last_name) > 100 or len(email) > 255 or len(message) > 5000:
+            return jsonify({'success': False, 'message': 'Données trop longues.'}), 400
+
         if len(message) < 10:
             return jsonify({'success': False, 'message': 'Le message doit contenir au moins 10 caractères.'}), 400
         

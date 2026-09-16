@@ -1,6 +1,7 @@
 import os
 import logging
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
@@ -19,7 +20,14 @@ def create_app(config_name=None):
                 static_folder='static',
                 static_url_path='/static')
     
+    if config_name not in config:
+        raise RuntimeError(f"Configuration inconnue: {config_name}")
     app.config.from_object(config[config_name])
+    if config_name == 'production':
+        config['production'].validate()
+
+    # Railway/Reverse proxy: ne faire confiance qu'à un proxy direct.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     
     # Initialiser les extensions
     db.init_app(app)
@@ -31,13 +39,6 @@ def create_app(config_name=None):
     def uploaded_file(filename):
         """Servir les fichiers uploadés (artists, moments, sponsors)"""
         upload_folder = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-        return send_from_directory(upload_folder, filename)
-    
-    # ROUTE POUR LES FICHIERS STATIQUES DES UPLOADS
-    @app.route('/static/uploads/<path:subfolder>/<path:filename>')
-    def static_uploads(subfolder, filename):
-        """Servir les fichiers uploadés via le dossier static"""
-        upload_folder = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], subfolder)
         return send_from_directory(upload_folder, filename)
     
     # Enregistrer les blueprints
@@ -92,6 +93,16 @@ def create_app(config_name=None):
             get_static_upload_url=get_static_upload_url
         )
     
+    @app.after_request
+    def add_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        if request.is_secure:
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        return response
+
     return app
 
 def create_upload_directories(app):
@@ -108,8 +119,8 @@ def create_upload_directories(app):
         # Donner les permissions
         try:
             os.chmod(path, 0o755)
-        except:
-            pass  # Sur Windows
+        except OSError:
+            pass  # Windows
 
 def register_error_handlers(app):
     @app.errorhandler(403)
@@ -120,8 +131,12 @@ def register_error_handlers(app):
     def not_found(e):
         return render_template('errors/404.html'), 404
     
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        return render_template('errors/404.html'), 429
+
     @app.errorhandler(500)
     def internal_error(e):
         db.session.rollback()
-        app.logger.error(f'Erreur 500: {str(e)}')
+        app.logger.exception('Erreur interne 500')
         return render_template('errors/500.html'), 500

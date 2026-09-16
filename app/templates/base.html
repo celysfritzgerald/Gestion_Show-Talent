@@ -393,7 +393,7 @@
                         {% elif session.user_role == 'artist' %}
                             <a href="{{ url_for('artist.dashboard') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition">Dashboard</a>
                         {% endif %}
-                        <a href="{{ url_for('auth.logout') }}" class="hover:text-yellow-400 transition">Déconnexion</a>
+                        <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="hover:text-yellow-400 transition">Déconnexion</button></form>
                     {% else %}
                         <a href="{{ url_for('auth.login') }}" class="btn-gold text-black px-6 py-2 rounded-lg font-bold transition">Connexion</a>
                     {% endif %}
@@ -421,7 +421,7 @@
                     {% elif session.user_role == 'artist' %}
                         <a href="{{ url_for('artist.dashboard') }}" onclick="toggleMobileMenu()" style="background: rgba(124, 58, 237, 0.2); color: #a78bfa;">⚙️ Dashboard</a>
                     {% endif %}
-                    <a href="{{ url_for('auth.logout') }}" onclick="toggleMobileMenu()" style="color: #f87171;">🚪 Déconnexion</a>
+                    <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" onclick="toggleMobileMenu()" style="color: #f87171;">🚪 Déconnexion</button></form>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}" onclick="toggleMobileMenu()" class="btn-gold">🔑 Connexion</a>
                 {% endif %}

@@ -53,3 +53,14 @@ Show Talent est un concours de chant qui se déroule sur 6 dimanches. Cette plat
 ```bash
 git clone https://github.com/yourusername/show-talent.git
 cd show-talent
+
+SECURITE / PRODUCTION
+- Ne jamais committer .env, credentials, DB ou venv.
+- Créer l'administrateur avec: python create_admin.py
+- En production, définir SECRET_KEY, CSRF_SECRET_KEY et DATABASE_URL PostgreSQL.
+- Les uploads sont validés par extension + MIME + contenu réel + dimensions et noms UUID.
+- Toutes les mutations sont protégées par CSRF.
+- Les rôles sont contrôlés côté serveur.
+- Les notes sont limitées à 0..10 et uniquement à l'évaluateur affecté.
+- Utiliser HTTPS en production.
+- Les fichiers uploads locaux nécessitent un stockage persistant en production.

@@ -1,134 +1,108 @@
 import os
 import uuid
-import imghdr
-from werkzeug.utils import secure_filename
+from urllib.parse import urlparse
+from pathlib import Path
+
+from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import current_app
-from PIL import Image
-import re
+
 
 def allowed_file(filename):
-    """Vérifier si l'extension du fichier est autorisée"""
-    if not filename or '.' not in filename:
-        return False
-    extension = filename.rsplit('.', 1)[1].lower()
-    return extension in current_app.config['ALLOWED_EXTENSIONS']
+    return bool(filename and "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"])
+
 
 def get_file_extension(filename):
-    """Récupérer l'extension du fichier"""
-    if not filename or '.' not in filename:
-        return ''
-    return filename.rsplit('.', 1)[1].lower()
+    return filename.rsplit(".", 1)[1].lower() if filename and "." in filename else ""
+
 
 def validate_image_content(filepath):
-    """Valider le contenu d'une image"""
     try:
-        # Vérifier que c'est bien une image avec imghdr
-        image_type = imghdr.what(filepath)
-        if not image_type:
-            return False
-        
-        # Ouvrir avec PIL pour validation supplémentaire
+        Image.MAX_IMAGE_PIXELS = 16_000_000
         with Image.open(filepath) as img:
-            # Vérifier les dimensions
+            img.verify()
+        with Image.open(filepath) as img:
             width, height = img.size
-            max_width, max_height = current_app.config.get('MAX_IMAGE_DIMENSIONS', (4096, 4096))
-            if width > max_width or height > max_height:
+            max_width, max_height = current_app.config["MAX_IMAGE_DIMENSIONS"]
+            if width < 1 or height < 1 or width > max_width or height > max_height:
                 return False
-            
-            # Vérifier le mode et convertir si nécessaire
-            if img.mode in ('RGBA', 'LA'):
-                rgb_img = Image.new('RGB', img.size, (255, 255, 255))
-                rgb_img.paste(img, mask=img.split()[-1])
-                rgb_img.save(filepath, 'JPEG', quality=85)
-            elif img.mode != 'RGB':
-                img.convert('RGB').save(filepath, 'JPEG', quality=85)
-        
-        return True
-        
-    except Exception as e:
-        current_app.logger.error(f"Erreur validation image: {str(e)}")
+            detected = (img.format or "").lower()
+            return detected in {"png", "jpeg", "gif", "webp"}
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         return False
 
+
 def save_uploaded_file(file, subfolder):
-    """
-    Sauvegarder un fichier uploadé avec validation de sécurité
-    Retourne le nom du fichier ou lève une exception
-    """
+    if subfolder not in {"artists", "moments", "sponsors"}:
+        raise ValueError("Dossier d'upload invalide")
     if not file or not file.filename:
         return None
-    
-    # ✅ Vérifier l'extension
-    extension = get_file_extension(file.filename)
     if not allowed_file(file.filename):
-        raise ValueError(f"Type de fichier non autorisé. Formats acceptés: {', '.join(current_app.config['ALLOWED_EXTENSIONS'])}")
-    
-    # ✅ Vérifier le MIME type
-    if file.mimetype not in current_app.config['ALLOWED_MIME_TYPES']:
-        raise ValueError(f"Type MIME non autorisé. Types acceptés: {', '.join(current_app.config['ALLOWED_MIME_TYPES'])}")
-    
-    # ✅ Vérifier la taille
+        raise ValueError("Type de fichier non autorisé")
+    if file.mimetype not in current_app.config["ALLOWED_MIME_TYPES"]:
+        raise ValueError("Type MIME non autorisé")
+
     file.seek(0, os.SEEK_END)
-    file_size = file.tell()
+    size = file.tell()
     file.seek(0)
-    
-    max_size = current_app.config['MAX_CONTENT_LENGTH']
-    if file_size > max_size:
-        raise ValueError(f"Fichier trop volumineux. Taille maximale: {max_size // (1024*1024)}MB")
-    
-    # ✅ Générer un nom de fichier sécurisé avec UUID
+    if size <= 0 or size > current_app.config["MAX_CONTENT_LENGTH"]:
+        raise ValueError("Fichier vide ou trop volumineux")
+
+    extension = get_file_extension(file.filename)
     filename = f"{uuid.uuid4().hex}.{extension}"
-    
-    # ✅ Chemin de sauvegarde avec chemin absolu
-    upload_path = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], subfolder)
-    os.makedirs(upload_path, exist_ok=True)
-    
-    filepath = os.path.join(upload_path, filename)
-    
-    # ✅ Sauvegarder
+    upload_path = Path(current_app.root_path) / current_app.config["UPLOAD_FOLDER"] / subfolder
+    upload_path.mkdir(parents=True, exist_ok=True)
+    filepath = upload_path / filename
+
     try:
         file.save(filepath)
-        current_app.logger.info(f"✅ Fichier sauvegardé: {filepath}")
-        
-        # ✅ Valider le contenu
         if not validate_image_content(filepath):
-            os.remove(filepath)
+            filepath.unlink(missing_ok=True)
             raise ValueError("Fichier image invalide ou corrompu")
-        
-        # ✅ Permissions sécurisées
         try:
             os.chmod(filepath, 0o644)
-        except:
+        except OSError:
             pass
-        
         return filename
-        
-    except Exception as e:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        current_app.logger.error(f"Erreur sauvegarde fichier: {str(e)}")
-        raise ValueError(f"Erreur lors de la sauvegarde: {str(e)}")
+    except ValueError:
+        raise
+    except Exception as exc:
+        filepath.unlink(missing_ok=True)
+        current_app.logger.exception("Erreur sauvegarde upload")
+        raise ValueError("Erreur lors de la sauvegarde du fichier") from exc
+
 
 def delete_uploaded_file(filename, subfolder):
-    """Supprimer un fichier uploadé"""
-    if not filename:
+    if not filename or subfolder not in {"artists", "moments", "sponsors"}:
         return
-    
-    filepath = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], subfolder, filename)
+    safe_name = os.path.basename(filename)
+    if safe_name != filename:
+        return
+    filepath = Path(current_app.root_path) / current_app.config["UPLOAD_FOLDER"] / subfolder / safe_name
     try:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-            current_app.logger.info(f"✅ Fichier supprimé: {filepath}")
-    except Exception as e:
-        current_app.logger.error(f"Erreur suppression fichier {filename}: {str(e)}")
+        filepath.unlink(missing_ok=True)
+    except OSError:
+        current_app.logger.exception("Erreur suppression upload")
+
 
 def get_file_url(filename, subfolder):
-    """Obtenir l'URL d'un fichier uploadé"""
-    if not filename:
-        return None
+    if not filename or subfolder not in {"artists", "moments", "sponsors"}: return None
     return f"/uploads/{subfolder}/{filename}"
 
+
 def get_file_path(filename, subfolder):
-    """Obtenir le chemin absolu d'un fichier uploadé"""
-    if not filename:
+    if not filename or subfolder not in {"artists", "moments", "sponsors"}: return None
+    safe_name = os.path.basename(filename)
+    if safe_name != filename: return None
+    return str(Path(current_app.root_path) / current_app.config["UPLOAD_FOLDER"] / subfolder / safe_name)
+
+
+def validate_http_url(value):
+    if not value:
         return None
-    return os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], subfolder, filename)
+    value = value.strip()
+    parsed = urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("URL invalide: seuls http:// et https:// sont autorisés")
+    if len(value) > 255:
+        raise ValueError("URL trop longue")
+    return value

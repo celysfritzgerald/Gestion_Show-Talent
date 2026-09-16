@@ -1,10 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session, jsonify
 import os
 from datetime import datetime
+import math
+from email_validator import EmailNotValidError, validate_email
+from sqlalchemy import func
 from app import db
 from app.models import User, Artist, CompetitionSession, Criterion, Assignment, Score, Comment, Sponsor, Moment, ContactMessage
 from app.permissions import admin_required, rate_limit
-from app.utils import save_uploaded_file, delete_uploaded_file
+from app.utils import save_uploaded_file, delete_uploaded_file, validate_http_url
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -83,6 +86,14 @@ def create_artist():
             if not all([first_name, last_name, email, username, password, code]):
                 flash('Tous les champs marqués * sont requis.', 'danger')
                 return render_template('admin/artist_form.html')
+            if any(len(value) > limit for value, limit in [(first_name, 100), (last_name, 100), (email, 255), (username, 100), (code, 20), (address, 500), (biography, 5000)]):
+                flash('Un ou plusieurs champs sont trop longs.', 'danger')
+                return render_template('admin/artist_form.html')
+            try:
+                email = validate_email(email, check_deliverability=False).normalized
+            except EmailNotValidError:
+                flash('Email invalide.', 'danger')
+                return render_template('admin/artist_form.html')
             
             if User.query.filter_by(email=email).first():
                 flash('Cet email est déjà utilisé.', 'danger')
@@ -135,7 +146,7 @@ def create_artist():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Erreur création artiste: {str(e)}")
-            flash(f'Erreur: {str(e)}', 'danger')
+            flash('Une erreur interne est survenue.', 'danger')
             return render_template('admin/artist_form.html')
     
     return render_template('admin/artist_form.html')
@@ -149,14 +160,38 @@ def edit_artist(artist_id):
     
     if request.method == 'POST':
         try:
-            artist.user.first_name = request.form.get('first_name', '').strip()
-            artist.user.last_name = request.form.get('last_name', '').strip()
-            artist.user.email = request.form.get('email', '').strip()
-            artist.user.username = request.form.get('username', '').strip()
+            first_name = request.form.get('first_name', '').strip()
+            last_name = request.form.get('last_name', '').strip()
+            email = request.form.get('email', '').strip()
+            username = request.form.get('username', '').strip()
+            code = request.form.get('code', '').strip().upper()
+            address = request.form.get('address', '').strip()
+            biography = request.form.get('biography', '').strip()
+            if not all([first_name, last_name, email, username, code]):
+                flash('Les champs obligatoires sont requis.', 'danger')
+                return render_template('admin/artist_form.html', artist=artist)
+            try:
+                email = validate_email(email, check_deliverability=False).normalized
+            except EmailNotValidError:
+                flash('Email invalide.', 'danger')
+                return render_template('admin/artist_form.html', artist=artist)
+            if User.query.filter(User.email == email, User.id != artist.user_id).first() or User.query.filter(User.username == username, User.id != artist.user_id).first():
+                flash("Email ou nom d'utilisateur déjà utilisé.", "danger")
+                return render_template('admin/artist_form.html', artist=artist)
+            if Artist.query.filter(Artist.code == code, Artist.id != artist.id).first():
+                flash('Ce code artiste est déjà utilisé.', 'danger')
+                return render_template('admin/artist_form.html', artist=artist)
+            if any(len(value) > limit for value, limit in [(first_name, 100), (last_name, 100), (email, 255), (username, 100), (code, 20), (address, 500), (biography, 5000)]):
+                flash('Un ou plusieurs champs sont trop longs.', 'danger')
+                return render_template('admin/artist_form.html', artist=artist)
+            artist.user.first_name = first_name
+            artist.user.last_name = last_name
+            artist.user.email = email
+            artist.user.username = username
             
-            artist.code = request.form.get('code', '').strip().upper()
-            artist.address = request.form.get('address', '').strip()
-            artist.biography = request.form.get('biography', '').strip()
+            artist.code = code
+            artist.address = address
+            artist.biography = biography
             
             if request.form.get('password', '').strip():
                 if len(request.form['password'].strip()) < 8:
@@ -183,7 +218,7 @@ def edit_artist(artist_id):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Erreur modification artiste: {str(e)}")
-            flash(f'Erreur: {str(e)}', 'danger')
+            flash('Une erreur interne est survenue.', 'danger')
     
     return render_template('admin/artist_form.html', artist=artist)
 
@@ -256,6 +291,14 @@ def create_jury():
             if not all([first_name, last_name, email, username, password]):
                 flash('Tous les champs sont requis.', 'danger')
                 return render_template('admin/jury_form.html')
+            try:
+                email = validate_email(email, check_deliverability=False).normalized
+            except EmailNotValidError:
+                flash('Email invalide.', 'danger')
+                return render_template('admin/jury_form.html')
+            if any(len(value) > limit for value, limit in [(first_name, 100), (last_name, 100), (email, 255), (username, 100)]):
+                flash('Un ou plusieurs champs sont trop longs.', 'danger')
+                return render_template('admin/jury_form.html')
             
             if User.query.filter_by(email=email).first():
                 flash('Cet email est déjà utilisé.', 'danger')
@@ -283,7 +326,7 @@ def create_jury():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Erreur création jury: {str(e)}")
-            flash(f'Erreur: {str(e)}', 'danger')
+            flash('Une erreur interne est survenue.', 'danger')
     
     return render_template('admin/jury_form.html')
 
@@ -333,6 +376,15 @@ def create_criterion():
         if not name:
             flash('Le nom du critère est requis.', 'danger')
             return redirect(url_for('admin.criteria'))
+        if len(name) > 100 or len(request.form.get('description', '').strip()) > 5000:
+            flash('Le nom ou la description est trop long.', 'danger')
+            return redirect(url_for('admin.criteria'))
+        if Criterion.query.count() >= 10:
+            flash('La compétition doit conserver exactement 10 critères.', 'danger')
+            return redirect(url_for('admin.criteria'))
+        if Criterion.query.filter(func.lower(Criterion.name) == name.lower()).first():
+            flash('Ce critère existe déjà.', 'danger')
+            return redirect(url_for('admin.criteria'))
         
         criterion = Criterion(
             name=name,
@@ -345,7 +397,7 @@ def create_criterion():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur création critère: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.criteria'))
 
 
@@ -365,7 +417,7 @@ def edit_criterion(criterion_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur modification critère: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.criteria'))
 
 
@@ -374,6 +426,9 @@ def edit_criterion(criterion_id):
 def delete_criterion(criterion_id):
     criterion = Criterion.query.get_or_404(criterion_id)
     try:
+        if Criterion.query.count() <= 10:
+            flash('La compétition doit conserver exactement 10 critères.', 'danger')
+            return redirect(url_for('admin.criteria'))
         if Assignment.query.filter_by(criterion_id=criterion_id).first():
             flash('Ce critère est utilisé dans des affectations et ne peut pas être supprimé.', 'danger')
             return redirect(url_for('admin.criteria'))
@@ -388,7 +443,7 @@ def delete_criterion(criterion_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression critère: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.criteria'))
 
 
@@ -398,6 +453,9 @@ def force_delete_criterion(criterion_id):
     """Supprimer un critère FORCÉMENT (supprime aussi les affectations et notes)"""
     criterion = Criterion.query.get_or_404(criterion_id)
     try:
+        if Criterion.query.count() <= 10:
+            flash('La compétition doit conserver exactement 10 critères.', 'danger')
+            return redirect(url_for('admin.criteria'))
         assignments_count = Assignment.query.filter_by(criterion_id=criterion_id).count()
         scores_count = Score.query.filter_by(criterion_id=criterion_id).count()
         
@@ -411,7 +469,7 @@ def force_delete_criterion(criterion_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur force delete critère: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.criteria'))
 
 
@@ -478,7 +536,7 @@ def create_sunday():
         number = int(request.form.get('number', 0))
         date_str = request.form.get('date', '')
         
-        if number < 1 or number > 10:
+        if number < 1 or number > 6:
             flash('Le numéro de session doit être compris entre 1 et 10.', 'danger')
             return redirect(url_for('admin.sundays'))
         
@@ -506,7 +564,7 @@ def create_sunday():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur création dimanche: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sundays'))
 
 
@@ -521,6 +579,9 @@ def edit_sunday(session_id):
         
         if number:
             number = int(number)
+            if number < 1 or number > 6:
+                flash('Le numéro de session doit être compris entre 1 et 6.', 'danger')
+                return redirect(url_for('admin.sundays'))
             existing = CompetitionSession.query.filter_by(number=number).first()
             if existing and existing.id != session_id:
                 flash(f'Le dimanche numéro {number} existe déjà.', 'danger')
@@ -537,7 +598,7 @@ def edit_sunday(session_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur modification dimanche: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sundays'))
 
 
@@ -558,7 +619,7 @@ def delete_sunday(session_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression dimanche: {str(e)}")
-        flash(f'Erreur lors de la suppression: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sundays'))
 
 
@@ -585,12 +646,24 @@ def assign_criteria(session_id):
         admin_user_id = request.form.get('admin_user_id')
         if admin_user_id and admin_user_id.isdigit():
             admin_user_id = int(admin_user_id)
-        
+        session_obj = CompetitionSession.query.get_or_404(session_id)
+        current_admin = db.session.get(User, session.get('user_id'))
+        if not admin_user_id:
+            admin_user_id = current_admin.id
+        admin_user = User.query.filter_by(id=admin_user_id, role='admin', account_status='ACTIVE').first()
+        if not admin_user:
+            flash('Administrateur invalide.', 'danger')
+            return redirect(url_for('admin.sundays'))
+
         all_criteria = []
         for jury_id, criteria_list in jury_data.items():
             all_criteria.extend(criteria_list)
         all_criteria.extend(admin_criteria)
         
+        if len(all_criteria) != 10:
+            flash('Une session doit avoir exactement 10 critères affectés.', 'danger')
+            return redirect(url_for('admin.sundays'))
+
         if len(all_criteria) != len(set(all_criteria)):
             flash('Un même critère ne peut pas être attribué plusieurs fois.', 'danger')
             return redirect(url_for('admin.sundays'))
@@ -631,7 +704,7 @@ def assign_criteria(session_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur assignation critères: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     
     return redirect(url_for('admin.sundays'))
 
@@ -654,7 +727,7 @@ def update_session_status(session_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur mise à jour statut: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sundays'))
 
 
@@ -677,7 +750,7 @@ def delete_assignment(assignment_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression affectation: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     
     return redirect(url_for('admin.sundays'))
 
@@ -720,7 +793,7 @@ def edit_assignment(assignment_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur modification affectation: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     
     return redirect(url_for('admin.sundays'))
 
@@ -752,6 +825,15 @@ def create_sponsor():
             flash('Le nom du sponsor est requis.', 'danger')
             return redirect(url_for('admin.sponsors'))
         
+        if len(name) > 200:
+            flash('Nom du sponsor trop long.', 'danger')
+            return redirect(url_for('admin.sponsors'))
+        try:
+            website = validate_http_url(website) if website else None
+        except ValueError as exc:
+            flash(str(exc), 'danger')
+            return redirect(url_for('admin.sponsors'))
+
         if 'logo' not in request.files or not request.files['logo'].filename:
             flash('Un logo est requis.', 'danger')
             return redirect(url_for('admin.sponsors'))
@@ -772,7 +854,7 @@ def create_sponsor():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur création sponsor: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sponsors'))
 
 
@@ -789,7 +871,7 @@ def delete_sponsor(sponsor_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression sponsor: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.sponsors'))
 
 
@@ -823,6 +905,21 @@ def create_moment():
         
         image_filename = save_uploaded_file(request.files['image'], 'moments')
         
+        if len(caption) > 500:
+            flash('La légende est trop longue.', 'danger')
+            delete_uploaded_file(image_filename, 'moments')
+            return redirect(url_for('admin.moments'))
+        if session_id:
+            try:
+                session_id = int(session_id)
+            except (TypeError, ValueError):
+                delete_uploaded_file(image_filename, 'moments')
+                flash('Dimanche invalide.', 'danger')
+                return redirect(url_for('admin.moments'))
+            if not CompetitionSession.query.get(session_id):
+                delete_uploaded_file(image_filename, 'moments')
+                flash('Dimanche invalide.', 'danger')
+                return redirect(url_for('admin.moments'))
         moment = Moment(
             image=image_filename,
             caption=caption if caption else None,
@@ -837,7 +934,7 @@ def create_moment():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur création moment: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.moments'))
 
 
@@ -854,7 +951,7 @@ def delete_moment(moment_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression moment: {str(e)}")
-        flash(f'Erreur: {str(e)}', 'danger')
+        flash('Une erreur interne est survenue.', 'danger')
     return redirect(url_for('admin.moments'))
 
 
@@ -917,7 +1014,7 @@ def admin_save_score():
     user_id = session['user_id']
     
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         if not data:
             return jsonify({'error': 'Données JSON invalides'}), 400
         
@@ -931,6 +1028,8 @@ def admin_save_score():
         
         try:
             score_value = float(score_value)
+            if not math.isfinite(score_value):
+                raise ValueError
             score_value = round(score_value, 1)
             if score_value < 0 or score_value > 10:
                 return jsonify({'error': 'La note doit être entre 0 et 10'}), 400
@@ -957,8 +1056,8 @@ def admin_save_score():
         if not session_obj:
             return jsonify({'error': 'Session invalide'}), 404
         
-        if session_obj.status == 'COMPLETED':
-            return jsonify({'error': 'Cette session est terminée'}), 403
+        if session_obj.status != 'IN_PROGRESS':
+            return jsonify({"error": "Cette session n'est pas ouverte à l'évaluation"}), 403
         
         existing_score = Score.query.filter_by(
             artist_id=artist_id,
@@ -997,7 +1096,8 @@ def admin_save_score():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur sauvegarde note admin: {str(e)}")
-        return jsonify({'error': str(e), 'success': False}), 500
+        current_app.logger.exception('Erreur API admin')
+        return jsonify({'error': 'Erreur serveur', 'success': False}), 500
 
 
 @admin_bp.route('/api/admin-delete-score', methods=['POST'])
@@ -1007,7 +1107,7 @@ def admin_delete_score():
     user_id = session['user_id']
     
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         if not data:
             return jsonify({'error': 'Données JSON invalides'}), 400
         
@@ -1048,7 +1148,8 @@ def admin_delete_score():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur suppression note admin: {str(e)}")
-        return jsonify({'error': str(e), 'success': False}), 500
+        current_app.logger.exception('Erreur API admin')
+        return jsonify({'error': 'Erreur serveur', 'success': False}), 500
 
 
 # ============================================================

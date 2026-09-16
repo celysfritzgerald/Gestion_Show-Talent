@@ -17,8 +17,10 @@ pip-delete-this-directory.txt
 # Environment
 .env
 .env.local
-.env.example
 .env.production
+.env.example
+
+creer_admin.py/
 
 # ✅ Uploads - Garder les dossiers mais pas les fichiers
 uploads/
@@ -47,4 +49,6 @@ htmlcov/
 
 # Logs
 *.log
+*.pem
+*.key
 logs/

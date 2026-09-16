@@ -3,8 +3,10 @@ from flask import session, flash, redirect, url_for, abort, request, current_app
 from app import db
 from app.models import User, Artist, Assignment, CompetitionSession, Criterion
 import time
+from collections import defaultdict
 
-_rate_limits = {}
+_rate_limits = defaultdict(list)
+_MAX_RATE_KEYS = 10000
 
 def login_required(f):
     @wraps(f)
@@ -25,12 +27,15 @@ def admin_required(f):
         user = User.query.get(session['user_id'])
         if not user or not user.is_admin():
             abort(403)
-        
         if not user.is_active_account():
             flash('Votre compte est désactivé.', 'danger')
             session.clear()
             return redirect(url_for('auth.login'))
         
+        if user.is_locked():
+            session.clear()
+            flash('Votre compte est verrouillé.', 'danger')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -107,10 +112,10 @@ def rate_limit(limit_per_minute=60):
             now = time.time()
             minute_ago = now - 60
             
-            if key in _rate_limits:
-                _rate_limits[key] = [t for t in _rate_limits[key] if t > minute_ago]
-            else:
-                _rate_limits[key] = []
+            _rate_limits[key] = [t for t in _rate_limits[key] if t > minute_ago]
+            if len(_rate_limits) > _MAX_RATE_KEYS:
+                oldest_key = next(iter(_rate_limits))
+                _rate_limits.pop(oldest_key, None)
             
             if len(_rate_limits[key]) >= limit_per_minute:
                 abort(429)
@@ -123,7 +128,9 @@ def rate_limit(limit_per_minute=60):
 
 def can_evaluate_criterion(jury_id, session_id, criterion_id, artist_id):
     try:
-        jury = User.query.get(jury_id)
+        if not all(isinstance(value, int) and value > 0 for value in (jury_id, session_id, criterion_id, artist_id)):
+            return False, "Données invalides"
+        jury = db.session.get(User, jury_id)
         if not jury or not jury.is_jury():
             return False, "Jury invalide"
         
@@ -133,7 +140,7 @@ def can_evaluate_criterion(jury_id, session_id, criterion_id, artist_id):
         if jury.is_locked():
             return False, "Compte jury verrouillé"
         
-        artist = Artist.query.get(artist_id)
+        artist = db.session.get(Artist, artist_id)
         if not artist:
             return False, "Artiste inexistant"
         
@@ -143,12 +150,12 @@ def can_evaluate_criterion(jury_id, session_id, criterion_id, artist_id):
         if not artist.user.is_active_account():
             return False, "Compte artiste désactivé"
         
-        session_obj = CompetitionSession.query.get(session_id)
+        session_obj = db.session.get(CompetitionSession, session_id)
         if not session_obj:
             return False, "Session invalide"
         
-        if session_obj.status == 'COMPLETED':
-            return False, "Cette session est terminée"
+        if session_obj.status != 'IN_PROGRESS':
+            return False, "Cette session n'est pas ouverte à l'évaluation"
         
         assignment = Assignment.query.filter_by(
             session_id=session_id,
