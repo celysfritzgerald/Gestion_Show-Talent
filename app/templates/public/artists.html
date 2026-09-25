@@ -1,315 +1,255 @@
+```html
 {% extends "base.html" %}
 
 {% block title %}Participants - Show Talent{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* ============================================================
-       SECTION PARTICIPANTS
-    ============================================================ */
-    .participants-section {
-        padding: 80px 20px;
-        text-align: center;
-        background-color: #0F172A;
-        min-height: 100vh;
-    }
-    
-    .participants-section h2 {
-        color: #FACC15;
-        margin-bottom: 12px;
-        font-size: 2.5rem;
-        font-weight: 700;
-    }
-    
-    .participants-section .subtitle {
-        color: #94a3b8;
-        margin-bottom: 40px;
-        font-size: 1.1rem;
-    }
-    
-    .participants-section .divider {
-        width: 60px;
-        height: 3px;
-        background: linear-gradient(90deg, #FACC15, #f59e0b);
-        margin: 12px auto 30px;
-        border-radius: 9999px;
-    }
-    
-    /* === GRILLE 2 PAR LIGNE === */
-    .participants-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    /* === CARTE PARTICIPANT === */
-    .participant {
-        background: rgba(2, 6, 23, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 20px;
-        border-radius: 16px;
-        transition: all 0.4s ease;
-        text-align: left;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .participant:hover {
-        transform: translateY(-6px);
-        border-color: rgba(252, 211, 77, 0.2);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    }
-    
-    .participant:hover .participant-name {
-        color: #FACC15;
-    }
-    
-    /* Image */
-    .participant .participant-image {
-        width: 100%;
-        height: 350px;
-        object-fit: cover;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(252, 211, 77, 0.05), rgba(245, 158, 11, 0.02));
-    }
-    
-    /* Infos */
-    .participant .participant-info {
-        padding: 16px 4px 4px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .participant .participant-name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #f8fafc;
-        margin-bottom: 2px;
-        transition: color 0.3s ease;
-    }
-    
-    .participant .participant-code {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        font-weight: 500;
-    }
-    
-    .participant .participant-code span {
-        color: #FACC15;
-        font-weight: 600;
-    }
-    
-    .participant .participant-address {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 4px;
-    }
-    
-    .participant .participant-address i {
-        color: #FACC15;
-        font-size: 0.8rem;
-    }
-    
-    .participant .participant-bio {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        line-height: 1.6;
-        margin-top: 8px;
-        flex: 1;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    /* Statut */
-    .participant .participant-status {
-        display: inline-block;
-        padding: 4px 16px;
-        border-radius: 9999px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 12px;
-        align-self: flex-start;
-        background: rgba(34, 197, 94, 0.15);
-        color: #4ade80;
-        border: 1px solid rgba(34, 197, 94, 0.1);
-    }
-    
-    .participant .participant-status.eliminated {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border-color: rgba(239, 68, 68, 0.1);
-    }
-    
-    .participant .participant-status.pending {
-        background: rgba(251, 191, 36, 0.15);
-        color: #fbbf24;
-        border-color: rgba(251, 191, 36, 0.1);
-    }
-    
-    /* ============================================================
-       RESPONSIVE
-    ============================================================ */
-    
-    /* Desktop : 2 colonnes */
-    @media (min-width: 769px) {
-        .participants-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    /* Mobile : 1 colonne */
-    @media (max-width: 768px) {
-        .participants-section {
-            padding: 50px 16px;
-        }
-        
-        .participants-section h2 {
-            font-size: 2rem;
-        }
-        
-        .participants-grid {
-            grid-template-columns: 1fr;
-            gap: 18px;
-        }
-        
-        .participant {
-            padding: 14px;
-            border-radius: 12px;
-        }
-        
-        .participant .participant-image {
-            height: 220px;
-        }
-        
-        .participant .participant-name {
-            font-size: 1.1rem;
-        }
-        
-        .participant .participant-code {
-            font-size: 0.8rem;
-        }
-        
-        .participant .participant-address {
-            font-size: 0.8rem;
-        }
-        
-        .participant .participant-bio {
-            font-size: 0.8rem;
-            -webkit-line-clamp: 2;
-        }
-        
-        .participant .participant-status {
-            font-size: 0.6rem;
-            padding: 3px 12px;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .participants-section {
-            padding: 40px 12px;
-        }
-        
-        .participants-section h2 {
-            font-size: 1.6rem;
-        }
-        
-        .participants-grid {
-            gap: 14px;
-        }
-        
-        .participant {
-            padding: 12px;
-            border-radius: 10px;
-        }
-        
-        .participant .participant-image {
-            height: 180px;
-            border-radius: 10px;
-        }
-        
-        .participant .participant-name {
-            font-size: 1rem;
-        }
-        
-        .participant .participant-code {
-            font-size: 0.75rem;
-        }
-        
-        .participant .participant-address {
-            font-size: 0.75rem;
-        }
-        
-        .participant .participant-bio {
-            font-size: 0.75rem;
-            -webkit-line-clamp: 2;
-        }
-        
-        .participant .participant-status {
-            font-size: 0.55rem;
-            padding: 2px 10px;
-        }
-    }
-</style>
+
+<!-- Police -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+
 {% endblock %}
 
+
 {% block content %}
-<!-- ============================================================
-     SECTION PARTICIPANTS - GRILLE 2 PAR LIGNE
-     ============================================================ -->
-<section class="participants-section">
-    <h2>Nos participants</h2>
-    <div class="divider"></div>
-    <p class="subtitle">Découvrez tous les talents qui participent à cette édition</p>
-    
-    <!-- Grille -->
-    <div class="participants-grid">
-        {% for artist in artists %}
-        <div class="participant">
-            <!-- Image -->
-            <img class="participant-image" 
-                 src="{% if artist.photo %}{{ artist.photo|upload_url('artists') }}{% else %}https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=350&fit=crop{% endif %}" 
-                 alt="{{ artist.user.full_name() }}">
-            
-            <!-- Infos -->
-            <div class="participant-info">
-                <h3 class="participant-name">{{ artist.user.first_name }} {{ artist.user.last_name }}</h3>
-                <p class="participant-code">Code: <span>{{ artist.code }}</span></p>
-                
-                {% if artist.address %}
-                <p class="participant-address">
-                    <i class="fas fa-map-pin"></i> {{ artist.address }}
-                </p>
-                {% endif %}
-                
-                <p class="participant-bio">
-                    {{ artist.biography or 'Aucune biographie disponible' }}
-                </p>
-                
-                <span class="participant-status {% if artist.competition_status == 'ELIMINATED' %}eliminated{% elif artist.competition_status == 'PENDING' %}pending{% endif %}">
-                    {{ artist.competition_status }}
-                </span>
-            </div>
-        </div>
-        {% else %}
-        <div class="participant" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
-            <p style="color: #94a3b8; font-size: 1.2rem;">Aucun artiste enregistré pour le moment</p>
-        </div>
-        {% endfor %}
+
+<section class="min-h-screen w-full bg-slate-950 px-4 py-16 font-['Inter'] sm:px-6 lg:px-8">
+
+    <!-- ========================================================
+         EN-TÊTE
+    ========================================================= -->
+
+    <div class="mx-auto max-w-3xl text-center">
+
+        <h2 class="text-3xl font-extrabold tracking-tight text-yellow-400 sm:text-4xl lg:text-5xl">
+            Nos participants
+        </h2>
+
+        <div class="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-yellow-300 to-yellow-500"></div>
+
+        <p class="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Découvrez les talents qui participent à cette édition.
+        </p>
+
     </div>
-    
-    <!-- Nombre total -->
-    <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 30px;">
-        <span style="color: #FACC15; font-weight: 600;">{{ artists|length }}</span> artistes participants
+
+
+    <!-- ========================================================
+         GRILLE DES ARTISTES
+         
+         PC       : 4 cartes
+         Tablette : 3 cartes
+         Téléphone: 2 cartes
+    ========================================================= -->
+
+    <div
+        class="mx-auto mt-12 grid w-full max-w-7xl grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4"
+    >
+
+
+        {% for artist in artists %}
+
+
+        <!-- ====================================================
+             CARTE ARTISTE
+        ==================================================== -->
+
+        <article
+            class="group overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 text-center shadow-xl shadow-black/20 transition duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/30"
+        >
+
+
+            <!-- ==================================================
+                 PHOTO
+            ================================================== -->
+
+            <div
+                class="h-48 w-full overflow-hidden bg-slate-200 sm:h-56 lg:h-64 xl:h-72"
+            >
+
+                <img
+                    class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+
+                    src="{% if artist.photo %}{{ artist.photo|upload_url('artists') }}{% else %}https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=600&h=700&fit=crop{% endif %}"
+
+                    alt="{{ artist.user.first_name }} {{ artist.user.last_name }}"
+
+                    loading="lazy"
+                >
+
+            </div>
+
+
+            <!-- ==================================================
+                 INFORMATIONS
+            ================================================== -->
+
+            <div class="bg-slate-300 px-3 py-5 sm:px-4 sm:py-6">
+
+
+                <!-- ==================================================
+                     NOM
+                ================================================== -->
+
+                <h3
+                    class="break-words text-lg font-extrabold leading-snug text-slate-900 transition duration-200 group-hover:text-yellow-700 sm:text-lg lg:text-3xl"
+                >
+                    {{ artist.user.first_name }}
+                    {{ artist.user.last_name }}
+                </h3>
+
+
+                <!-- ==================================================
+                     CODE
+                ================================================== -->
+
+                <p class="mt-2 text-xs font-medium text-slate-500 sm:text-lg">
+
+                    Code :
+
+                    <span class="font-bold text-yellow-700">
+                        {{ artist.code }}
+                    </span>
+
+                </p>
+
+
+                <!-- ==================================================
+                     ADRESSE
+                ================================================== -->
+
+                {% if artist.address %}
+
+                <p
+                    class="mt-3 flex items-center justify-center gap-1.5 text-lg leading-5 text-slate-600 sm:text-sm"
+                >
+
+                    <i class="fas fa-map-marker-alt text-yellow-700"></i>
+
+                    <span class="break-words">
+                        {{ artist.address }}
+                    </span>
+
+                </p>
+
+                {% endif %}
+
+
+                <!-- ==================================================
+                     BIOGRAPHIE
+                     
+                     Si une biographie existe :
+                     → afficher la biographie.
+                     
+                     Sinon :
+                     → afficher "Aucune biographie".
+                ================================================== -->
+
+                {% if artist.biography %}
+
+                <p
+                    class="mx-auto mt-3 line-clamp-3 max-w-sm text-sm leading-6 text-slate-600 sm:text-[15px]"
+                >
+                    {{ artist.biography }}
+                </p>
+
+                {% else %}
+
+                <p
+                    class="mx-auto mt-3 max-w-sm text-sm italic leading-6 text-slate-500 sm:text-[15px]"
+                >
+                    Aucune biographie
+                </p>
+
+                {% endif %}
+
+
+                <!-- ==================================================
+                     STATUT
+                ================================================== -->
+
+                <div class="mt-4">
+
+                    {% if artist.competition_status == 'ELIMINATED' %}
+
+                    <span
+                        class="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-700 sm:px-4 sm:text-xs"
+                    >
+                        {{ artist.competition_status }}
+                    </span>
+
+
+                    {% elif artist.competition_status == 'PENDING' %}
+
+                    <span
+                        class="inline-flex items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-amber-700 sm:px-4 sm:text-xs"
+                    >
+                        {{ artist.competition_status }}
+                    </span>
+
+
+                    {% else %}
+
+                    <span
+                        class="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700 sm:px-4 sm:text-xs"
+                    >
+                        {{ artist.competition_status }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+            </div>
+
+        </article>
+
+
+        {% else %}
+
+
+        <!-- ====================================================
+             AUCUN ARTISTE
+        ==================================================== -->
+
+        <div
+            class="col-span-2 rounded-2xl border border-slate-200 bg-slate-100 px-5 py-16 text-center shadow-xl lg:col-span-3 xl:col-span-4"
+        >
+
+            <p class="text-base font-medium text-slate-500 sm:text-lg">
+                Aucun artiste enregistré pour le moment.
+            </p>
+
+        </div>
+
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- ========================================================
+         TOTAL DES ARTISTES
+    ========================================================= -->
+
+    <p class="mt-10 text-center text-sm font-medium text-slate-300 sm:text-base">
+
+        <span class="font-extrabold text-yellow-400">
+            {{ artists|length }}
+        </span>
+
+        artistes participants
+
     </p>
+
+
 </section>
+
 {% endblock %}
+```
