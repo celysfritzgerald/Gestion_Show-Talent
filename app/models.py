@@ -176,3 +176,26 @@ class ContactMessage(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     __table_args__ = (db.CheckConstraint("status IN ('NEW', 'READ', 'REPLIED')", name="check_contact_status"),)
     def full_name(self): return f"{self.first_name} {self.last_name}"
+
+
+class Lyric(db.Model):
+    """Modèle Paroles de chanson — Totalement indépendant"""
+    __tablename__ = "lyrics"
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_name = db.Column(db.String(150), nullable=False)      # Nom saisi manuellement
+    artist_code = db.Column(db.String(20), nullable=False)       # Code saisi manuellement
+    artist_photo = db.Column(db.String(255))                     # Photo uploadée
+    song_title = db.Column(db.String(200), nullable=False, index=True)
+    content = db.Column(db.Text, nullable=False)
+    is_published = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    view_count = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("view_count >= 0", name="check_view_count"),
+    )
+
+    def __repr__(self):
+        return f"<Lyric {self.song_title} - {self.artist_name}>"

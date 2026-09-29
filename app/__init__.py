@@ -37,7 +37,7 @@ def create_app(config_name=None):
     # ROUTE POUR SERVIR LES FICHIERS UPLOADÉS
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
-        """Servir les fichiers uploadés (artists, moments, sponsors)"""
+        """Servir les fichiers uploadés (artists, moments, sponsors, lyrics)"""
         upload_folder = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
         return send_from_directory(upload_folder, filename)
     
@@ -108,7 +108,7 @@ def create_app(config_name=None):
 def create_upload_directories(app):
     """Création sécurisée des dossiers d'upload"""
     upload_base = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-    for subfolder in ['artists', 'moments', 'sponsors']:
+    for subfolder in ['artists', 'moments', 'sponsors', 'lyrics']:
         path = os.path.join(upload_base, subfolder)
         os.makedirs(path, exist_ok=True)
         # Créer un fichier .gitkeep pour garder le dossier

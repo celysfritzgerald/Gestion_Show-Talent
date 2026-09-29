@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Administration - Show Talent{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0B1120; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+        .hover-lift { transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.06); }
+        .badge-jury {
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color: #0B1120;
+        }
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: rgba(250, 204, 21, 0.5);
+        }
+        .sidebar-link.active {
+            background: rgba(250, 204, 21, 0.1);
+            border-left-color: #facc15;
+            color: #facc15;
+        }
+        .section-dark { background: #0B1120; min-height: calc(100vh - 64px); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="text-gray-200">
+
+    <!-- NAVBAR (fixe en haut, pleine largeur) -->
+    <nav class="bg-white/5 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="sidebarToggle" class="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition" aria-label="Menu">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2">
+                    <span class="text-xl md:text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                        🎤 Show Talent
+                    </span>
+                    <span class="hidden md:inline-block px-2 py-0.5 bg-yellow-400/10 border border-yellow-400/30 rounded-full text-yellow-400 text-xs font-bold">
+                        Admin
+                    </span>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('main.index') }}" target="_blank" class="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Voir le site</span>
+                </a>
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
+                    <i class="fas fa-user-shield text-yellow-400 text-sm"></i>
+                    <span class="text-sm text-gray-300">{{ session.user_name }}</span>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/30 rounded-full text-red-400 hover:bg-red-500/20 text-sm transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="hidden md:inline">Déconnexion</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LAYOUT PRINCIPAL -->
+    <div class="flex">
+
+        <!-- SIDEBAR À GAUCHE -->
+        <aside id="sidebar"
+               class="fixed lg:sticky top-0 lg:top-[57px] left-0 z-40 w-64 h-screen lg:h-[calc(100vh-57px)] bg-[#0B1120] border-r border-white/10 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex-shrink-0">
+
+            <!-- Header sidebar -->
+            <div class="p-4 border-b border-white/10">
+                <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Menu principal
+                </div>
+            </div>
+
+            <!-- Liens -->
+            <nav class="p-3 space-y-1">
+                <a href="{{ url_for('admin.dashboard') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt w-5 text-center"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+
+                <div class="pt-3 mt-3 border-t border-white/5">
+                    <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Gestion
+                    </div>
+                </div>
+
+                <a href="{{ url_for('admin.artists') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'artist' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-users w-5 text-center"></i>
+                    <span class="font-medium">Artistes</span>
+                </a>
+
+                <a href="{{ url_for('admin.juries') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'juri' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-gavel w-5 text-center"></i>
+                    <span class="font-medium">Jurys</span>
+                </a>
+
+                <a href="{{ url_for('admin.criteria') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'criteria' in request.endpoint or 'criterion' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-list-check w-5 text-center"></i>
+                    <span class="font-medium">Critères</span>
+                </a>
+
+                <a href="{{ url_for('admin.sundays') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'sunday' in request.endpoint or 'assignment' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-calendar-day w-5 text-center"></i>
+                    <span class="font-medium">Dimanches</span>
+                </a>
+
+                <a href="{{ url_for('admin.sponsors') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'sponsor' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-handshake w-5 text-center"></i>
+                    <span class="font-medium">Sponsors</span>
+                </a>
+
+                <a href="{{ url_for('admin.moments') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'moment' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-camera w-5 text-center"></i>
+                    <span class="font-medium">Moments forts</span>
+                </a>
+
+                <a href="{{ url_for('admin.lyrics') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'lyric' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-music w-5 text-center"></i>
+                    <span class="font-medium">Paroles</span>
+                </a>
+
+                <div class="pt-3 mt-3 border-t border-white/5">
+                    <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Communication
+                    </div>
+                </div>
+
+                <a href="{{ url_for('admin.messages') }}"
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'message' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-envelope w-5 text-center"></i>
+                    <span class="font-medium">Messages</span>
+                </a>
+            </nav>
+
+            <div class="p-4 mt-4 border-t border-white/10">
+                <div class="text-xs text-gray-500 text-center">
+                    Show Talent v4.0
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay mobile -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 min-w-0">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="p-4">
+                        {% for category, message in messages %}
+                            <div class="mb-3 p-4 rounded-xl {% if category == 'success' %}bg-green-900/30 border border-green-500/30 text-green-400{% elif category == 'danger' %}bg-red-900/30 border border-red-500/30 text-red-400{% elif category == 'warning' %}bg-yellow-900/30 border border-yellow-500/30 text-yellow-400{% else %}bg-blue-900/30 border border-blue-500/30 text-blue-400{% endif %}">
+                                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            var sidebar = document.getElementById('sidebar');
+            var toggle = document.getElementById('sidebarToggle');
+            var overlay = document.getElementById('sidebarOverlay');
+
+            if (!sidebar || !toggle) return;
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+                if (overlay) overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+                if (overlay) overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            toggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+            });
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

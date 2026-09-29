@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lyric.song_title }} - {{ lyric.artist_name }} | Paroles Show Talent{% endblock %}
+
+{% block meta_description %}Paroles de la chanson "{{ lyric.song_title }}" interprétée par {{ lyric.artist_name }} ({{ lyric.artist_code }}) lors du concours Show Talent 4e Édition.{% endblock %}
+
+{% block meta_keywords %}{{ lyric.song_title }}, {{ lyric.artist_name }}, paroles, lyrics, Show Talent, {{ lyric.artist_code }}{% endblock %}
+
+{% block og_title %}{{ lyric.song_title }} - {{ lyric.artist_name }} | Paroles{% endblock %}
+{% block og_description %}Découvrez les paroles de "{{ lyric.song_title }}" interprétée par {{ lyric.artist_name }}.{% endblock %}
+
+{% block content %}
+
+<article class="py-8 md:py-12 bg-[#0B1120] min-h-screen">
+    <div class="container mx-auto px-4 max-w-3xl">
+
+        <!-- Fil d'Ariane -->
+        <nav class="mb-6 text-xs md:text-sm text-gray-500" aria-label="Breadcrumb">
+            <a href="/" class="hover:text-yellow-400 transition">Accueil</a>
+            <span class="mx-2">/</span>
+            <a href="{{ url_for('main.lyrics') }}" class="hover:text-yellow-400 transition">Paroles</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-300 truncate">{{ lyric.song_title }}</span>
+        </nav>
+
+        <!-- CARTE PRINCIPALE -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
+
+            <!-- En-tête avec photo + infos -->
+            <header class="p-5 md:p-6 border-b border-white/5">
+                <div class="flex items-center gap-4">
+                    {% if lyric.artist_photo %}
+                        <img src="{{ lyric.artist_photo|upload_url('lyrics') }}"
+                             alt="{{ lyric.artist_name }} - {{ lyric.song_title }}"
+                             class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-yellow-400/40 flex-shrink-0"
+                             width="80" height="80" loading="eager" decoding="async">
+                    {% else %}
+                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-yellow-400/10 border-2 border-yellow-400/40 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-yellow-400 text-2xl"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-lg md:text-2xl font-bold text-white truncate">
+                            {{ lyric.song_title }}
+                        </h1>
+                        <p class="text-yellow-400 text-sm md:text-base font-semibold truncate">
+                            {{ lyric.artist_name }}
+                        </p>
+                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            <span class="inline-flex items-center gap-1">
+                                <i class="fas fa-id-badge"></i>
+                                {{ lyric.artist_code }}
+                            </span>
+                            <span class="inline-flex items-center gap-1">
+                                <i class="fas fa-eye"></i>
+                                {{ lyric.view_count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Paroles -->
+            <div class="p-5 md:p-6">
+                <pre class="text-gray-200 text-sm md:text-base leading-7 whitespace-pre-wrap font-sans m-0">{{ lyric.content }}</pre>
+            </div>
+
+            <!-- Actions -->
+            <div class="px-5 md:px-6 py-4 border-t border-white/5 bg-white/[0.02] flex flex-wrap gap-2">
+                <button type="button" id="copyLyricsBtn"
+                        class="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 py-2.5 rounded-xl font-bold text-sm hover:scale-[1.02] transition shadow-lg shadow-yellow-500/20">
+                    <i class="fas fa-copy"></i>
+                    <span id="copyBtnText">Copier les paroles</span>
+                </button>
+                <a href="{{ url_for('main.lyrics') }}"
+                   class="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-white/10 transition">
+                    <i class="fas fa-arrow-left"></i>
+                    Toutes les paroles
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Date de publication -->
+        <p class="text-center text-xs text-gray-600 mt-6">
+            <i class="fas fa-calendar mr-1"></i>
+            Publié le {{ lyric.created_at.strftime('%d/%m/%Y') }}
+        </p>
+
+    </div>
+</article>
+
+<!-- ✅ Données JSON sécurisées -->
+<script id="lyricData" type="application/json">
+{
+    "artist": {{ lyric.artist_name|tojson }},
+    "title": {{ lyric.song_title|tojson }},
+    "content": {{ lyric.content|tojson }}
+}
+</script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+
+    var btn = document.getElementById('copyLyricsBtn');
+    var btnText = document.getElementById('copyBtnText');
+    var dataEl = document.getElementById('lyricData');
+
+    if (!btn || !dataEl || !btnText) return;
+
+    var data;
+    try {
+        data = JSON.parse(dataEl.textContent);
+    } catch (e) {
+        return;
+    }
+
+    var fullText = data.artist + ' - ' + data.title + '\n\n' + data.content;
+
+    btn.addEventListener('click', function() {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(fullText).then(showSuccess).catch(function() {
+                fallbackCopy(fullText);
+            });
+        } else {
+            fallbackCopy(fullText);
+        }
+    });
+
+    function showSuccess() {
+        var original = btnText.textContent;
+        btnText.textContent = 'Copié !';
+        btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+        setTimeout(function() {
+            btnText.textContent = original;
+            btn.style.background = '';
+        }, 2000);
+    }
+
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.setAttribute('readonly', '');
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        try {
+            document.execCommand('copy');
+            showSuccess();
+        } catch (e) {
+            // Silencieux
+        }
+        document.body.removeChild(textarea);
+    }
+})();
+</script>
+{% endblock %}

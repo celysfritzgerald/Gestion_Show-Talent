@@ -1,100 +1,270 @@
 {% extends "base.html" %}
 
-{% block title %}Classement - Show Talent{% endblock %}
+{% block title %}Classement Général - Show Talent 4e Édition | Top Artistes{% endblock %}
+
+{% block meta_description %}Découvrez le classement général officiel du concours Show Talent 4e Édition. Scores, moyennes et évolution des artistes participants.{% endblock %}
+
+{% block meta_keywords %}classement Show Talent, top artistes, scores, ACDA Haïti, concours chant, résultats{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold flex items-center">
-                <i class="fas fa-trophy mr-3 text-purple-600"></i>
-                Classement général
-            </h1>
-            <p class="text-gray-500 mt-1">Classement de tous les artistes participants</p>
+<main class="min-h-screen py-6 md:py-8" style="background: #0B1120;" role="main">
+    <div class="container mx-auto px-3 sm:px-4 max-w-5xl">
+
+        <!-- ============================================================
+             EN-TÊTE
+             ============================================================ -->
+        <header class="glass-card rounded-2xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white">
+                            🏆 Classement général
+                        </h1>
+                        <span class="badge-jury px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap">
+                            {{ ranking|length }} artistes
+                        </span>
+                    </div>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-base">
+                        Classement cumulé de tous les artistes participants.
+                    </p>
+                </div>
+                <a href="{{ url_for('artist.dashboard') }}"
+                   class="inline-flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-gray-300 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm hover:bg-white/10 transition self-start sm:self-auto">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    <span>Retour</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- ============================================================
+             STATS PERSONNELLES
+             ============================================================ -->
+        {% set my_rank = namespace(value=None, total=None, percentage=None) %}
+        {% for item in ranking %}
+            {% if item.artist.id == artist.id %}
+                {% set my_rank.value = item.rank %}
+                {% set my_rank.total = item.total %}
+                {% set my_rank.percentage = item.percentage %}
+            {% endif %}
+        {% endfor %}
+
+        {% if my_rank.value %}
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-6 md:mb-8">
+            <div class="glass-card rounded-xl p-3 sm:p-4" style="border-left: 3px solid #facc15;">
+                <div class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Position</div>
+                <div class="text-lg sm:text-2xl font-bold text-yellow-400 mt-1">
+                    #{{ my_rank.value }}
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-3 sm:p-4" style="border-left: 3px solid #7c3aed;">
+                <div class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Total</div>
+                <div class="text-lg sm:text-2xl font-bold text-purple-400 mt-1">{{ my_rank.total }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-3 sm:p-4" style="border-left: 3px solid #22c55e;">
+                <div class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Score</div>
+                <div class="text-lg sm:text-2xl font-bold text-green-400 mt-1">{{ my_rank.percentage }}%</div>
+            </div>
         </div>
-        <a href="{{ url_for('artist.dashboard') }}" class="text-gray-600 hover:text-purple-600 transition inline-flex items-center">
-            <i class="fas fa-arrow-left mr-2"></i>Retour
-        </a>
-    </div>
-    
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rang</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artiste</th>
-                        <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Dimanches</th>
-                        <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for item in ranking %}
-                    <tr class="{% if item.artist.id == artist.id %}bg-purple-50{% endif %} hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if item.rank == 1 %}
-                            <span class="text-2xl">🥇</span>
-                            {% elif item.rank == 2 %}
-                            <span class="text-2xl">🥈</span>
-                            {% elif item.rank == 3 %}
-                            <span class="text-2xl">🥉</span>
-                            {% else %}
-                            <span class="font-bold text-gray-500">#{{ item.rank }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                {% if item.artist.photo %}
-                                <img src="{{ url_for('static', filename='uploads/artists/' + item.artist.photo) }}" 
-                                     alt="{{ item.artist.user.full_name() }}" 
-                                     class="w-8 h-8 rounded-full object-cover mr-3"
-                                     onerror="this.onerror=null; this.src=''; this.className='w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3 text-sm'; this.innerHTML='🎤'">
-                                {% else %}
-                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                                    <span class="text-sm">🎤</span>
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <span class="font-medium {% if item.artist.id == artist.id %}text-purple-600 font-bold{% endif %}">
-                                        {{ item.artist.user.full_name() }}
-                                    </span>
-                                    {% if item.artist.id == artist.id %}
-                                    <span class="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Vous</span>
-                                    {% endif %}
-                                    <p class="text-xs text-gray-500">{{ item.artist.code }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                            {{ item.sessions_completed }}/6
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-purple-600">
-                            {{ item.total }}/{{ item.max_possible }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <div class="flex items-center justify-end">
-                                <span class="text-sm font-medium {% if item.percentage >= 80 %}text-green-600{% elif item.percentage >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
-                                    {{ item.percentage }}%
-                                </span>
-                                <div class="w-16 h-1.5 bg-gray-200 rounded-full ml-2">
-                                    <div class="h-1.5 rounded-full bg-purple-600" style="width: {{ item.percentage }}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
+        {% endif %}
+
+        <!-- ============================================================
+             CLASSEMENT
+             ============================================================ -->
+        {% if ranking %}
+
+        <!-- ===== VUE MOBILE (cartes empilées) ===== -->
+        <div class="md:hidden space-y-3">
+            {% for item in ranking %}
+            {% set is_me = (item.artist.id == artist.id) %}
+            <div class="glass-card rounded-2xl p-4 {% if is_me %}ring-2 ring-yellow-400/40{% endif %}">
+
+                <!-- Header carte : rang + nom -->
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+                        {% if item.rank == 1 %}
+                            <span class="text-2xl" aria-label="Première place">🥇</span>
+                        {% elif item.rank == 2 %}
+                            <span class="text-2xl" aria-label="Deuxième place">🥈</span>
+                        {% elif item.rank == 3 %}
+                            <span class="text-2xl" aria-label="Troisième place">🥉</span>
+                        {% else %}
+                            <span class="font-bold text-gray-400 text-sm">#{{ item.rank }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if item.artist.photo %}
+                        <img src="{{ item.artist.photo|upload_url('artists') }}"
+                             alt="{{ item.artist.user.full_name() }}"
+                             class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400/30 flex-shrink-0"
+                             width="40" height="40" loading="lazy" decoding="async"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-400/30 items-center justify-center flex-shrink-0" style="display:none;">
+                            <i class="fas fa-user text-yellow-400 text-xs"></i>
+                        </div>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                            <i class="fas fa-trophy text-4xl mb-3 block text-gray-300"></i>
-                            <p>Aucun classement disponible</p>
-                            <p class="text-sm text-gray-400 mt-1">Les résultats apparaîtront après les évaluations</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        <div class="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-400/30 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-yellow-400 text-xs"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-semibold {% if is_me %}text-yellow-400{% else %}text-white{% endif %} truncate text-sm">
+                                {{ item.artist.user.full_name() }}
+                            </span>
+                            {% if is_me %}
+                                <span class="text-[9px] bg-yellow-400 text-[#0B1120] font-bold px-2 py-0.5 rounded-full">
+                                    VOUS
+                                </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-[10px] text-gray-500 font-mono">{{ item.artist.code }}</p>
+                    </div>
+                </div>
+
+                <!-- Stats ligne -->
+                <div class="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">
+                    <div class="text-center">
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider">Dim.</div>
+                        <div class="text-sm font-bold text-white mt-0.5">{{ item.sessions_completed }}/6</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider">Total</div>
+                        <div class="text-sm font-bold {% if is_me %}text-yellow-400{% else %}text-white{% endif %} mt-0.5">
+                            {{ item.total }}
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-gray-500 uppercase tracking-wider">Score</div>
+                        <div class="text-sm font-bold mt-0.5
+                            {% if item.percentage >= 80 %}text-green-400
+                            {% elif item.percentage >= 60 %}text-yellow-400
+                            {% else %}text-red-400{% endif %}">
+                            {{ item.percentage }}%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barre de progression -->
+                <div class="mt-3 w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500
+                        {% if item.percentage >= 80 %}bg-green-400
+                        {% elif item.percentage >= 60 %}bg-yellow-400
+                        {% else %}bg-red-400{% endif %}"
+                        style="width: {{ item.percentage }}%"></div>
+                </div>
+
+            </div>
+            {% endfor %}
         </div>
+
+        <!-- ===== VUE DESKTOP (tableau) ===== -->
+        <div class="hidden md:block glass-card rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full" role="table" aria-label="Classement général des artistes">
+                    <thead>
+                        <tr class="border-b border-white/10 bg-white/5">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Rang</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Artiste</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Dimanches</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ranking %}
+                        {% set is_me = (item.artist.id == artist.id) %}
+                        <tr class="border-b border-white/5 transition
+                            {% if is_me %}bg-yellow-400/5 border-l-4 border-l-yellow-400{% else %}hover:bg-white/5{% endif %}">
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if item.rank == 1 %}
+                                    <span class="text-2xl" aria-label="Première place">🥇</span>
+                                {% elif item.rank == 2 %}
+                                    <span class="text-2xl" aria-label="Deuxième place">🥈</span>
+                                {% elif item.rank == 3 %}
+                                    <span class="text-2xl" aria-label="Troisième place">🥉</span>
+                                {% else %}
+                                    <span class="font-bold text-gray-400 text-base">#{{ item.rank }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    {% if item.artist.photo %}
+                                        <img src="{{ item.artist.photo|upload_url('artists') }}"
+                                             alt="{{ item.artist.user.full_name() }}"
+                                             class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400/30 flex-shrink-0"
+                                             width="40" height="40" loading="lazy" decoding="async"
+                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                        <div class="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-400/30 items-center justify-center flex-shrink-0" style="display:none;">
+                                            <i class="fas fa-user text-yellow-400 text-xs"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-400/30 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user text-yellow-400 text-xs"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-semibold {% if is_me %}text-yellow-400{% else %}text-white{% endif %} truncate">
+                                                {{ item.artist.user.full_name() }}
+                                            </span>
+                                            {% if is_me %}
+                                                <span class="text-[10px] bg-yellow-400 text-[#0B1120] font-bold px-2 py-0.5 rounded-full">
+                                                    VOUS
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-xs text-gray-500 font-mono">{{ item.artist.code }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
+                                {{ item.sessions_completed }}/6
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <span class="font-bold text-base {% if is_me %}text-yellow-400{% else %}text-white{% endif %}">
+                                    {{ item.total }}
+                                </span>
+                                <span class="text-xs text-gray-500 font-normal">/{{ item.max_possible }}</span>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-3">
+                                    <span class="text-sm font-bold
+                                        {% if item.percentage >= 80 %}text-green-400
+                                        {% elif item.percentage >= 60 %}text-yellow-400
+                                        {% else %}text-red-400{% endif %}">
+                                        {{ item.percentage }}%
+                                    </span>
+                                    <div class="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-500
+                                            {% if item.percentage >= 80 %}bg-green-400
+                                            {% elif item.percentage >= 60 %}bg-yellow-400
+                                            {% else %}bg-red-400{% endif %}"
+                                            style="width: {{ item.percentage }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% else %}
+            <!-- État vide -->
+            <div class="glass-card rounded-2xl p-8 sm:p-12 text-center">
+                <i class="fas fa-trophy text-4xl sm:text-5xl text-gray-600 mb-4" aria-hidden="true"></i>
+                <p class="text-gray-300 text-base sm:text-lg font-semibold">Aucun classement disponible</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-2">Les résultats apparaîtront après les évaluations du premier dimanche.</p>
+            </div>
+        {% endif %}
+
     </div>
-</div>
+</main>
 {% endblock %}

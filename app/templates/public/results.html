@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Résultats - Show Talent{% endblock %}
+{% block title %}Résultats & Classements - Show Talent 4e Édition | ACDA Haïti{% endblock %}
+
+{% block meta_description %}Consultez les résultats et classements officiels du concours Show Talent 4e Édition. Scores par dimanche, top artistes, moyennes et classements en direct de la compétition musicale ACDA Haïti.{% endblock %}
+
+{% block meta_keywords %}résultats Show Talent, classement concours chant, scores artistes, ACDA Haïti, compétition musicale, dimanche, top artistes{% endblock %}
+
+{% block og_title %}Résultats & Classements - Show Talent 4e Édition{% endblock %}
+{% block og_description %}Découvrez les résultats officiels et les classements du concours Show Talent. Scores par dimanche en temps réel.{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block twitter_card %}summary{% endblock %}
+{% block twitter_title %}Résultats Show Talent 4e Édition{% endblock %}
+{% block twitter_description %}Classements et scores officiels par dimanche.{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -9,11 +21,10 @@
     ============================================================ */
     .results-section {
         padding: 60px 20px;
-        background-color: #0d1117;
+        background-color: #0B1120;
         min-height: 100vh;
     }
 
-    /* Carte effet de verre */
     .glass-card {
         background: rgba(15, 23, 42, 0.75);
         backdrop-filter: blur(12px);
@@ -22,7 +33,6 @@
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    /* Badges */
     .badge-jury {
         background: rgba(250, 204, 21, 0.12);
         color: #facc15;
@@ -35,12 +45,20 @@
         color: #94a3b8;
         border: 1px solid rgba(255, 255, 255, 0.08);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        white-space: nowrap;
     }
 
-    .btn-session:hover {
+    .btn-session:hover,
+    .btn-session:focus-visible {
         background: rgba(255, 255, 255, 0.1);
         color: #ffffff;
         border-color: rgba(250, 204, 21, 0.3);
+        outline: none;
+    }
+
+    .btn-session:focus-visible {
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3);
     }
 
     .btn-session.active {
@@ -50,7 +68,13 @@
         box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
     }
 
-    /* Rang / Medailles */
+    .btn-session[aria-selected="true"] {
+        background: rgba(124, 58, 237, 0.2);
+        color: #ffffff;
+        border-color: #7c3aed;
+    }
+
+    /* Podium */
     .podium-1 {
         background: linear-gradient(90deg, rgba(250, 204, 21, 0.12) 0%, rgba(15, 23, 42, 0.6) 100%);
         border-left: 4px solid #facc15 !important;
@@ -66,26 +90,62 @@
         border-left: 4px solid #f97316 !important;
     }
 
+    /* Table responsive */
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* A11y : visible au focus */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
     @media (max-width: 640px) {
         .results-section {
-            padding: 40px 12px;
+            padding: 32px 12px;
+        }
+        .btn-session {
+            padding: 10px 14px;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Animations respectueuses */
+    @media (prefers-reduced-motion: reduce) {
+        .btn-session,
+        .glass-card {
+            transition: none !important;
+        }
+        .fa-spin {
+            animation: none !important;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="results-section">
+<main class="results-section" role="main">
     <div class="container mx-auto px-4 max-w-6xl">
 
         <!-- ============================================================
-             SECTION HEADER (Style Dashboard)
+             HEADER
              ============================================================ -->
-        <div class="glass-card rounded-2xl p-6 md:p-8 mb-8">
+        <header class="glass-card rounded-2xl p-6 md:p-8 mb-8">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <div class="flex flex-wrap items-center gap-3 mb-2">
-                        <h1 class="text-2xl md:text-3xl font-bold text-white">🏆 Résultats & Classements</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold text-white">
+                            🏆 Résultats & Classements
+                        </h1>
                         <span class="badge-jury px-3 py-1 rounded-full text-xs font-semibold">
                             Show Talent
                         </span>
@@ -94,171 +154,258 @@
                         Consultez les scores et classements officiels attribués lors de chaque dimanche.
                     </p>
                 </div>
-                
+
                 <div class="flex items-center gap-3 text-sm text-gray-400 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
-                    <i class="fas fa-trophy text-yellow-400"></i>
+                    <i class="fas fa-trophy text-yellow-400" aria-hidden="true"></i>
                     <span>Classements en direct</span>
                 </div>
             </div>
-        </div>
+        </header>
 
         <!-- ============================================================
-             SESSION TABS (Boutons Dimanches)
+             SESSION TABS
              ============================================================ -->
-        <div class="flex flex-wrap gap-3 mb-8 justify-center md:justify-start">
+        {% if sessions %}
+        <nav class="flex flex-wrap gap-2 md:gap-3 mb-8 justify-center md:justify-start"
+             role="tablist"
+             aria-label="Sélection du dimanche">
             {% for session in sessions %}
-            <button onclick="loadResults({{ session.id }})" 
-                    class="btn-session px-5 py-3 rounded-xl font-medium text-sm flex items-center gap-2 cursor-pointer"
-                    id="tab-{{ session.id }}">
-                <i class="fas fa-calendar-alt text-yellow-400"></i>
+            <button type="button"
+                    onclick="loadResults({{ session.id }})"
+                    class="btn-session px-4 md:px-5 py-2.5 md:py-3 rounded-xl font-medium text-xs md:text-sm flex items-center gap-2"
+                    id="tab-{{ session.id }}"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="results-container"
+                    data-session-id="{{ session.id }}">
+                <i class="fas fa-calendar-alt text-yellow-400" aria-hidden="true"></i>
                 <span>Dimanche {{ session.number }}</span>
             </button>
-            {% else %}
-            <div class="text-gray-400 text-sm">Aucune session enregistrée.</div>
             {% endfor %}
+        </nav>
+        {% else %}
+        <div class="glass-card rounded-2xl p-8 text-center text-gray-400 mb-8">
+            <i class="fas fa-calendar-times text-3xl mb-3 text-gray-600 block" aria-hidden="true"></i>
+            <p>Aucune session enregistrée pour le moment.</p>
         </div>
+        {% endif %}
 
         <!-- ============================================================
-             RESULTS DISPLAY CONTAINER
+             RESULTS CONTAINER
              ============================================================ -->
-        <div id="results-container" class="glass-card rounded-2xl overflow-hidden min-h-[300px] flex items-center justify-center">
+        <section id="results-container"
+                 class="glass-card rounded-2xl overflow-hidden min-h-[300px] flex items-center justify-center"
+                 role="tabpanel"
+                 aria-live="polite"
+                 aria-busy="false">
             <div class="p-12 text-center text-gray-400">
-                <i class="fas fa-trophy text-5xl mb-4 text-gray-600 block"></i>
+                <i class="fas fa-trophy text-5xl mb-4 text-gray-600 block" aria-hidden="true"></i>
                 <p class="text-base font-medium">Sélectionnez un dimanche pour afficher les résultats</p>
             </div>
-        </div>
+        </section>
 
     </div>
-</div>
+</main>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function loadResults(sessionId) {
-    // Mise à jour des boutons d'onglets
-    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    const activeTab = document.getElementById('tab-' + sessionId);
-    if (activeTab) {
-        activeTab.classList.add('active');
-    }
-    
-    const container = document.getElementById('results-container');
-    
-    // Spinner de chargement
-    container.innerHTML = `
-        <div class="p-12 text-center text-gray-400">
-            <i class="fas fa-circle-notch fa-spin text-4xl mb-3 text-yellow-400 block"></i>
-            <p class="text-sm">Chargement des résultats...</p>
-        </div>
-    `;
+// ============================================================
+// GESTION DES RÉSULTATS — VERSION OPTIMISÉE
+// ============================================================
+(function() {
+    'use strict';
 
-    // Chargement API
-    fetch('/api/results/' + sessionId)
-        .then(response => response.json())
-        .then(data => {
-            if (!data.results || data.results.length === 0) {
-                container.innerHTML = `
-                    <div class="p-12 text-center text-gray-400">
-                        <i class="fas fa-hourglass-half text-5xl mb-4 block text-gray-600"></i>
-                        <p class="text-base font-semibold text-white mb-1">Aucun résultat disponible pour ce dimanche</p>
-                        <p class="text-xs text-gray-500">Les évaluations sont en cours ou n'ont pas encore été validées.</p>
-                    </div>
-                `;
-                return;
+    var container = document.getElementById('results-container');
+    if (!container) return;
+
+    // Cache des résultats (évite les requêtes répétées)
+    var cache = {};
+
+    // ============================================================
+    // ESCAPE HTML (sécurité XSS)
+    // ============================================================
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        var d = document.createElement('div');
+        d.textContent = String(str);
+        return d.innerHTML;
+    }
+
+    // ============================================================
+    // SKELETON LOADER
+    // ============================================================
+    function showLoading() {
+        container.setAttribute('aria-busy', 'true');
+        container.innerHTML =
+            '<div class="p-12 text-center text-gray-400">' +
+                '<i class="fas fa-circle-notch fa-spin text-4xl mb-3 text-yellow-400 block" aria-hidden="true"></i>' +
+                '<p class="text-sm">Chargement des résultats...</p>' +
+            '</div>';
+    }
+
+    // ============================================================
+    // EMPTY STATE
+    // ============================================================
+    function showEmpty(sessionNumber) {
+        container.setAttribute('aria-busy', 'false');
+        container.innerHTML =
+            '<div class="p-12 text-center text-gray-400">' +
+                '<i class="fas fa-hourglass-half text-5xl mb-4 block text-gray-600" aria-hidden="true"></i>' +
+                '<p class="text-base font-semibold text-white mb-1">Aucun résultat disponible</p>' +
+                '<p class="text-xs text-gray-500">Les évaluations du dimanche ' + escapeHTML(sessionNumber) + ' sont en cours ou n\'ont pas encore été validées.</p>' +
+            '</div>';
+    }
+
+    // ============================================================
+    // ERROR STATE
+    // ============================================================
+    function showError() {
+        container.setAttribute('aria-busy', 'false');
+        container.innerHTML =
+            '<div class="p-12 text-center text-red-400">' +
+                '<i class="fas fa-exclamation-triangle text-5xl mb-4 block" aria-hidden="true"></i>' +
+                '<p class="text-base font-semibold text-white mb-1">Erreur de chargement</p>' +
+                '<p class="text-xs text-gray-400 mb-4">Impossible de récupérer les résultats.</p>' +
+                '<button type="button" onclick="location.reload()" ' +
+                        'class="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 text-xs font-bold rounded-lg hover:bg-white/10 transition">' +
+                    '<i class="fas fa-redo mr-1" aria-hidden="true"></i>Réessayer' +
+                '</button>' +
+            '</div>';
+    }
+
+    // ============================================================
+    // RENDER RESULTS
+    // ============================================================
+    function renderResults(data) {
+        if (!data.results || data.results.length === 0) {
+            showEmpty(data.session || '');
+            return;
+        }
+
+        var html = '<div class="w-full">';
+
+        // Banner info
+        html +=
+            '<div class="p-4 bg-white/5 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">' +
+                '<div class="flex items-center gap-2 text-xs md:text-sm text-gray-300">' +
+                    '<i class="fas fa-info-circle text-yellow-400" aria-hidden="true"></i>' +
+                    '<span>Classement officiel — <strong>Dimanche ' + escapeHTML(data.session) + '</strong></span>' +
+                '</div>' +
+                '<span class="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">' +
+                    data.results.length + ' artiste' + (data.results.length > 1 ? 's' : '') + ' évalué' + (data.results.length > 1 ? 's' : '') +
+                '</span>' +
+            '</div>';
+
+        // Table
+        html +=
+            '<div class="overflow-x-auto">' +
+                '<table class="results-table" role="table" aria-label="Classement des artistes">' +
+                    '<thead>' +
+                        '<tr class="border-b border-white/5 text-[10px] md:text-xs text-gray-400 uppercase tracking-wider bg-white/[0.02]">' +
+                            '<th class="py-3 md:py-4 px-3 md:px-6 text-left">Rang</th>' +
+                            '<th class="py-3 md:py-4 px-3 md:px-6 text-left">Artiste</th>' +
+                            '<th class="py-3 md:py-4 px-3 md:px-6 text-left hidden sm:table-cell">Code</th>' +
+                            '<th class="py-3 md:py-4 px-3 md:px-6 text-right">Score</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody class="divide-y divide-white/5 text-xs md:text-sm">';
+
+        data.results.forEach(function(result) {
+            var rowStyle = '';
+            var rankBadge = '<span class="text-gray-400 font-semibold pl-2">#' + escapeHTML(result.position) + '</span>';
+            var ariaLabel = 'Position ' + result.position;
+
+            if (result.position === 1) {
+                rowStyle = 'podium-1';
+                rankBadge = '<span class="text-xl md:text-2xl" aria-hidden="true">🥇</span>';
+                ariaLabel = 'Première place';
+            } else if (result.position === 2) {
+                rowStyle = 'podium-2';
+                rankBadge = '<span class="text-xl md:text-2xl" aria-hidden="true">🥈</span>';
+                ariaLabel = 'Deuxième place';
+            } else if (result.position === 3) {
+                rowStyle = 'podium-3';
+                rankBadge = '<span class="text-xl md:text-2xl" aria-hidden="true">🥉</span>';
+                ariaLabel = 'Troisième place';
             }
-            
-            let html = `
-                <div class="w-full">
-                    <!-- Banner Info -->
-                    <div class="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
-                        <div class="flex items-center gap-2 text-sm text-gray-300">
-                            <i class="fas fa-info-circle text-yellow-400"></i>
-                            <span>Classement officiel — <strong>Dimanche ${data.session}</strong></span>
-                        </div>
-                        <span class="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-                            ${data.results.length} artistes évalués
-                        </span>
-                    </div>
 
-                    <!-- Tableau des résultats -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="border-b border-white/5 text-xs text-gray-400 uppercase tracking-wider bg-white/[0.02]">
-                                    <th class="py-4 px-6">Rang</th>
-                                    <th class="py-4 px-6">Artiste</th>
-                                    <th class="py-4 px-6">Code</th>
-                                    <th class="py-4 px-6 text-right">Score Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-white/5 text-sm">
-            `;
-            
-            data.results.forEach((result) => {
-                let rowStyle = '';
-                let rankBadge = `<span class="text-gray-400 font-semibold pl-2">#${result.position}</span>`;
-                
-                if (result.position === 1) {
-                    rowStyle = 'podium-1';
-                    rankBadge = `<span class="text-2xl">🥇</span>`;
-                } else if (result.position === 2) {
-                    rowStyle = 'podium-2';
-                    rankBadge = `<span class="text-2xl">🥈</span>`;
-                } else if (result.position === 3) {
-                    rowStyle = 'podium-3';
-                    rankBadge = `<span class="text-2xl">🥉</span>`;
-                }
-                
-                html += `
-                    <tr class="${rowStyle} hover:bg-white/5 transition border-l-4 border-transparent">
-                        <td class="py-4 px-6 font-bold">
-                            ${rankBadge}
-                        </td>
-                        <td class="py-4 px-6 font-semibold text-white">
-                            ${result.first_name || ''} ${result.last_name || ''}
-                        </td>
-                        <td class="py-4 px-6">
-                            <span class="font-mono text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2 py-1 rounded">
-                                ${result.code}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-right font-bold ${result.position <= 3 ? 'text-yellow-400 text-base' : 'text-gray-300'}">
-                            ${result.total} <span class="text-xs text-gray-500 font-normal">/ ${result.max_score} pts</span>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        })
-        .catch(error => {
-            container.innerHTML = `
-                <div class="p-12 text-center text-red-400">
-                    <i class="fas fa-exclamation-triangle text-5xl mb-4 block"></i>
-                    <p class="text-base font-semibold text-white mb-1">Erreur de chargement</p>
-                    <p class="text-xs text-gray-400">Impossible de récupérer les résultats pour cette session.</p>
-                </div>
-            `;
+            var fullName = (result.first_name || '') + ' ' + (result.last_name || '');
+            var scoreClass = result.position <= 3 ? 'text-yellow-400 text-sm md:text-base' : 'text-gray-300';
+
+            html +=
+                '<tr class="' + rowStyle + ' hover:bg-white/5 transition border-l-4 border-transparent" aria-label="' + escapeHTML(ariaLabel) + '">' +
+                    '<td class="py-3 md:py-4 px-3 md:px-6 font-bold">' + rankBadge + '</td>' +
+                    '<td class="py-3 md:py-4 px-3 md:px-6 font-semibold text-white">' + escapeHTML(fullName.trim()) + '</td>' +
+                    '<td class="py-3 md:py-4 px-3 md:px-6 hidden sm:table-cell">' +
+                        '<span class="font-mono text-[10px] md:text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2 py-1 rounded">' +
+                            escapeHTML(result.code) +
+                        '</span>' +
+                    '</td>' +
+                    '<td class="py-3 md:py-4 px-3 md:px-6 text-right font-bold ' + scoreClass + '">' +
+                        escapeHTML(result.total) + ' <span class="text-[10px] md:text-xs text-gray-500 font-normal">/ ' + escapeHTML(result.max_score) + ' pts</span>' +
+                    '</td>' +
+                '</tr>';
         });
-}
 
-// Charger le premier dimanche automatiquement
-document.addEventListener('DOMContentLoaded', function() {
-    const firstTab = document.querySelector('[id^="tab-"]');
-    if (firstTab) {
-        const sessionId = firstTab.id.replace('tab-', '');
-        loadResults(sessionId);
+        html += '</tbody></table></div></div>';
+
+        container.setAttribute('aria-busy', 'false');
+        container.innerHTML = html;
     }
-});
+
+    // ============================================================
+    // UPDATE TABS
+    // ============================================================
+    function updateTabs(sessionId) {
+        document.querySelectorAll('[role="tab"]').forEach(function(tab) {
+            var isActive = tab.dataset.sessionId === String(sessionId);
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    }
+
+    // ============================================================
+    // LOAD RESULTS
+    // ============================================================
+    window.loadResults = function(sessionId) {
+        updateTabs(sessionId);
+
+        // ✅ Utiliser le cache si disponible
+        if (cache[sessionId]) {
+            renderResults(cache[sessionId]);
+            return;
+        }
+
+        showLoading();
+
+        fetch('/api/results/' + sessionId, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.error) throw new Error(data.error);
+            cache[sessionId] = data;  // ✅ Stocker en cache
+            renderResults(data);
+        })
+        .catch(function() {
+            showError();
+        });
+    };
+
+    // ============================================================
+    // AUTO-LOAD PREMIER ONGLET
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        var firstTab = document.querySelector('[role="tab"]');
+        if (firstTab) {
+            var sessionId = firstTab.dataset.sessionId;
+            if (sessionId) loadResults(sessionId);
+        }
+    });
+})();
 </script>
 {% endblock %}

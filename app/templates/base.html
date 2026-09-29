@@ -355,7 +355,7 @@
             <div class="flex justify-between items-center py-3">
                 <div class="flex items-center space-x-2">
                     <a href="{{ url_for('main.index') }}" class="text-2xl font-bold text-white hover:text-yellow-400 transition">
-                        🎤 Show Talent
+                         Show Talent
                     </a>
                     <span class="text-xs gradient-gold text-black px-2 py-1 rounded-full font-bold">4e ÉDITION</span>
                     {% if session.user_id %}
@@ -378,6 +378,8 @@
                     <a href="{{ url_for('main.results') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.results' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
                         Résultat
                     </a>
+                    <a href="{{ url_for('main.lyrics') }}" class="hover:text-yellow-400 transition">Paroles</a>
+
                     <a href="{{ url_for('main.sponsors_page') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.sponsors_page' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
                         Sponsor
                     </a>
@@ -410,6 +412,7 @@
                 <a href="{{ url_for('main.index') }}#about" onclick="toggleMobileMenu()">📖 À propos</a>
                 <a href="{{ url_for('main.artists') }}" onclick="toggleMobileMenu()">🎤 Participants</a>
                 <a href="{{ url_for('main.results') }}" onclick="toggleMobileMenu()">🏆 Résultat</a>
+                <a href="{{ url_for('main.lyrics') }}" onclick="toggleMobileMenu()">📋 Paroles</a>
                 <a href="{{ url_for('main.sponsors_page') }}" onclick="toggleMobileMenu()">🤝 Sponsor</a>
                 <a href="{{ url_for('main.index') }}#contact" onclick="toggleMobileMenu()">📞 Contact</a>
                 

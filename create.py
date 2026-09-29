@@ -5,7 +5,7 @@ def create_upload_folders():
     base_path = os.path.dirname(os.path.abspath(__file__))
     uploads_path = os.path.join(base_path, 'uploads')
     
-    folders = ['artists', 'moments', 'sponsors']
+    folders = ['artists', 'moments', 'sponsors', 'lyrics']
     
     print("=" * 50)
     print("📁 CRÉATION DES DOSSIERS UPLOADS")

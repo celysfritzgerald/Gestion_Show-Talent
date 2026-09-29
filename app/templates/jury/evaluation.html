@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Évaluation - Dimanche {{ session.number }}{% endblock %}
+{% block title %}Évaluation Dimanche {{ session.number }} - Show Talent | Jury{% endblock %}
+
+{% block meta_description %}Interface d'évaluation du jury pour le Dimanche {{ session.number }} du concours Show Talent. Notation des artistes sur 10 critères et commentaires.{% endblock %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -8,12 +12,11 @@
        SECTION ÉVALUATION - DARK GLASSMORPHISM
     ============================================================ */
     .evaluation-section {
-        padding: 60px 20px;
-        background-color: #0d1117;
+        padding: 40px 12px;
+        background-color: #0B1120;
         min-height: 100vh;
     }
 
-    /* Carte effet de verre */
     .glass-card {
         background: rgba(15, 23, 42, 0.75);
         backdrop-filter: blur(12px);
@@ -22,16 +25,19 @@
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    /* Champs de saisie des notes */
+    /* ============================================================
+       INPUTS SCORE
+    ============================================================ */
     .score-input {
-        width: 65px;
+        width: 60px;
         text-align: center;
-        transition: all 0.3s ease;
+        transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
         -moz-appearance: textfield;
         background: rgba(0, 0, 0, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
         font-weight: 600;
+        font-size: 0.9rem;
     }
     .score-input::-webkit-outer-spin-button,
     .score-input::-webkit-inner-spin-button {
@@ -59,12 +65,14 @@
         opacity: 0.6;
     }
 
-    /* Zone de texte des commentaires */
+    /* ============================================================
+       TEXTAREA COMMENTAIRE
+    ============================================================ */
     .comment-textarea {
         width: 100%;
         min-height: 50px;
         resize: vertical;
-        transition: all 0.3s ease;
+        transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
         font-size: 0.875rem;
         background: rgba(0, 0, 0, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.15);
@@ -87,19 +95,21 @@
         opacity: 0.6;
     }
 
-    /* En-tête des critères verticaux */
+    /* ============================================================
+       EN-TÊTE CRITÈRES (vertical)
+    ============================================================ */
     .criterion-header {
         writing-mode: vertical-lr;
         text-orientation: mixed;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
         letter-spacing: 0.05em;
         padding: 8px 4px;
         min-height: 90px;
         color: #facc15;
+        white-space: nowrap;
     }
 
-    /* Survol des lignes du tableau */
     .table-row-hover {
         transition: background-color 0.2s ease;
     }
@@ -107,395 +117,522 @@
         background-color: rgba(255, 255, 255, 0.03);
     }
 
-    /* Statuts */
+    /* ============================================================
+       BADGES STATUT
+    ============================================================ */
     .badge-status {
         padding: 4px 12px;
         border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .badge-completed { 
-        background: rgba(59, 130, 246, 0.15); 
-        color: #60a5fa; 
-        border: 1px solid rgba(59, 130, 246, 0.3); 
+    .badge-completed {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
     }
-    .badge-in-progress { 
-        background: rgba(250, 204, 21, 0.15); 
-        color: #facc15; 
-        border: 1px solid rgba(250, 204, 21, 0.3); 
+    .badge-in-progress {
+        background: rgba(250, 204, 21, 0.15);
+        color: #facc15;
+        border: 1px solid rgba(250, 204, 21, 0.3);
     }
-    .badge-pending { 
-        background: rgba(148, 163, 184, 0.15); 
-        color: #cbd5e1; 
-        border: 1px solid rgba(148, 163, 184, 0.3); 
+    .badge-pending {
+        background: rgba(148, 163, 184, 0.15);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.3);
     }
 
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
     @media (max-width: 768px) {
-        .evaluation-section { padding: 40px 12px; }
-        .score-input { width: 50px; font-size: 0.8rem; padding: 4px; }
-        .criterion-header { font-size: 0.65rem; min-height: 70px; padding: 4px 2px; }
-        .table-container { overflow-x: auto; }
-        .comment-textarea { min-height: 40px; font-size: 0.75rem; }
+        .evaluation-section {
+            padding: 20px 8px;
+        }
+        .score-input {
+            width: 46px;
+            font-size: 0.75rem;
+            padding: 4px 2px;
+        }
+        .criterion-header {
+            font-size: 0.6rem;
+            min-height: 60px;
+            padding: 4px 2px;
+        }
+        .comment-textarea {
+            min-height: 40px;
+            font-size: 0.75rem;
+            padding: 6px 8px;
+        }
+    }
+
+    /* ============================================================
+       ACCESSIBILITÉ
+    ============================================================ */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* Réduire les animations si l'utilisateur le souhaite */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="evaluation-section">
-    <div class="container mx-auto px-4 max-w-7xl">
+<main class="evaluation-section" role="main">
+    <div class="container mx-auto px-3 sm:px-4 max-w-7xl">
 
         <!-- ============================================================
-             SECTION HEADER & BOUTON RETOUR
+             HEADER
              ============================================================ -->
-        <div class="glass-card rounded-2xl p-6 md:p-8 mb-6">
-            <div class="flex flex-wrap justify-between items-center gap-4">
-                <div>
-                    <div class="flex items-center gap-3 mb-1">
-                        <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
-                            <i class="fas fa-clipboard-list mr-3 text-yellow-400"></i>
+        <header class="glass-card rounded-2xl p-4 sm:p-6 md:p-8 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 sm:gap-3 mb-2">
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white flex items-center">
+                            <i class="fas fa-clipboard-list mr-2 sm:mr-3 text-yellow-400" aria-hidden="true"></i>
                             Évaluation - Dimanche {{ session.number }}
                         </h1>
                     </div>
-                    <p class="text-gray-400 text-sm md:text-base flex items-center gap-2">
-                        <i class="fas fa-calendar-alt text-yellow-400"></i>
+                    <p class="text-gray-400 text-xs sm:text-sm flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-yellow-400" aria-hidden="true"></i>
                         {{ session.date.strftime('%d/%m/%Y') }}
                     </p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3">
-                    <span class="badge-status 
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span class="badge-status
                         {% if session.status == 'COMPLETED' %}badge-completed
                         {% elif session.status == 'IN_PROGRESS' %}badge-in-progress
                         {% else %}badge-pending{% endif %}">
-                        {{ session.status }}
+                        {% if session.status == 'COMPLETED' %}✓ Terminé
+                        {% elif session.status == 'IN_PROGRESS' %}● En cours
+                        {% else %}◯ À venir{% endif %}
                     </span>
-                    <a href="{{ url_for('jury.dashboard') }}" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40 transition inline-flex items-center text-sm md:text-base">
-                        <i class="fas fa-arrow-left mr-2"></i>Retour
+                    <a href="{{ url_for('jury.dashboard') }}"
+                       class="px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40 transition inline-flex items-center gap-2">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        <span>Retour</span>
                     </a>
                 </div>
             </div>
-        </div>
+        </header>
 
         <!-- ============================================================
-             TABLEAU D'ÉVALUATION (GLASSMORPHISM)
+             TABLEAU D'ÉVALUATION
              ============================================================ -->
-        <div class="glass-card rounded-2xl overflow-hidden mb-6">
-            <div class="table-container overflow-x-auto">
+        {% if artists %}
+        <section class="glass-card rounded-2xl overflow-hidden mb-6" aria-label="Tableau d'évaluation des artistes">
+            <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left border-collapse">
+                    <caption class="sr-only">Tableau de notation des artistes sur {{ criteria|length }} critères</caption>
+
                     <thead class="bg-white/[0.02] border-b border-white/10">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider sticky left-0 bg-[#0f172a] z-20" style="min-width: 150px;">
+                            <th scope="col"
+                                class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider sticky left-0 bg-[#0f172a] z-20"
+                                style="min-width: 160px;">
                                 Artiste
                             </th>
+
                             {% for criterion in criteria %}
-                            <th class="px-2 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider" style="min-width: 75px;">
+                            <th scope="col"
+                                class="px-2 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                                style="min-width: 72px;">
                                 <div class="criterion-header mx-auto">{{ criterion.name }}</div>
                                 <div class="text-[10px] text-gray-500 mt-1 font-mono">/10</div>
                             </th>
                             {% endfor %}
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider" style="min-width: 220px;">
+
+                            <th scope="col"
+                                class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                                style="min-width: 200px;">
                                 Commentaire
                             </th>
                         </tr>
                     </thead>
+
                     <tbody class="divide-y divide-white/5">
                         {% for artist in artists %}
                         <tr class="table-row-hover">
-                            <!-- Cellule Artiste Figeant à Gauche -->
-                            <td class="px-4 py-3 whitespace-nowrap sticky left-0 bg-[#0f172a] z-10 border-r border-white/5">
-                                <div class="flex items-center">
+                            <th scope="row"
+                                class="px-3 sm:px-4 py-3 whitespace-nowrap sticky left-0 bg-[#0f172a] z-10 border-r border-white/5 font-normal">
+                                <div class="flex items-center gap-2 sm:gap-3">
                                     {% if artist.photo %}
-                                    <img src="{{ url_for('static', filename='uploads/artists/' + artist.photo) }}" 
-                                         alt="{{ artist.user.full_name() }}" 
-                                         class="w-9 h-9 rounded-full object-cover mr-3 ring-2 ring-yellow-400/30"
-                                         loading="lazy">
+                                        <img src="{{ artist.photo|upload_url('artists') }}"
+                                             alt="{{ artist.user.full_name() }}"
+                                             class="w-9 h-9 rounded-full object-cover ring-2 ring-yellow-400/30 flex-shrink-0"
+                                             width="36" height="36" loading="lazy" decoding="async"
+                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                        <div class="w-9 h-9 rounded-full bg-yellow-400/10 border border-yellow-400/20 items-center justify-center flex-shrink-0" style="display:none;">
+                                            <i class="fas fa-user text-yellow-400 text-xs" aria-hidden="true"></i>
+                                        </div>
                                     {% else %}
-                                    <div class="w-9 h-9 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mr-3 shrink-0">
-                                        <span class="text-sm">🎤</span>
-                                    </div>
+                                        <div class="w-9 h-9 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user text-yellow-400 text-xs" aria-hidden="true"></i>
+                                        </div>
                                     {% endif %}
-                                    <div class="min-w-[80px]">
-                                        <p class="font-semibold text-sm text-white truncate max-w-[100px]">{{ artist.user.first_name }} {{ artist.user.last_name }}</p>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-sm text-white truncate max-w-[110px]">
+                                            {{ artist.user.full_name() }}
+                                        </p>
                                         <span class="font-mono text-[10px] text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-1.5 py-0.5 rounded">
                                             {{ artist.code }}
                                         </span>
                                     </div>
                                 </div>
-                            </td>
-                            
-                            <!-- Notes par critère -->
+                            </th>
+
                             {% for criterion in criteria %}
                             <td class="px-2 py-3 text-center align-middle">
-                                <input type="number" 
+                                <label for="score-{{ artist.id }}-{{ criterion.id }}" class="sr-only">
+                                    Note pour {{ artist.user.full_name() }} - {{ criterion.name }}
+                                </label>
+                                <input type="number"
+                                       id="score-{{ artist.id }}-{{ criterion.id }}"
                                        class="score-input px-2 py-1.5 rounded-lg text-center"
                                        min="0" max="10" step="0.1"
+                                       inputmode="decimal"
                                        data-artist="{{ artist.id }}"
                                        data-criterion="{{ criterion.id }}"
                                        value="{{ scores.get(artist.id|string + '_' + criterion.id|string, '') }}"
                                        {% if session.status == 'COMPLETED' %}disabled{% endif %}
-                                       placeholder="-"
-                                       autocomplete="off">
+                                       placeholder="--"
+                                       autocomplete="off"
+                                       aria-label="Note {{ criterion.name }} pour {{ artist.user.full_name() }}">
                             </td>
                             {% endfor %}
-                            
-                            <!-- Commentaire -->
-                            <td class="px-4 py-3 align-middle">
-                                <textarea class="comment-textarea px-3 py-2 rounded-lg"
+
+                            <td class="px-3 sm:px-4 py-3 align-middle">
+                                <label for="comment-{{ artist.id }}" class="sr-only">
+                                    Commentaire pour {{ artist.user.full_name() }}
+                                </label>
+                                <textarea id="comment-{{ artist.id }}"
+                                          class="comment-textarea px-3 py-2 rounded-lg"
                                           data-artist="{{ artist.id }}"
                                           placeholder="Conseil ou commentaire..."
+                                          maxlength="500"
                                           {% if session.status == 'COMPLETED' %}disabled{% endif %}
-                                          rows="2">{{ comments.get(artist.id|string, '') }}</textarea>
+                                          rows="2"
+                                          aria-label="Commentaire pour {{ artist.user.full_name() }}">{{ comments.get(artist.id|string, '') }}</textarea>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+        </section>
+        {% else %}
+        <div class="glass-card rounded-2xl p-12 text-center mb-6">
+            <i class="fas fa-users text-5xl text-gray-600 mb-4" aria-hidden="true"></i>
+            <p class="text-gray-300 text-lg">Aucun artiste à évaluer</p>
+            <p class="text-gray-500 text-sm mt-2">Les artistes apparaîtront une fois inscrits dans la compétition.</p>
         </div>
+        {% endif %}
 
         <!-- ============================================================
-             BARRE D'INFORMATION DE SAUVEGARDE
+             BARRE D'INFO
              ============================================================ -->
-        <div class="glass-card rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
+        <div class="glass-card rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-gray-400">
             <div class="flex items-center gap-2">
-                <i class="fas fa-info-circle text-yellow-400"></i>
-                <span>Les notes et commentaires sont enregistrés automatiquement.</span>
+                <i class="fas fa-info-circle text-yellow-400" aria-hidden="true"></i>
+                <span>Sauvegarde automatique</span>
             </div>
-            <div class="flex items-center gap-6">
-                <span class="flex items-center gap-2 text-xs">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+            <div class="flex flex-wrap items-center gap-3 sm:gap-6">
+                <span class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                     <span class="text-gray-300">Enregistré</span>
                 </span>
-                <span class="flex items-center gap-2 text-xs">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
-                    <span class="text-gray-300">En cours...</span>
+                <span class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span class="text-gray-300">En cours</span>
                 </span>
-                <span class="flex items-center gap-2 text-xs">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
+                <span class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                     <span class="text-gray-300">Erreur</span>
+                </span>
+                <span class="flex items-center gap-2 text-gray-500">
+                    <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] font-mono">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] font-mono">Entrée</kbd>
+                    <span>pour sauver un commentaire</span>
                 </span>
             </div>
         </div>
 
     </div>
-</div>
+</main>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function() {
     'use strict';
-    
-    // --- Variables globales depuis le template ---
+
+    // ============================================================
+    // CONFIGURATION
+    // ============================================================
     var SESSION_ID = parseInt('{{ session.id }}', 10);
     var CSRF_TOKEN = '{{ csrf_token() }}';
-    
-    // --- Fonction pour obtenir la valeur d'un attribut data ---
+    var IS_COMPLETED = {{ 'true' if session.status == 'COMPLETED' else 'false' }};
+    var SAVE_SCORE_DELAY = 800;
+    var SAVE_COMMENT_DELAY = 1000;
+
+    if (IS_COMPLETED) return;
+
+    // ============================================================
+    // UTILITAIRES
+    // ============================================================
     function getData(el, name) {
         return el.getAttribute('data-' + name);
     }
-    
-    // ================================================================
-    // 1. SAUVEGARDE DES NOTES
-    // ================================================================
-    var scoreInputs = document.querySelectorAll('.score-input:not([disabled])');
+
+    function setStatus(el, status) {
+        el.classList.remove('saved', 'error');
+        if (status === 'saved') {
+            el.classList.add('saved');
+            setTimeout(function() { el.classList.remove('saved'); }, 1500);
+        } else if (status === 'error') {
+            el.classList.add('error');
+        }
+    }
+
+    function showToast(message, type) {
+        // Petit toast non-bloquant au lieu de alert()
+        var toast = document.createElement('div');
+        toast.style.cssText =
+            'position:fixed;bottom:20px;right:20px;z-index:9999;' +
+            'padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;' +
+            'color:#fff;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.5);' +
+            'background:' + (type === 'error' ? '#dc2626' : '#16a34a') + ';' +
+            'transform:translateY(20px);opacity:0;transition:all 0.3s ease;';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        requestAnimationFrame(function() {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
+
+    // ============================================================
+    // SAUVEGARDE DES NOTES
+    // ============================================================
     var scoreTimeouts = {};
-    
+    var scoreInputs = document.querySelectorAll('.score-input:not([disabled])');
+
     function saveScore(input) {
         var artistId = parseInt(getData(input, 'artist'), 10);
         var criterionId = parseInt(getData(input, 'criterion'), 10);
-        var score = parseFloat(input.value);
-        
-        // Validation
+        var raw = input.value.trim();
+
+        // Si vide → on ne sauvegarde pas
+        if (raw === '') return;
+
+        var score = parseFloat(raw);
         if (isNaN(score) || score < 0 || score > 10) {
-            input.className = input.className + ' error';
+            setStatus(input, 'error');
             return;
         }
-        
-        // Arrondir
         score = Math.round(score * 10) / 10;
-        
-        // Désactiver pendant la sauvegarde
+        input.value = score;
+
+        var originalValue = input.value;
         input.disabled = true;
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/jury/api/save-score', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRFToken', CSRF_TOKEN);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                input.disabled = false;
-                if (xhr.status === 200) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        if (data.success) {
-                            input.className = input.className.replace(/error/g, '');
-                            input.className = input.className + ' saved';
-                            input.style.borderColor = '#22c55e';
-                            setTimeout(function() {
-                                input.className = input.className.replace(/saved/g, '');
-                                input.style.borderColor = '';
-                            }, 1500);
-                        } else {
-                            input.className = input.className + ' error';
-                            alert('Erreur: ' + (data.error || 'Erreur inconnue'));
-                        }
-                    } catch (e) {
-                        input.className = input.className + ' error';
-                    }
-                } else {
-                    input.className = input.className + ' error';
-                }
+
+        fetch('/jury/api/save-score', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                artist_id: artistId,
+                session_id: SESSION_ID,
+                criterion_id: criterionId,
+                score: score
+            })
+        })
+        .then(function(response) {
+            return response.json().then(function(data) {
+                return { ok: response.ok, data: data };
+            });
+        })
+        .then(function(result) {
+            input.disabled = false;
+            if (result.ok && result.data.success) {
+                setStatus(input, 'saved');
+            } else {
+                setStatus(input, 'error');
+                input.value = originalValue;
+                showToast(result.data.error || 'Erreur de sauvegarde', 'error');
             }
-        };
-        xhr.send(JSON.stringify({
-            artist_id: artistId,
-            session_id: SESSION_ID,
-            criterion_id: criterionId,
-            score: score
-        }));
+        })
+        .catch(function() {
+            input.disabled = false;
+            setStatus(input, 'error');
+            showToast('Erreur de connexion', 'error');
+        });
     }
-    
-    // Attacher les événements
-    for (var i = 0; i < scoreInputs.length; i++) {
-        (function(input) {
-            var key = getData(input, 'artist') + '_' + getData(input, 'criterion');
-            
-            input.addEventListener('input', function() {
-                var val = this.value;
-                
-                if (val === '' || val === '-') {
-                    this.className = this.className.replace(/error/g, '');
-                    this.className = this.className.replace(/saved/g, '');
-                    this.style.borderColor = '';
-                    if (scoreTimeouts[key]) {
-                        clearTimeout(scoreTimeouts[key]);
-                        delete scoreTimeouts[key];
-                    }
-                    return;
-                }
-                
-                var num = parseFloat(val);
-                if (isNaN(num) || num < 0 || num > 10) {
-                    this.className = this.className + ' error';
-                    this.style.borderColor = '#ef4444';
-                    return;
-                } else {
-                    this.className = this.className.replace(/error/g, '');
-                    this.style.borderColor = '#22c55e';
-                }
-                
+
+    scoreInputs.forEach(function(input) {
+        var key = getData(input, 'artist') + '_' + getData(input, 'criterion');
+
+        input.addEventListener('input', function() {
+            var val = this.value.trim();
+
+            // Vide : reset
+            if (val === '') {
+                this.classList.remove('error', 'saved');
                 if (scoreTimeouts[key]) {
                     clearTimeout(scoreTimeouts[key]);
-                }
-                scoreTimeouts[key] = setTimeout(function() {
-                    saveScore(input);
                     delete scoreTimeouts[key];
-                }, 800);
-            });
-            
-            input.addEventListener('blur', function() {
-                var val = this.value;
-                if (val !== '' && val !== '-') {
-                    var num = parseFloat(val);
-                    if (!isNaN(num) && num >= 0 && num <= 10) {
-                        var k = getData(this, 'artist') + '_' + getData(this, 'criterion');
-                        if (scoreTimeouts[k]) {
-                            clearTimeout(scoreTimeouts[k]);
-                            delete scoreTimeouts[k];
-                        }
-                        saveScore(this);
-                    }
                 }
-            });
-        })(scoreInputs[i]);
-    }
-    
-    // ================================================================
-    // 2. SAUVEGARDE DES COMMENTAIRES
-    // ================================================================
-    var commentTextareas = document.querySelectorAll('.comment-textarea:not([disabled])');
+                return;
+            }
+
+            // Validation instantanée
+            var num = parseFloat(val);
+            if (isNaN(num) || num < 0 || num > 10) {
+                this.classList.add('error');
+                this.classList.remove('saved');
+                return;
+            } else {
+                this.classList.remove('error');
+            }
+
+            // Debounce
+            if (scoreTimeouts[key]) clearTimeout(scoreTimeouts[key]);
+            scoreTimeouts[key] = setTimeout(function() {
+                saveScore(input);
+                delete scoreTimeouts[key];
+            }, SAVE_SCORE_DELAY);
+        });
+
+        input.addEventListener('blur', function() {
+            var val = this.value.trim();
+            if (val === '') return;
+            var num = parseFloat(val);
+            if (isNaN(num) || num < 0 || num > 10) return;
+
+            // Sauvegarde immédiate au blur
+            if (scoreTimeouts[key]) {
+                clearTimeout(scoreTimeouts[key]);
+                delete scoreTimeouts[key];
+            }
+            saveScore(this);
+        });
+
+        // Navigation clavier : flèches ↑↓ pour incrémenter
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                var v = parseFloat(this.value) || 0;
+                this.value = Math.min(10, Math.round((v + 0.5) * 10) / 10);
+                this.dispatchEvent(new Event('input'));
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                var v2 = parseFloat(this.value) || 0;
+                this.value = Math.max(0, Math.round((v2 - 0.5) * 10) / 10);
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+
+    // ============================================================
+    // SAUVEGARDE DES COMMENTAIRES
+    // ============================================================
     var commentTimeouts = {};
-    
+    var commentTextareas = document.querySelectorAll('.comment-textarea:not([disabled])');
+
     function saveComment(textarea) {
         var artistId = parseInt(getData(textarea, 'artist'), 10);
         var comment = textarea.value;
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/jury/api/save-comment', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRFToken', CSRF_TOKEN);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        if (data.success) {
-                            textarea.className = textarea.className + ' saved';
-                            textarea.style.borderColor = '#22c55e';
-                            setTimeout(function() {
-                                textarea.className = textarea.className.replace(/saved/g, '');
-                                textarea.style.borderColor = '';
-                            }, 1500);
-                        } else {
-                            textarea.style.borderColor = '#ef4444';
-                        }
-                    } catch (e) {
-                        textarea.style.borderColor = '#ef4444';
-                    }
-                } else {
-                    textarea.style.borderColor = '#ef4444';
-                }
+
+        fetch('/jury/api/save-comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                artist_id: artistId,
+                session_id: SESSION_ID,
+                comment: comment
+            })
+        })
+        .then(function(response) {
+            return response.json().then(function(data) {
+                return { ok: response.ok, data: data };
+            });
+        })
+        .then(function(result) {
+            if (result.ok && result.data.success) {
+                setStatus(textarea, 'saved');
+            } else {
+                setStatus(textarea, 'error');
+                showToast(result.data.error || 'Erreur de sauvegarde', 'error');
             }
-        };
-        xhr.send(JSON.stringify({
-            artist_id: artistId,
-            session_id: SESSION_ID,
-            comment: comment || ''
-        }));
+        })
+        .catch(function() {
+            setStatus(textarea, 'error');
+            showToast('Erreur de connexion', 'error');
+        });
     }
-    
-    for (var j = 0; j < commentTextareas.length; j++) {
-        (function(textarea) {
-            var key = getData(textarea, 'artist');
-            
-            textarea.addEventListener('input', function() {
-                this.style.borderColor = '#f59e0b';
-                
+
+    commentTextareas.forEach(function(textarea) {
+        var key = getData(textarea, 'artist');
+
+        textarea.addEventListener('input', function() {
+            this.style.borderColor = '#f59e0b';
+
+            if (commentTimeouts[key]) clearTimeout(commentTimeouts[key]);
+            commentTimeouts[key] = setTimeout(function() {
+                saveComment(textarea);
+                delete commentTimeouts[key];
+            }, SAVE_COMMENT_DELAY);
+        });
+
+        textarea.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
                 if (commentTimeouts[key]) {
                     clearTimeout(commentTimeouts[key]);
-                }
-                commentTimeouts[key] = setTimeout(function() {
-                    saveComment(textarea);
                     delete commentTimeouts[key];
-                }, 1000);
-            });
-            
-            textarea.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    e.preventDefault();
-                    var k = getData(this, 'artist');
-                    if (commentTimeouts[k]) {
-                        clearTimeout(commentTimeouts[k]);
-                        delete commentTimeouts[k];
-                    }
-                    saveComment(this);
-                    this.style.borderColor = '#7c3aed';
                 }
-            });
-        })(commentTextareas[j]);
-    }
-    
-    // ================================================================
-    // 3. INFOS DANS LA CONSOLE
-    // ================================================================
-    var totalArtists = document.querySelectorAll('tbody tr').length;
-    var totalCriteria = document.querySelectorAll('thead tr th:not(:first-child):not(:last-child)').length;
-    console.log('📊 Show Talent - Évaluation chargée');
-    console.log('   Artistes: ' + totalArtists);
-    console.log('   Critères: ' + totalCriteria);
-    console.log('   Session: ' + SESSION_ID);
-    
+                saveComment(this);
+            }
+        });
+
+        textarea.addEventListener('blur', function() {
+            if (commentTimeouts[key]) {
+                clearTimeout(commentTimeouts[key]);
+                delete commentTimeouts[key];
+                saveComment(this);
+            }
+        });
+    });
+
 })();
 </script>
 {% endblock %}

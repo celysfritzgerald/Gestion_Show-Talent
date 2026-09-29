@@ -7,6 +7,9 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import current_app
 
 
+ALLOWED_SUBFOLDERS = {"artists", "moments", "sponsors", "lyrics"}
+
+
 def allowed_file(filename):
     return bool(filename and "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"])
 
@@ -32,7 +35,7 @@ def validate_image_content(filepath):
 
 
 def save_uploaded_file(file, subfolder):
-    if subfolder not in {"artists", "moments", "sponsors"}:
+    if subfolder not in ALLOWED_SUBFOLDERS:
         raise ValueError("Dossier d'upload invalide")
     if not file or not file.filename:
         return None
@@ -72,7 +75,7 @@ def save_uploaded_file(file, subfolder):
 
 
 def delete_uploaded_file(filename, subfolder):
-    if not filename or subfolder not in {"artists", "moments", "sponsors"}:
+    if not filename or subfolder not in ALLOWED_SUBFOLDERS:
         return
     safe_name = os.path.basename(filename)
     if safe_name != filename:
@@ -85,14 +88,17 @@ def delete_uploaded_file(filename, subfolder):
 
 
 def get_file_url(filename, subfolder):
-    if not filename or subfolder not in {"artists", "moments", "sponsors"}: return None
+    if not filename or subfolder not in ALLOWED_SUBFOLDERS:
+        return None
     return f"/uploads/{subfolder}/{filename}"
 
 
 def get_file_path(filename, subfolder):
-    if not filename or subfolder not in {"artists", "moments", "sponsors"}: return None
+    if not filename or subfolder not in ALLOWED_SUBFOLDERS:
+        return None
     safe_name = os.path.basename(filename)
-    if safe_name != filename: return None
+    if safe_name != filename:
+        return None
     return str(Path(current_app.root_path) / current_app.config["UPLOAD_FOLDER"] / subfolder / safe_name)
 
 
