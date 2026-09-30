@@ -1,0 +1,327 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Sondages{% endblock %}
+
+{% block content %}
+<div class="section-dark py-6 sm:py-8">
+    <div class="container mx-auto px-3 sm:px-4 max-w-5xl">
+
+        <!-- EN-TÊTE -->
+        <div class="glass-card rounded-2xl p-4 sm:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white">📊 Sondages</h1>
+                    <p class="text-gray-400 text-xs sm:text-sm mt-1">
+                        Créez des sondages rapides — 100% indépendant
+                    </p>
+                </div>
+                <button onclick="toggleCreateForm()"
+                        class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition shadow-lg shadow-yellow-500/20">
+                    <i class="fas fa-plus mr-1"></i>Nouveau sondage
+                </button>
+            </div>
+        </div>
+
+        <!-- FORMULAIRE -->
+        <div id="createPoll" class="hidden glass-card rounded-2xl p-4 sm:p-6 mb-6">
+            <h2 class="text-lg font-bold text-white mb-4">
+                <i class="fas fa-plus-circle text-yellow-400 mr-2"></i>Créer un sondage
+            </h2>
+
+            <form method="POST" action="{{ url_for('admin.create_poll') }}" id="pollForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Question -->
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-medium mb-1">
+                        Question <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" name="question" required maxlength="300"
+                           class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition"
+                           placeholder="Ex: Qui va gagner ce dimanche ?">
+                </div>
+
+                <!-- Auteur -->
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-medium mb-1">
+                        Auteur <span class="text-gray-500">(optionnel)</span>
+                    </label>
+                    <input type="text" name="author_name" maxlength="100"
+                           class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition"
+                           placeholder="Ex: ACDA">
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-medium mb-1">
+                        Description <span class="text-gray-500">(optionnel)</span>
+                    </label>
+                    <textarea name="description" rows="2" maxlength="1000"
+                              class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition resize-y"
+                              placeholder="Contexte ou précisions sur le sondage..."></textarea>
+                </div>
+
+                <!-- Options -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-gray-400 text-xs font-medium">
+                            Options <span class="text-red-400">*</span>
+                            <span class="text-gray-500 ml-1">(2 à 30)</span>
+                        </label>
+                        <span id="optionCount" class="text-xs text-gray-500 font-medium">
+                            2 options
+                        </span>
+                    </div>
+
+                    <div id="optionsContainer" class="space-y-2">
+                        <input type="text" name="options[]" required maxlength="200" placeholder="Option 1"
+                               class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition">
+                        <input type="text" name="options[]" required maxlength="200" placeholder="Option 2"
+                               class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition">
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 mt-2">
+                        <button type="button" onclick="addOption()"
+                                class="text-yellow-400 hover:text-yellow-300 text-sm font-semibold transition inline-flex items-center gap-1">
+                            <i class="fas fa-plus-circle"></i>Ajouter une option
+                        </button>
+                        <button type="button" onclick="removeLastOption()"
+                                class="text-red-400 hover:text-red-300 text-sm font-semibold transition inline-flex items-center gap-1">
+                            <i class="fas fa-minus-circle"></i>Retirer la dernière
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Actif -->
+                <div class="mb-4 flex items-center gap-2">
+                    <input type="checkbox" name="is_active" id="is_active" checked
+                           class="w-4 h-4 rounded bg-white/5 border-white/10 text-yellow-400 focus:ring-yellow-400">
+                    <label for="is_active" class="text-gray-300 text-sm">Activer immédiatement</label>
+                </div>
+
+                <!-- Boutons -->
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit"
+                            class="px-6 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] font-bold rounded-xl hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-sm">
+                        <i class="fas fa-check mr-1"></i>Créer le sondage
+                    </button>
+                    <button type="button" onclick="toggleCreateForm()"
+                            class="px-6 py-2.5 bg-white/5 border border-white/10 text-gray-300 font-bold rounded-xl hover:bg-white/10 transition text-sm">
+                        <i class="fas fa-times mr-1"></i>Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- LISTE -->
+        {% if polls %}
+        <div class="space-y-3">
+            {% for poll in polls %}
+            <div class="glass-card rounded-2xl p-4 sm:p-5">
+
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-white font-bold mb-1 break-words">
+                            {{ poll.question }}
+                        </h3>
+                        {% if poll.description %}
+                            <p class="text-sm text-gray-400 mb-2 break-words">{{ poll.description }}</p>
+                        {% endif %}
+
+                        <div class="flex flex-wrap items-center gap-3 text-xs">
+                            {% if poll.author_name %}
+                            <span class="text-gray-500">
+                                <i class="fas fa-user mr-1"></i>{{ poll.author_name }}
+                            </span>
+                            {% endif %}
+                            <span class="text-gray-500">
+                                <i class="fas fa-list mr-1"></i>
+                                {{ poll.options.count() }} option{{ 's' if poll.options.count() != 1 else '' }}
+                            </span>
+                            <span class="text-gray-500">
+                                <i class="fas fa-vote-yea mr-1"></i>
+                                {{ poll.poll_votes.count() }} vote{{ 's' if poll.poll_votes.count() != 1 else '' }}
+                            </span>
+                            {% if poll.is_active %}
+                                <span class="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded-full font-semibold">
+                                    <i class="fas fa-check-circle mr-1"></i>Actif
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-0.5 bg-gray-500/10 border border-gray-500/30 text-gray-400 rounded-full font-semibold">
+                                    <i class="fas fa-pause-circle mr-1"></i>Inactif
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 self-start">
+                        <form method="POST" action="{{ url_for('admin.toggle_poll_active', poll_id=poll.id) }}" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit"
+                                    class="px-3 py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/30 text-yellow-400 text-xs rounded-lg font-semibold transition"
+                                    title="{{ 'Désactiver' if poll.is_active else 'Activer' }}">
+                                <i class="fas fa-{{ 'pause' if poll.is_active else 'play' }}"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.delete_poll', poll_id=poll.id) }}" class="inline"
+                              onsubmit="return confirm('Supprimer ce sondage et tous ses votes ?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit"
+                                    class="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-xs rounded-lg font-semibold transition"
+                                    title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {# ✅ CORRECTION : Utiliser .all() au lieu de .order_by(PollOption.display_order) #}
+                {% if poll.options.count() > 0 %}
+                <div class="mt-3 pt-3 border-t border-white/5 space-y-1.5 max-h-64 overflow-y-auto">
+                    {% for option in poll.options.all() %}
+                    <div class="flex items-center justify-between text-xs gap-2">
+                        <span class="text-gray-400 truncate flex-1">{{ option.text }}</span>
+                        <span class="text-gray-500 whitespace-nowrap">
+                            {{ option.option_votes.count() }} vote{{ 's' if option.option_votes.count() != 1 else '' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <div class="glass-card rounded-2xl p-12 text-center">
+                <i class="fas fa-poll text-5xl text-gray-600 mb-4"></i>
+                <p class="text-gray-300 text-lg font-semibold">Aucun sondage créé</p>
+                <p class="text-gray-500 text-sm mt-2 mb-6">Cliquez sur "+ Nouveau sondage" pour commencer.</p>
+                <button onclick="toggleCreateForm()"
+                        class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20">
+                    <i class="fas fa-plus"></i>Créer un sondage
+                </button>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+
+    var MAX_OPTIONS = 30;
+    var MIN_OPTIONS = 2;
+
+    window.toggleCreateForm = function() {
+        var form = document.getElementById('createPoll');
+        if (!form) return;
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) {
+            setTimeout(function() {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var firstInput = form.querySelector('input[name="question"]');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+    };
+
+    function updateOptionCount() {
+        var container = document.getElementById('optionsContainer');
+        var counter = document.getElementById('optionCount');
+        if (!container || !counter) return;
+
+        var count = container.querySelectorAll('input[name="options[]"]').length;
+        counter.textContent = count + ' option' + (count > 1 ? 's' : '');
+
+        if (count >= MAX_OPTIONS) {
+            counter.className = 'text-xs text-red-400 font-bold';
+        } else if (count <= MIN_OPTIONS) {
+            counter.className = 'text-xs text-gray-500 font-medium';
+        } else {
+            counter.className = 'text-xs text-green-400 font-medium';
+        }
+    }
+
+    window.addOption = function() {
+        var container = document.getElementById('optionsContainer');
+        if (!container) return;
+
+        var count = container.querySelectorAll('input[name="options[]"]').length;
+        if (count >= MAX_OPTIONS) {
+            alert('Maximum ' + MAX_OPTIONS + ' options atteint.');
+            return;
+        }
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'options[]';
+        input.maxLength = 200;
+        input.placeholder = 'Option ' + (count + 1);
+        input.className = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 outline-none transition';
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addOption(); }
+        });
+
+        container.appendChild(input);
+        updateOptionCount();
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window.removeLastOption = function() {
+        var container = document.getElementById('optionsContainer');
+        if (!container) return;
+
+        var inputs = container.querySelectorAll('input[name="options[]"]');
+        if (inputs.length <= MIN_OPTIONS) {
+            alert('Vous devez avoir au moins ' + MIN_OPTIONS + ' options.');
+            return;
+        }
+        inputs[inputs.length - 1].remove();
+        updateOptionCount();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateOptionCount();
+
+        var form = document.getElementById('pollForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            var container = document.getElementById('optionsContainer');
+            var inputs = container.querySelectorAll('input[name="options[]"]');
+            var filled = 0;
+
+            for (var i = 0; i < inputs.length; i++) {
+                if (inputs[i].value.trim()) filled++;
+            }
+
+            if (filled < MIN_OPTIONS) {
+                e.preventDefault();
+                alert('Vous devez remplir au moins ' + MIN_OPTIONS + ' options.');
+                return false;
+            }
+
+            if (filled > MAX_OPTIONS) {
+                e.preventDefault();
+                alert('Maximum ' + MAX_OPTIONS + ' options.');
+                return false;
+            }
+
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Création...';
+            }
+            return true;
+        });
+    });
+
+})();
+</script>
+{% endblock %}

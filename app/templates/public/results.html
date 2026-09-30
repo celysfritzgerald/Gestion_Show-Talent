@@ -39,7 +39,6 @@
         border: 1px solid rgba(250, 204, 21, 0.3);
     }
 
-    /* Boutons Onglets Dimanches */
     .btn-session {
         background: rgba(255, 255, 255, 0.05);
         color: #94a3b8;
@@ -74,7 +73,6 @@
         border-color: #7c3aed;
     }
 
-    /* Podium */
     .podium-1 {
         background: linear-gradient(90deg, rgba(250, 204, 21, 0.12) 0%, rgba(15, 23, 42, 0.6) 100%);
         border-left: 4px solid #facc15 !important;
@@ -90,13 +88,11 @@
         border-left: 4px solid #f97316 !important;
     }
 
-    /* Table responsive */
     .results-table {
         width: 100%;
         border-collapse: collapse;
     }
 
-    /* A11y : visible au focus */
     .sr-only {
         position: absolute;
         width: 1px;
@@ -119,7 +115,6 @@
         }
     }
 
-    /* Animations respectueuses */
     @media (prefers-reduced-motion: reduce) {
         .btn-session,
         .glass-card {
@@ -135,6 +130,17 @@
 {% block content %}
 <main class="results-section" role="main">
     <div class="container mx-auto px-4 max-w-6xl">
+
+        <!-- ============================================================
+             BOUTON RETOUR ACCUEIL
+             ============================================================ -->
+        <div class="mb-6">
+            <a href="{{ url_for('main.index') }}"
+               class="inline-flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40 text-gray-300 hover:text-yellow-400 rounded-full font-semibold text-base transition-all group">
+                <i class="fas fa-arrow-left text-yellow-400 group-hover:-translate-x-1 transition-transform"></i>
+                <span>Retour à l'accueil</span>
+            </a>
+        </div>
 
         <!-- ============================================================
              HEADER
@@ -211,7 +217,7 @@
 {% block extra_js %}
 <script>
 // ============================================================
-// GESTION DES RÉSULTATS — VERSION OPTIMISÉE
+// GESTION DES RÉSULTATS
 // ============================================================
 (function() {
     'use strict';
@@ -219,12 +225,8 @@
     var container = document.getElementById('results-container');
     if (!container) return;
 
-    // Cache des résultats (évite les requêtes répétées)
     var cache = {};
 
-    // ============================================================
-    // ESCAPE HTML (sécurité XSS)
-    // ============================================================
     function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         var d = document.createElement('div');
@@ -232,9 +234,6 @@
         return d.innerHTML;
     }
 
-    // ============================================================
-    // SKELETON LOADER
-    // ============================================================
     function showLoading() {
         container.setAttribute('aria-busy', 'true');
         container.innerHTML =
@@ -244,9 +243,6 @@
             '</div>';
     }
 
-    // ============================================================
-    // EMPTY STATE
-    // ============================================================
     function showEmpty(sessionNumber) {
         container.setAttribute('aria-busy', 'false');
         container.innerHTML =
@@ -257,9 +253,6 @@
             '</div>';
     }
 
-    // ============================================================
-    // ERROR STATE
-    // ============================================================
     function showError() {
         container.setAttribute('aria-busy', 'false');
         container.innerHTML =
@@ -274,9 +267,6 @@
             '</div>';
     }
 
-    // ============================================================
-    // RENDER RESULTS
-    // ============================================================
     function renderResults(data) {
         if (!data.results || data.results.length === 0) {
             showEmpty(data.session || '');
@@ -285,7 +275,6 @@
 
         var html = '<div class="w-full">';
 
-        // Banner info
         html +=
             '<div class="p-4 bg-white/5 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">' +
                 '<div class="flex items-center gap-2 text-xs md:text-sm text-gray-300">' +
@@ -297,7 +286,6 @@
                 '</span>' +
             '</div>';
 
-        // Table
         html +=
             '<div class="overflow-x-auto">' +
                 '<table class="results-table" role="table" aria-label="Classement des artistes">' +
@@ -354,9 +342,6 @@
         container.innerHTML = html;
     }
 
-    // ============================================================
-    // UPDATE TABS
-    // ============================================================
     function updateTabs(sessionId) {
         document.querySelectorAll('[role="tab"]').forEach(function(tab) {
             var isActive = tab.dataset.sessionId === String(sessionId);
@@ -365,13 +350,9 @@
         });
     }
 
-    // ============================================================
-    // LOAD RESULTS
-    // ============================================================
     window.loadResults = function(sessionId) {
         updateTabs(sessionId);
 
-        // ✅ Utiliser le cache si disponible
         if (cache[sessionId]) {
             renderResults(cache[sessionId]);
             return;
@@ -388,7 +369,7 @@
         })
         .then(function(data) {
             if (data.error) throw new Error(data.error);
-            cache[sessionId] = data;  // ✅ Stocker en cache
+            cache[sessionId] = data;
             renderResults(data);
         })
         .catch(function() {
@@ -396,9 +377,6 @@
         });
     };
 
-    // ============================================================
-    // AUTO-LOAD PREMIER ONGLET
-    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         var firstTab = document.querySelector('[role="tab"]');
         if (firstTab) {

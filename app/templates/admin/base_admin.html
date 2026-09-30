@@ -144,12 +144,27 @@
                     <i class="fas fa-camera w-5 text-center"></i>
                     <span class="font-medium">Moments forts</span>
                 </a>
+                <a href="{{ url_for('admin.finance') }}"
+   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'finance' in request.endpoint %}active{% endif %}">
+    <i class="fas fa-coins w-5 text-center"></i>
+    <span class="font-medium">Finances</span>
+</a><a href="{{ url_for('admin.polls_list') }}"
+   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'poll' in request.endpoint %}active{% endif %}">
+    <i class="fas fa-poll w-5 text-center"></i>
+    <span class="font-medium">Sondages</span>
+</a>
+
 
                 <a href="{{ url_for('admin.lyrics') }}"
                    class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'lyric' in request.endpoint %}active{% endif %}">
                     <i class="fas fa-music w-5 text-center"></i>
                     <span class="font-medium">Paroles</span>
                 </a>
+                <a href="{{ url_for('admin.votes_dashboard') }}"
+       class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'vote' in request.endpoint and 'poll' not in request.endpoint %}active{% endif %}">
+        <i class="fas fa-vote-yea w-5 text-center"></i>
+        <span class="font-medium">Votes public</span>
+    </a>
 
                 <div class="pt-3 mt-3 border-t border-white/5">
                     <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">

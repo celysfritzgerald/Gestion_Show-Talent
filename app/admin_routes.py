@@ -5,7 +5,8 @@ import math
 from email_validator import EmailNotValidError, validate_email
 from sqlalchemy import func
 from app import db
-from app.models import User, Artist, CompetitionSession, Criterion, Assignment, Score, Comment, Sponsor, Moment, ContactMessage, Lyric
+from app.models import Poll, User, Artist, CompetitionSession, Criterion, Assignment, Score, Comment, Sponsor, Moment, ContactMessage, Lyric, FinanceCategory, FinanceTransaction,    Poll, PollOption, PollVote,VoteConfig, VoteSession, PublicVote
+
 from app.permissions import admin_required, rate_limit
 from app.utils import save_uploaded_file, delete_uploaded_file, validate_http_url
 
@@ -1341,3 +1342,580 @@ def toggle_lyric_publish(lyric_id):
         db.session.rollback()
         flash('Erreur lors du changement de statut.', 'danger')
     return redirect(url_for('admin.lyrics'))
+
+# ============================================================
+# GESTION FINANCIÈRE — MODULE INDÉPENDANT
+# ============================================================
+
+@admin_bp.route('/finance')
+@admin_required
+def finance():
+    """Dashboard financier"""
+    try:
+        from sqlalchemy import func
+
+        # Total rentrées
+        total_income = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
+            FinanceTransaction.type == 'income'
+        ).scalar() or 0
+
+        # Total sorties
+        total_expense = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
+            FinanceTransaction.type == 'expense'
+        ).scalar() or 0
+
+        balance = float(total_income) - float(total_expense)
+
+        # Par catégorie
+        categories = FinanceCategory.query.order_by(FinanceCategory.type, FinanceCategory.name).all()
+
+        # Transactions récentes
+        transactions = FinanceTransaction.query.order_by(
+            FinanceTransaction.transaction_date.desc(),
+            FinanceTransaction.created_at.desc()
+        ).limit(50).all()
+
+        # Totaux par catégorie
+        category_totals = {}
+        for cat in categories:
+            cat_total = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
+                FinanceTransaction.category_id == cat.id
+            ).scalar() or 0
+            category_totals[cat.id] = float(cat_total)
+
+        return render_template('admin/finance.html',
+                             total_income=float(total_income),
+                             total_expense=float(total_expense),
+                             balance=balance,
+                             categories=categories,
+                             transactions=transactions,
+                             category_totals=category_totals)
+    except Exception as e:
+        current_app.logger.error(f"Erreur finance: {str(e)}")
+        flash('Erreur lors du chargement de la page finance.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/finance/transaction/create', methods=['POST'])
+@admin_required
+def create_transaction():
+    """Créer une transaction"""
+    try:
+        t_type = request.form.get('type', '').strip()
+        category_id = request.form.get('category_id')
+        amount_str = request.form.get('amount', '').strip()
+        description = request.form.get('description', '').strip()
+        source = request.form.get('source', '').strip()
+        reference = request.form.get('reference', '').strip()
+        transaction_date_str = request.form.get('transaction_date', '').strip()
+        currency = request.form.get('currency', 'HTG').strip()
+
+        # Validations
+        if t_type not in ('income', 'expense'):
+            flash('Type invalide.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        if not description:
+            flash('La description est requise.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        if len(description) > 500 or len(source) > 200 or len(reference) > 100:
+            flash('Un ou plusieurs champs sont trop longs.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        try:
+            amount = float(amount_str)
+            if amount <= 0 or amount > 999999999.99:
+                raise ValueError
+            amount = round(amount, 2)
+        except (ValueError, TypeError):
+            flash('Montant invalide.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        # Date
+        if transaction_date_str:
+            try:
+                transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Format de date invalide.', 'danger')
+                return redirect(url_for('admin.finance'))
+        else:
+            transaction_date = datetime.utcnow().date()
+
+        # Catégorie (optionnelle)
+        cat_id = None
+        if category_id and category_id.isdigit():
+            cat = FinanceCategory.query.get(int(category_id))
+            if cat:
+                cat_id = cat.id
+
+        # Créer
+        transaction = FinanceTransaction(
+            type=t_type,
+            category_id=cat_id,
+            amount=amount,
+            currency=currency,
+            description=description,
+            source=source if source else None,
+            reference=reference if reference else None,
+            transaction_date=transaction_date,
+            created_by=session.get('user_id')
+        )
+        db.session.add(transaction)
+        db.session.commit()
+
+        flash(f'Transaction de {amount:.2f} {currency} enregistrée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur création transaction: {str(e)}")
+        flash('Erreur lors de l\'enregistrement.', 'danger')
+    return redirect(url_for('admin.finance'))
+
+
+@admin_bp.route('/finance/transaction/<int:tid>/delete', methods=['POST'])
+@admin_required
+def delete_transaction(tid):
+    """Supprimer une transaction"""
+    try:
+        transaction = FinanceTransaction.query.get_or_404(tid)
+        db.session.delete(transaction)
+        db.session.commit()
+        flash('Transaction supprimée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur lors de la suppression.', 'danger')
+    return redirect(url_for('admin.finance'))
+
+
+@admin_bp.route('/finance/category/create', methods=['POST'])
+@admin_required
+def create_finance_category():
+    """Créer une catégorie"""
+    try:
+        name = request.form.get('name', '').strip()
+        cat_type = request.form.get('type', '').strip()
+
+        if not name or cat_type not in ('income', 'expense'):
+            flash('Nom et type requis.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        if len(name) > 100:
+            flash('Nom trop long.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        if FinanceCategory.query.filter_by(name=name, type=cat_type).first():
+            flash('Cette catégorie existe déjà.', 'danger')
+            return redirect(url_for('admin.finance'))
+
+        category = FinanceCategory(name=name, type=cat_type)
+        db.session.add(category)
+        db.session.commit()
+        flash('Catégorie créée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.finance'))
+
+
+@admin_bp.route('/finance/category/<int:cid>/delete', methods=['POST'])
+@admin_required
+def delete_finance_category(cid):
+    """Supprimer une catégorie"""
+    try:
+        category = FinanceCategory.query.get_or_404(cid)
+        # Détacher les transactions
+        FinanceTransaction.query.filter_by(category_id=cid).update({'category_id': None})
+        db.session.delete(category)
+        db.session.commit()
+        flash('Catégorie supprimée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.finance'))
+
+# ============================================================
+# GESTION DES SONDAGES — 100% INDÉPENDANT
+# ============================================================
+
+@admin_bp.route('/polls')
+@admin_required
+def polls_list():
+    """Liste des sondages (admin)"""
+    try:
+        polls_data = Poll.query.order_by(Poll.created_at.desc()).all()
+        return render_template('admin/polls.html', polls=polls_data)
+    except Exception as e:
+        current_app.logger.error(f"Erreur liste polls: {str(e)}")
+        current_app.logger.exception('Erreur admin sondages')
+        flash(f'Erreur: {str(e)}', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/polls/create', methods=['POST'])
+@admin_required
+def create_poll():
+    """Créer un sondage avec ses options"""
+    try:
+        question = request.form.get('question', '').strip()
+        description = request.form.get('description', '').strip()
+        author_name = request.form.get('author_name', '').strip()
+        is_active = request.form.get('is_active') == 'on'
+        option_texts = request.form.getlist('options[]')
+
+        if not question:
+            flash('La question est requise.', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        if len(question) > 300:
+            flash('Question trop longue (max 300 caractères).', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        if description and len(description) > 1000:
+            flash('Description trop longue (max 1000 caractères).', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        if author_name and len(author_name) > 100:
+            flash('Nom de l\'auteur trop long (max 100 caractères).', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        options = [o.strip() for o in option_texts if o and o.strip()]
+
+        if len(options) < 2:
+            flash('Au moins 2 options sont requises.', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        if len(options) > 30:
+            flash('Maximum 30 options.', 'danger')
+            return redirect(url_for('admin.polls_list'))
+
+        for opt in options:
+            if len(opt) > 200:
+                flash('Une option dépasse 200 caractères.', 'danger')
+                return redirect(url_for('admin.polls_list'))
+
+        poll = Poll(
+            question=question,
+            description=description if description else None,
+            author_name=author_name if author_name else None,
+            is_active=is_active
+        )
+        db.session.add(poll)
+        db.session.flush()
+
+        for i, opt_text in enumerate(options):
+            option = PollOption(
+                poll_id=poll.id,
+                text=opt_text,
+                display_order=i
+            )
+            db.session.add(option)
+
+        db.session.commit()
+        flash(f'Sondage créé avec {len(options)} options.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur création poll: {str(e)}")
+        current_app.logger.exception('Erreur création sondage')
+        flash(f'Erreur: {str(e)}', 'danger')
+    return redirect(url_for('admin.polls_list'))
+
+
+@admin_bp.route('/polls/<int:poll_id>/delete', methods=['POST'])
+@admin_required
+def delete_poll(poll_id):
+    """Supprimer un sondage"""
+    try:
+        poll = Poll.query.get_or_404(poll_id)
+        db.session.delete(poll)
+        db.session.commit()
+        flash('Sondage supprimé.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur suppression poll: {str(e)}")
+        flash('Erreur lors de la suppression.', 'danger')
+    return redirect(url_for('admin.polls_list'))
+
+
+@admin_bp.route('/polls/<int:poll_id>/toggle-active', methods=['POST'])
+@admin_required
+def toggle_poll_active(poll_id):
+    """Activer/Désactiver un sondage"""
+    try:
+        poll = Poll.query.get_or_404(poll_id)
+        poll.is_active = not poll.is_active
+        db.session.commit()
+        status = "activé" if poll.is_active else "désactivé"
+        flash(f'Sondage {status}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur toggle poll: {str(e)}")
+        flash('Erreur lors du changement de statut.', 'danger')
+    return redirect(url_for('admin.polls_list'))
+
+
+# ============================================================
+# GESTION DES VOTES PUBLICS — ADMIN
+# ============================================================
+
+@admin_bp.route('/votes')
+@admin_required
+def votes_dashboard():
+    """Dashboard des votes publics"""
+    try:
+        from sqlalchemy import func
+
+        config = VoteConfig.query.first()
+        if not config:
+            config = VoteConfig(mode="PER_SESSION", is_enabled=True)
+            db.session.add(config)
+            db.session.commit()
+
+        edition = request.args.get('edition', '4e')
+        sessions = VoteSession.query.order_by(VoteSession.number).all()
+
+        # Session courante (mode PER_SESSION)
+        current_session = None
+        if config.mode == 'PER_SESSION' and sessions:
+            session_id = request.args.get('session_id', type=int)
+            if session_id:
+                current_session = VoteSession.query.get(session_id)
+            if not current_session:
+                current_session = sessions[0]
+
+        # Filtrer les votes selon le mode
+        if config.mode == 'GLOBAL':
+            vote_query = PublicVote.query.filter_by(mode='GLOBAL', edition=edition)
+        else:
+            if current_session:
+                vote_query = PublicVote.query.filter_by(session_id=current_session.id)
+            else:
+                vote_query = PublicVote.query.filter_by(id=-1)  # vide
+
+        # Résultats par artiste
+        results_raw = db.session.query(
+            PublicVote.artist_id,
+            func.count(PublicVote.id).label('votes')
+        )
+
+        if config.mode == 'GLOBAL':
+            results_raw = results_raw.filter(
+                PublicVote.mode == 'GLOBAL', PublicVote.edition == edition
+            )
+        else:
+            if current_session:
+                results_raw = results_raw.filter(PublicVote.session_id == current_session.id)
+            else:
+                results_raw = results_raw.filter(PublicVote.id == -1)
+
+        results_raw = results_raw.group_by(PublicVote.artist_id).order_by(
+            func.count(PublicVote.id).desc()
+        ).all()
+
+        total_votes = sum(r.votes for r in results_raw)
+
+        results = []
+        for artist_id, votes in results_raw:
+            artist = Artist.query.get(artist_id)
+            if artist:
+                results.append({
+                    'artist': artist,
+                    'votes': votes,
+                    'percentage': round((votes / total_votes * 100), 1) if total_votes > 0 else 0
+                })
+
+        voters = vote_query.order_by(PublicVote.created_at.desc()).all()
+
+        return render_template('admin/votes.html',
+                             config=config,
+                             sessions=sessions,
+                             current_session=current_session,
+                             results=results,
+                             voters=voters,
+                             total_votes=total_votes,
+                             edition=edition)
+    except Exception as e:
+        current_app.logger.error(f"Erreur votes dashboard: {str(e)}")
+        current_app.logger.exception('Erreur votes dashboard')
+        flash(f'Erreur: {str(e)}', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/votes/config', methods=['POST'])
+@admin_required
+def update_vote_config():
+    """Changer le mode de vote"""
+    try:
+        config = VoteConfig.query.first()
+        if not config:
+            config = VoteConfig()
+            db.session.add(config)
+
+        new_mode = request.form.get('mode', 'PER_SESSION').strip()
+        if new_mode not in ('GLOBAL', 'PER_SESSION'):
+            flash('Mode invalide.', 'danger')
+            return redirect(url_for('admin.votes_dashboard'))
+
+        config.mode = new_mode
+        config.is_enabled = request.form.get('is_enabled') == 'on'
+
+        closed_message = request.form.get('closed_message', '').strip()
+        if closed_message:
+            config.closed_message = closed_message[:300]
+
+        db.session.commit()
+        flash(f'Mode de vote: {new_mode}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur update vote config: {str(e)}")
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.votes_dashboard'))
+
+
+@admin_bp.route('/votes/sessions/create', methods=['POST'])
+@admin_required
+def create_vote_session():
+    """Créer une soirée de vote"""
+    try:
+        number_str = request.form.get('number', '').strip()
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        is_open = request.form.get('is_open') == 'on'
+
+        if not number_str or not title:
+            flash('Numéro et titre requis.', 'danger')
+            return redirect(url_for('admin.votes_dashboard'))
+
+        try:
+            number = int(number_str)
+            if number < 1 or number > 20:
+                raise ValueError
+        except ValueError:
+            flash('Numéro invalide (1 à 20).', 'danger')
+            return redirect(url_for('admin.votes_dashboard'))
+
+        if len(title) > 150:
+            flash('Titre trop long.', 'danger')
+            return redirect(url_for('admin.votes_dashboard'))
+
+        if VoteSession.query.filter_by(number=number).first():
+            flash(f'La soirée {number} existe déjà.', 'danger')
+            return redirect(url_for('admin.votes_dashboard'))
+
+        session_obj = VoteSession(
+            number=number,
+            title=title,
+            description=description if description else None,
+            is_open=is_open
+        )
+        db.session.add(session_obj)
+        db.session.commit()
+        flash(f'Soirée "{title}" créée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur: {str(e)}', 'danger')
+    return redirect(url_for('admin.votes_dashboard'))
+
+
+@admin_bp.route('/votes/sessions/<int:session_id>/toggle', methods=['POST'])
+@admin_required
+def toggle_vote_session(session_id):
+    """Ouvrir/Fermer le vote d'une soirée"""
+    try:
+        session_obj = VoteSession.query.get_or_404(session_id)
+        session_obj.is_open = not session_obj.is_open
+
+        closed_message = request.form.get('closed_message', '').strip()
+        if closed_message:
+            session_obj.closed_message = closed_message[:300]
+
+        db.session.commit()
+        status = "ouvert" if session_obj.is_open else "fermé"
+        flash(f'Vote de la soirée {session_obj.number} {status}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.votes_dashboard', session_id=session_id))
+
+
+@admin_bp.route('/votes/sessions/<int:session_id>/delete', methods=['POST'])
+@admin_required
+def delete_vote_session(session_id):
+    """Supprimer une soirée"""
+    try:
+        session_obj = VoteSession.query.get_or_404(session_id)
+        number = session_obj.number
+        db.session.delete(session_obj)
+        db.session.commit()
+        flash(f'Soirée {number} supprimée.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.votes_dashboard'))
+
+
+@admin_bp.route('/votes/<int:vote_id>/delete', methods=['POST'])
+@admin_required
+def delete_vote(vote_id):
+    """Supprimer un vote individuel"""
+    try:
+        vote_obj = PublicVote.query.get_or_404(vote_id)
+        db.session.delete(vote_obj)
+        db.session.commit()
+        flash('Vote supprimé.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erreur.', 'danger')
+    return redirect(url_for('admin.votes_dashboard'))
+
+
+@admin_bp.route('/votes/export')
+@admin_required
+def export_votes():
+    """Exporter en CSV"""
+    try:
+        import csv
+        from io import StringIO
+        from flask import Response
+
+        config = VoteConfig.query.first()
+        edition = request.args.get('edition', '4e')
+
+        if config.mode == 'GLOBAL':
+            votes_list = PublicVote.query.filter_by(
+                mode='GLOBAL', edition=edition
+            ).order_by(PublicVote.created_at.desc()).all()
+            filename = f'votes_global_{edition}.csv'
+        else:
+            session_id = request.args.get('session_id', type=int)
+            if not session_id:
+                flash('Sélectionnez une soirée.', 'danger')
+                return redirect(url_for('admin.votes_dashboard'))
+            votes_list = PublicVote.query.filter_by(
+                session_id=session_id
+            ).order_by(PublicVote.created_at.desc()).all()
+            session_obj = VoteSession.query.get(session_id)
+            filename = f'votes_soiree_{session_obj.number}.csv'
+
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Date', 'Prénom', 'Nom', 'Code artiste', 'Artiste'])
+
+        for v in votes_list:
+            writer.writerow([
+                v.created_at.strftime('%d/%m/%Y %H:%M'),
+                v.voter_first_name,
+                v.voter_last_name,
+                v.artist.code,
+                v.artist.user.full_name()
+            ])
+
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv; charset=utf-8',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur export: {str(e)}")
+        flash('Erreur lors de l\'export.', 'danger')
+        return redirect(url_for('admin.votes_dashboard'))

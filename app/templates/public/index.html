@@ -1,21 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Show Talent 4e Édition - Concours de Chant ACDA Haïti | Résultats, Artistes et Paroles{% endblock %}
+{% block title %}Show Talent 4e Édition - Concours de Chant ACDA Haïti | Votez et Participez{% endblock %}
 
-{% block meta_description %}Show Talent 4e Édition - Concours de chant organisé par l'ACDA en Haïti. Découvrez les artistes, les résultats en direct, les paroles des chansons et les moments forts de la compétition musicale. Thème : Yon ti chans pou Ayiti.{% endblock %}
+{% block meta_description %}Show Talent 4e Édition - Concours de chant ACDA en Haïti. Votez pour votre artiste préféré, participez aux sondages, découvrez les résultats, les paroles et les moments forts. Thème : Yon ti chans pou Ayiti.{% endblock %}
 
-{% block meta_keywords %}Show Talent, ACDA, concours chant Haïti, paroles chansons, artistes haïtiens, Yon ti chans pou Ayiti, compétition musicale, Desbas d'Aquin{% endblock %}
+{% block meta_keywords %}Show Talent, ACDA, concours chant Haïti, vote public, sondages, paroles chansons, artistes haïtiens, Yon ti chans pou Ayiti, compétition musicale{% endblock %}
 
-{% block og_title %}Show Talent 4e Édition - Concours de Chant ACDA Haïti{% endblock %}
-{% block og_description %}Découvrez les artistes, les paroles et les performances du concours Show Talent 4e Édition. Thème : Yon ti chans pou Ayiti.{% endblock %}
+{% block og_title %}Show Talent 4e Édition - Votez et Participez{% endblock %}
+{% block og_description %}Votez pour votre artiste préféré et participez aux sondages du concours Show Talent 4e Édition. Thème : Yon ti chans pou Ayiti.{% endblock %}
 {% block og_type %}website{% endblock %}
 {% block og_image %}{{ url_for('static', filename='images/og-image.jpg', _external=True) }}{% endblock %}
 
 {% block twitter_card %}summary_large_image{% endblock %}
-{% block twitter_title %}Show Talent 4e Édition - ACDA Haïti{% endblock %}
-{% block twitter_description %}Concours de chant - Résultats, artistes, paroles. Thème : Yon ti chans pou Ayiti.{% endblock %}
+{% block twitter_title %}Show Talent 4e Édition - Votez et Participez{% endblock %}
+{% block twitter_description %}Vote du public, sondages, résultats, artistes et paroles du concours Show Talent.{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://images.unsplash.com">
 <style>
     /* ============================================================
        IMAGE SLIDER
@@ -237,7 +240,7 @@
     }
 
     /* ============================================================
-       LYRICS CARDS — CORRIGÉ
+       LYRICS CARDS
     ============================================================ */
     .lyric-card {
         background: rgba(255, 255, 255, 0.03);
@@ -323,8 +326,37 @@
     }
 
     /* ============================================================
-       PERFORMANCE — Réduire les animations si demandé
+       RESPONSIVE
     ============================================================ */
+    body, html {
+        overflow-x: hidden;
+    }
+
+    .typewriter-letter {
+        max-width: 100%;
+    }
+
+    #contactForm {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    @media (max-width: 359px) {
+        .typewriter-letter {
+            font-size: 0.85em;
+        }
+        .typewriter-cursor {
+            width: 1.5px;
+            height: 0.7em;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .lyric-card {
+            padding: 20px;
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .typewriter-letter,
         .typewriter-cursor,
@@ -342,58 +374,92 @@
 {% block content %}
 
 <!-- ============================================================
+     SCHEMA.ORG - Structured Data
+     ============================================================ -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    "name": "Show Talent 4e Édition",
+    "description": "Concours de chant organisé par l'ACDA en Haïti. Thème : Yon ti chans pou Ayiti.",
+    "startDate": "2026-01-01",
+    "endDate": "2026-12-31",
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": {
+        "@type": "Place",
+        "name": "Desbas d'Aquin, Haïti",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "HT"
+        }
+    },
+    "organizer": {
+        "@type": "Organization",
+        "name": "ACDA",
+        "url": "{{ url_for('main.index', _external=True) }}"
+    },
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "HTG",
+        "availability": "https://schema.org/InStock"
+    }
+}
+</script>
+
+<!-- ============================================================
      HERO SECTION
      ============================================================ -->
-<section class="py-12 md:py-20" style="background: #0B1120;">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+<section class="py-8 sm:py-12 md:py-20" style="background: #0B1120;">
+    <div class="container mx-auto px-3 sm:px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 items-center">
 
-            <div class="order-1 lg:order-1">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4" aria-label="Show Talent">
-                    <span class="typewriter-letter" style="animation-delay: 0s">S</span><span class="typewriter-letter" style="animation-delay: 0.1s">H</span><span class="typewriter-letter" style="animation-delay: 0.2s">O</span><span class="typewriter-letter" style="animation-delay: 0.3s">W</span><span class="inline-block w-2 md:w-3"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.4s">T</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.5s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.6s">L</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.7s">E</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.8s">N</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.9s">T</span><span class="typewriter-cursor"></span>
-                </h1>
+            <div class="order-1 lg:order-1 text-center lg:text-left">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4 break-words" aria-label="Show Talent 4e Édition">
+                    <span class="typewriter-letter" style="animation-delay: 0s">S</span><span class="typewriter-letter" style="animation-delay: 0.1s">H</span><span class="typewriter-letter" style="animation-delay: 0.2s">O</span><span class="typewriter-letter" style="animation-delay: 0.3s">W</span><span class="inline-block w-1 sm:w-2 md:w-3"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.4s">T</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.5s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.6s">L</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.7s">E</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.8s">N</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.9s">T</span><span class="typewriter-cursor"></span>
+                </h2>
 
-                <!-- Thème du concours -->
-                <p class="text-lg md:text-2xl lg:text-3xl font-bold text-gray-300 leading-tight mb-6 mt-2" aria-label="Yon ti chans pou Ayiti">
-                    <span class="typewriter-letter" style="animation-delay: 1.2s">Theme: Y</span><span class="typewriter-letter" style="animation-delay: 1.3s">o</span><span class="typewriter-letter" style="animation-delay: 1.4s">n</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 1.5s">t</span><span class="typewriter-letter" style="animation-delay: 1.6s">i</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 1.7s">c</span><span class="typewriter-letter" style="animation-delay: 1.8s">h</span><span class="typewriter-letter" style="animation-delay: 1.9s">a</span><span class="typewriter-letter" style="animation-delay: 2.0s">n</span><span class="typewriter-letter" style="animation-delay: 2.1s">s</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.2s">p</span><span class="typewriter-letter" style="animation-delay: 2.3s">o</span><span class="typewriter-letter" style="animation-delay: 2.4s">u</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 2.5s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 2.6s">y</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 2.7s">i</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 2.8s">t</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 2.9s">i</span>
+                <p class="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold text-gray-300 leading-tight mb-4 sm:mb-6 mt-2 break-words" aria-label="Yon ti chans pou Ayiti">
+                    <span class="typewriter-letter" style="animation-delay: 1.2s">T</span><span class="typewriter-letter" style="animation-delay: 1.3s">h</span><span class="typewriter-letter" style="animation-delay: 1.4s">è</span><span class="typewriter-letter" style="animation-delay: 1.5s">m</span><span class="typewriter-letter" style="animation-delay: 1.6s">e</span><span class="typewriter-letter" style="animation-delay: 1.7s">:</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 1.8s">Y</span><span class="typewriter-letter" style="animation-delay: 1.9s">o</span><span class="typewriter-letter" style="animation-delay: 2.0s">n</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.1s">t</span><span class="typewriter-letter" style="animation-delay: 2.2s">i</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.3s">c</span><span class="typewriter-letter" style="animation-delay: 2.4s">h</span><span class="typewriter-letter" style="animation-delay: 2.5s">a</span><span class="typewriter-letter" style="animation-delay: 2.6s">n</span><span class="typewriter-letter" style="animation-delay: 2.7s">s</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.8s">p</span><span class="typewriter-letter" style="animation-delay: 2.9s">o</span><span class="typewriter-letter" style="animation-delay: 3.0s">u</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.1s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.2s">y</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.3s">i</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.4s">t</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.5s">i</span>
                 </p>
 
-                <p class="text-gray-300 text-base md:text-lg leading-relaxed mb-3">
+                <p class="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed mb-3 text-justify">
                     Bienvenue sur la plateforme officielle du concours Show Talent, une compétition musicale conçue pour révéler les talents les plus prometteurs.
                 </p>
-                <p class="text-gray-300 text-base md:text-lg leading-relaxed mb-3">
-                    Chaque dimanche, des artistes passionnés montent sur scène pour partager leur voix, leurs émotions et leur univers. Derrière chaque performance se cache une histoire, une revue et une détermination à réussir.
+                <p class="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed mb-3 text-justify">
+                    Chaque dimanche, des artistes passionnés montent sur scène pour partager leur voix, leurs émotions et leur univers.
                 </p>
-                <p class="text-yellow-400 text-base md:text-lg font-medium leading-relaxed mb-6">
+                <p class="text-yellow-400 text-sm sm:text-base md:text-lg font-medium leading-relaxed mb-6 text-justify">
                     Rejoignez-nous et vivez une expérience unique où passion et créativité se rencontrent.
                 </p>
 
                 <div class="hero-buttons">
-                    <a href="{{ url_for('main.results') }}" class="btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 inline-flex items-center gap-2">
+                    <a href="{{ url_for('main.results') }}" class="btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i class="fas fa-trophy" aria-hidden="true"></i> Voir les résultats
                     </a>
-                    <a href="{{ url_for('main.artists') }}" class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-6 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-blue-500/30 inline-flex items-center gap-2">
+                    <a href="{{ url_for('main.artists') }}" class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-blue-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i class="fas fa-users" aria-hidden="true"></i> Voir les participants
                     </a>
                 </div>
             </div>
 
             <div class="order-2 lg:order-2">
-                <div class="relative w-full h-[450px] md:h-[450px] overflow-hidden rounded-2xl shadow-2xl border border-white/5" id="imageSlider">
-                    <img class="image-slide active absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Show Talent 1" width="800" height="500" loading="eager" decoding="async" fetchpriority="high" onerror="this.src='https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=500&fit=crop'">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image2.jpg') }}" alt="Show Talent 2" width="800" height="500" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=500&fit=crop'">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image3.jpg') }}" alt="Show Talent 3" width="800" height="500" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&h=500&fit=crop'">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image4.jpg') }}" alt="Show Talent 4" width="800" height="500" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=500&fit=crop'">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image5.jpg') }}" alt="Show Talent 5" width="800" height="500" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&h=500&fit=crop'">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image6.jpg') }}" alt="Show Talent 6" width="800" height="500" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&h=500&fit=crop'">
+                <div class="relative w-full h-[280px] sm:h-[350px] md:h-[450px] overflow-hidden rounded-2xl shadow-2xl border border-white/5" id="imageSlider">
+                    <img class="image-slide active absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Show Talent 1" width="800" height="500" loading="eager" decoding="async" fetchpriority="high">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image2.jpg') }}" alt="Show Talent 2" width="800" height="500" loading="lazy" decoding="async">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image3.jpg') }}" alt="Show Talent 3" width="800" height="500" loading="lazy" decoding="async">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image4.jpg') }}" alt="Show Talent 4" width="800" height="500" loading="lazy" decoding="async">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image5.jpg') }}" alt="Show Talent 5" width="800" height="500" loading="lazy" decoding="async">
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image6.jpg') }}" alt="Show Talent 6" width="800" height="500" loading="lazy" decoding="async">
 
-                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot active bg-yellow-400 border-yellow-400" data-index="0" aria-label="Image 1"></button>
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="1" aria-label="Image 2"></button>
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="2" aria-label="Image 3"></button>
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="3" aria-label="Image 4"></button>
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="4" aria-label="Image 5"></button>
-                        <button class="w-3 h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="5" aria-label="Image 6"></button>
+                    <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot active bg-yellow-400 border-yellow-400" data-index="0" aria-label="Image 1"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="1" aria-label="Image 2"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="2" aria-label="Image 3"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="3" aria-label="Image 4"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="4" aria-label="Image 5"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="5" aria-label="Image 6"></button>
                     </div>
                 </div>
             </div>
@@ -405,38 +471,41 @@
 <!-- ============================================================
      ABOUT SECTION
      ============================================================ -->
-<section id="about" class="py-16 md:py-20" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+<section id="about" class="py-12 sm:py-16 md:py-20" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-3 sm:px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
 
             <div class="hidden lg:block rounded-2xl overflow-hidden shadow-2xl border border-white/5 hover:-translate-y-2 transition">
-                <img src="{{ url_for('static', filename='images/about-image.jpg') }}" alt="Show Talent" class="w-full h-[400px] object-cover hover:scale-105 transition duration-700" width="800" height="400" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=400&fit=crop'">
+                <img src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=400&fit=crop"
+                     alt="Show Talent"
+                     class="w-full h-[400px] object-cover hover:scale-105 transition duration-700"
+                     width="800" height="400" loading="lazy" decoding="async">
             </div>
 
-            <div>
-                <span class="text-yellow-400 font-semibold text-2xl uppercase tracking-widest">À propos du concours</span>
-                <h2 class="text-3xl md:text-4xl font-extrabold text-white mt-2 mb-4">
+            <div class="text-center lg:text-left">
+                <span class="text-yellow-400 font-semibold text-base sm:text-xl md:text-2xl uppercase tracking-widest">À propos du concours</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mt-2 mb-4">
                     La compétition qui <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">révèle</span> les talents
                 </h2>
-                <p class="text-gray-400 text-base md:text-lg leading-relaxed mb-3">
+                <p class="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed mb-3 text-justify">
                     Show Talent est bien plus qu'un simple concours de chant. C'est une véritable plateforme de révélation où les artistes peuvent exprimer leur passion et leur créativité.
                 </p>
-                <p class="text-gray-400 text-base md:text-lg leading-relaxed mb-6">
+                <p class="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed mb-6 text-justify">
                     Organisé par l'<span class="text-white font-semibold">ACDA</span> (Association Culturelle de Desbas d'Aquin), cet événement rassemble chaque année les meilleurs talents de la région pour 6 dimanches de compétition intense, évalués selon 10 critères précis par un jury professionnel.
                 </p>
 
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
-                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">6</span>
-                        <span class="block text-gray-400 text-sm font-medium mt-1">Dimanches</span>
+                <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                    <div class="text-center p-3 sm:p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">6</span>
+                        <span class="block text-gray-400 text-xs sm:text-sm font-medium mt-1">Dimanches</span>
                     </div>
-                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
-                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">10</span>
-                        <span class="block text-gray-400 text-sm font-medium mt-1">Critères</span>
+                    <div class="text-center p-3 sm:p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">10</span>
+                        <span class="block text-gray-400 text-xs sm:text-sm font-medium mt-1">Critères</span>
                     </div>
-                    <div class="text-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
-                        <span class="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">100</span>
-                        <span class="block text-gray-400 text-sm font-medium mt-1">Points max</span>
+                    <div class="text-center p-3 sm:p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition hover:border-yellow-400/20">
+                        <span class="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">100</span>
+                        <span class="block text-gray-400 text-xs sm:text-sm font-medium mt-1">Points max</span>
                     </div>
                 </div>
             </div>
@@ -446,112 +515,71 @@
 </section>
 
 <!-- ============================================================
-     COMMENT ÇA MARCHE - 4 ÉTAPES
+     VOTE PUBLIC SECTION — H1
      ============================================================ -->
-<section id="comment-ca-marche" class="py-16 md:py-20 bg-[#0B1120] border-t border-b border-white/5">
-    <div class="container mx-auto px-4">
+<section id="vote" class="py-8 sm:py-12 bg-[#0B1120] border-t border-b border-white/5" itemscope itemtype="https://schema.org/Event">
+    <div class="container mx-auto px-3 sm:px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="glass-card rounded-2xl p-5 sm:p-6 border-l-4 border-yellow-400">
 
-        <div class="text-center mb-12">
-            <span class="text-yellow-400 text-sm uppercase tracking-widest font-semibold">
-                Comment ça marche
-            </span>
-            <h2 class="text-3xl md:text-4xl font-extrabold text-white mt-3 mb-4">
-                Votre parcours en <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">4 étapes</span>
-            </h2>
-            <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-5 rounded-full"></div>
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/30 flex-shrink-0" aria-hidden="true">
+                        <i class="fas fa-vote-yea text-2xl text-[#0B1120]"></i>
+                    </div>
+
+                    <div class="flex-1 text-center sm:text-left" itemprop="description">
+                        <span class="inline-block text-yellow-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                            🗳️ Vote du public
+                        </span>
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1" itemprop="name">
+                            Votez pour votre artiste préféré
+                        </h1>
+                        <p class="text-gray-400 text-xs sm:text-sm leading-relaxed">
+                            Soutenez votre candidat. 1 vote par personne, résultats en direct.
+                        </p>
+                    </div>
+
+                    <a href="{{ url_for('main.vote') }}"
+                       class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition shadow-lg shadow-yellow-500/30 flex-shrink-0 whitespace-nowrap"
+                       itemprop="url"
+                       aria-label="Aller à la page de vote du public">
+                        <i class="fas fa-vote-yea" aria-hidden="true"></i>
+                        Voter
+                    </a>
+
+                </div>
+            </div>
         </div>
-
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
-
-            <div class="group text-center p-5 md:p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:-translate-y-2 hover:bg-white/10 hover:border-yellow-400/30 hover:shadow-xl hover:shadow-yellow-500/10 transition-all duration-300">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-[#0B1120] font-black text-lg flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-                    1
-                </div>
-                <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-300">
-                    <svg class="w-7 h-7 stroke-yellow-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <line x1="19" y1="8" x2="19" y2="14"/>
-                        <line x1="22" y1="11" x2="16" y2="11"/>
-                    </svg>
-                </div>
-                <h3 class="text-white font-bold text-sm md:text-base mb-2">Inscrivez-vous gratuitement</h3>
-            </div>
-
-            <div class="group text-center p-5 md:p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:-translate-y-2 hover:bg-white/10 hover:border-yellow-400/30 hover:shadow-xl hover:shadow-yellow-500/10 transition-all duration-300">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-[#0B1120] font-black text-lg flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-                    2
-                </div>
-                <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-300">
-                    <svg class="w-7 h-7 stroke-yellow-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="9" y="2" width="6" height="11" rx="3"/>
-                        <path d="M5 10v1a7 7 0 0 0 14 0v-1"/>
-                        <line x1="12" y1="18" x2="12" y2="22"/>
-                        <line x1="8" y1="22" x2="16" y2="22"/>
-                    </svg>
-                </div>
-                <h3 class="text-white font-bold text-sm md:text-base mb-2">Chantez chaque dimanche</h3>
-            </div>
-
-            <div class="group text-center p-5 md:p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:-translate-y-2 hover:bg-white/10 hover:border-yellow-400/30 hover:shadow-xl hover:shadow-yellow-500/10 transition-all duration-300">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-[#0B1120] font-black text-lg flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-                    3
-                </div>
-                <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-300">
-                    <svg class="w-7 h-7 stroke-yellow-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                </div>
-                <h3 class="text-white font-bold text-sm md:text-base mb-2">Recevez vos notes</h3>
-            </div>
-
-            <div class="group text-center p-5 md:p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:-translate-y-2 hover:bg-white/10 hover:border-yellow-400/30 hover:shadow-xl hover:shadow-yellow-500/10 transition-all duration-300">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-[#0B1120] font-black text-lg flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
-                    4
-                </div>
-                <div class="w-14 h-14 mx-auto mb-3 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center group-hover:rotate-6 transition-transform duration-300">
-                    <svg class="w-7 h-7 stroke-yellow-400" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M8 21h8"/>
-                        <path d="M12 17v4"/>
-                        <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
-                        <path d="M17 5h3a2 2 0 0 1-2 4"/>
-                        <path d="M7 5H4a2 2 0 0 0 2 4"/>
-                    </svg>
-                </div>
-                <h3 class="text-white font-bold text-sm md:text-base mb-2">Gagnez le concours</h3>
-            </div>
-
-        </div>
-
     </div>
 </section>
 
 <!-- ============================================================
-     LYRICS SECTION — Aperçu des paroles
+     LYRICS SECTION
      ============================================================ -->
-<section id="lyrics" class="py-16 md:py-20 bg-[#0B1120] border-t border-b border-white/5">
-    <div class="container mx-auto px-4">
+<section id="lyrics" class="py-12 sm:py-16 md:py-20 bg-[#0B1120] border-t border-b border-white/5">
+    <div class="container mx-auto px-3 sm:px-4">
 
-        <div class="text-center mb-12">
-            <span class="text-yellow-400 text-sm uppercase tracking-widest font-semibold">
+        <div class="text-center mb-8 sm:mb-12">
+            <span class="text-yellow-400 text-xs sm:text-sm uppercase tracking-widest font-semibold">
                 🎵 Paroles & Lyrics
             </span>
-            <h2 class="text-3xl md:text-4xl font-extrabold text-white mt-3 mb-4">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mt-3 mb-4">
                 Apprenez les <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">chansons</span>
             </h2>
-            <p class="text-gray-400 max-w-2xl mx-auto text-base leading-relaxed">
+            <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed text-justify">
                 Découvrez les paroles des chansons interprétées pendant le concours et chantez avec vos artistes préférés.
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-5 rounded-full"></div>
+            <div class="w-16 sm:w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-4 sm:mt-5 rounded-full"></div>
         </div>
 
-        <div id="lyricsPreview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-10">
+        <div id="lyricsPreview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto mb-8 sm:mb-10">
             <!-- Cartes injectées dynamiquement -->
         </div>
 
         <div class="text-center">
             <a href="{{ url_for('main.lyrics') }}"
-               class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-7 py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30">
+               class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 text-sm sm:text-base">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M9 18V5l12-2v13"/>
                     <circle cx="6" cy="18" r="3"/>
@@ -565,14 +593,53 @@
 </section>
 
 <!-- ============================================================
+     SONDAGES SECTION — H1
+     ============================================================ -->
+<section id="sondages" class="py-8 sm:py-12 bg-[#0B1120] border-t border-b border-white/5">
+    <div class="container mx-auto px-3 sm:px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="glass-card rounded-2xl p-5 sm:p-6 border-l-4 border-blue-400">
+
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0" aria-hidden="true">
+                        <i class="fas fa-poll text-2xl text-white"></i>
+                    </div>
+
+                    <div class="flex-1 text-center sm:text-left">
+                        <span class="inline-block text-blue-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                            📊 Sondages
+                        </span>
+                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1">
+                            Participez aux sondages
+                        </h1>
+                        <p class="text-gray-400 text-xs sm:text-sm leading-relaxed">
+                            Donnez votre avis sur le concours. Résultats en temps réel.
+                        </p>
+                    </div>
+
+                    <a href="{{ url_for('main.public_polls') }}"
+                       class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition shadow-lg shadow-blue-500/30 flex-shrink-0 whitespace-nowrap"
+                       aria-label="Aller à la page des sondages">
+                        <i class="fas fa-poll" aria-hidden="true"></i>
+                        Participer
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
      SPONSORS SECTION
      ============================================================ -->
-<section id="sponsors" class="py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
-    <div class="container mx-auto px-4">
-        <div class="text-center mb-8">
-            <span class="text-yellow-400 text-2xl uppercase tracking-wider font-semibold">Nos partenaires et sponsors</span>
-            <h2 class="text-3xl font-bold text-white mt-2">Qui rends possible cet édition</h2>
-            <div class="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-3 rounded-full"></div>
+<section id="sponsors" class="py-12 sm:py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-3 sm:px-4">
+        <div class="text-center mb-6 sm:mb-8">
+            <span class="text-yellow-400 text-base sm:text-xl md:text-2xl uppercase tracking-wider font-semibold">Nos partenaires et sponsors</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Qui rend possible cette édition</h2>
+            <div class="w-16 sm:w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-3 rounded-full"></div>
         </div>
 
         <div class="sponsors-grid" id="sponsorGrid">
@@ -580,7 +647,7 @@
         </div>
 
         <div class="text-center mt-6">
-            <a href="{{ url_for('main.sponsors_page') }}" class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-6 py-2.5 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-sm">
+            <a href="{{ url_for('main.sponsors_page') }}" class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-xs sm:text-sm">
                 <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>Voir tous les sponsors
             </a>
         </div>
@@ -590,64 +657,64 @@
 <!-- ============================================================
      CONTACT SECTION
      ============================================================ -->
-<section id="contact" class="py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05);">
-    <div class="container mx-auto px-4">
+<section id="contact" class="py-12 sm:py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05);">
+    <div class="container mx-auto px-3 sm:px-4">
         <div class="max-w-2xl mx-auto text-center">
-            <span class="text-yellow-400 text-sm uppercase tracking-wider font-semibold">Contactez-nous</span>
-            <h2 class="text-3xl font-bold text-white mt-2 mb-6">Une question ? Un projet ?</h2>
-            <p class="text-gray-400 mb-8">N'hésitez pas à nous contacter pour toute information concernant le concours.</p>
+            <span class="text-yellow-400 text-xs sm:text-sm uppercase tracking-wider font-semibold">Contactez-nous</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2 mb-4 sm:mb-6">Une question ? Un projet ?</h2>
+            <p class="text-gray-400 text-sm sm:text-base mb-6 sm:mb-8 text-justify">N'hésitez pas à nous contacter pour toute information concernant le concours.</p>
 
-            <form id="contactForm" class="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl text-left" novalidate>
+            <form id="contactForm" class="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl text-left" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2" for="first_name">
+                        <label class="block text-gray-400 text-xs sm:text-sm font-medium mb-2" for="first_name">
                             Prénom <span class="text-red-400">*</span>
                         </label>
                         <input type="text" id="first_name" name="first_name"
-                               class="form-input w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                               class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
                                placeholder="Votre prénom" required autocomplete="given-name">
                     </div>
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2" for="last_name">
+                        <label class="block text-gray-400 text-xs sm:text-sm font-medium mb-2" for="last_name">
                             Nom <span class="text-red-400">*</span>
                         </label>
                         <input type="text" id="last_name" name="last_name"
-                               class="form-input w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                               class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
                                placeholder="Votre nom" required autocomplete="family-name">
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <label class="block text-gray-400 text-sm font-medium mb-2" for="email">
+                <div class="mt-4 sm:mt-5">
+                    <label class="block text-gray-400 text-xs sm:text-sm font-medium mb-2" for="email">
                         Email <span class="text-red-400">*</span>
                     </label>
                     <input type="email" id="email" name="email"
-                           class="form-input w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
+                           class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
                            placeholder="votre@email.com" required autocomplete="email">
                 </div>
 
-                <div class="mt-5">
-                    <label class="block text-gray-400 text-sm font-medium mb-2" for="message">
+                <div class="mt-4 sm:mt-5">
+                    <label class="block text-gray-400 text-xs sm:text-sm font-medium mb-2" for="message">
                         Message <span class="text-red-400">*</span>
                     </label>
                     <textarea id="message" name="message" rows="5"
-                              class="form-input w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none resize-y"
+                              class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none resize-y"
                               placeholder="Votre message..." required minlength="10"></textarea>
                 </div>
 
                 <button type="submit"
-                        class="mt-6 w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] font-bold py-4 px-6 rounded-xl hover:scale-[1.02] transition shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="mt-5 sm:mt-6 w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl hover:scale-[1.02] transition shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2 sm:gap-3 text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fas fa-paper-plane" aria-hidden="true"></i>
                     <span id="submitBtnText">Envoyer le message</span>
                 </button>
 
-                <div id="formSuccess" class="hidden mt-4 p-4 bg-green-900/30 border border-green-500/30 rounded-xl text-green-400 text-center" role="status" aria-live="polite">
+                <div id="formSuccess" class="hidden mt-4 p-3 sm:p-4 bg-green-900/30 border border-green-500/30 rounded-xl text-green-400 text-sm text-center" role="status" aria-live="polite">
                     <i class="fas fa-check-circle mr-2" aria-hidden="true"></i>
                     Votre message a été envoyé avec succès !
                 </div>
-                <div id="formError" class="hidden mt-4 p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-center" role="alert" aria-live="assertive">
+                <div id="formError" class="hidden mt-4 p-3 sm:p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-sm text-center" role="alert" aria-live="assertive">
                     <i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>
                     <span id="formErrorText">Une erreur est survenue. Veuillez réessayer.</span>
                 </div>
@@ -661,7 +728,7 @@
 {% block extra_js %}
 <script>
 // ============================================================
-// SLIDER HERO — CORRIGÉ
+// SLIDER HERO
 // ============================================================
 (function() {
     'use strict';
@@ -689,15 +756,8 @@
         current = index;
     }
 
-    function nextSlide() {
-        showSlide((current + 1) % total);
-    }
-
-    function goToSlide(index) {
-        showSlide(index);
-        resetInterval();
-    }
-
+    function nextSlide() { showSlide((current + 1) % total); }
+    function goToSlide(index) { showSlide(index); resetInterval(); }
     function resetInterval() {
         if (interval) clearInterval(interval);
         interval = setInterval(nextSlide, 5000);
@@ -715,23 +775,18 @@
 
     var container = document.getElementById('imageSlider');
     if (container) {
-        container.addEventListener('mouseenter', function() {
-            if (interval) clearInterval(interval);
-        });
+        container.addEventListener('mouseenter', function() { if (interval) clearInterval(interval); });
         container.addEventListener('mouseleave', resetInterval);
     }
 
     document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            if (interval) clearInterval(interval);
-        } else {
-            resetInterval();
-        }
+        if (document.hidden) { if (interval) clearInterval(interval); }
+        else { resetInterval(); }
     });
 })();
 
 // ============================================================
-// SPONSORS — CORRIGÉ
+// SPONSORS
 // ============================================================
 (function() {
     'use strict';
@@ -766,12 +821,10 @@
             div.setAttribute('role', 'link');
             div.setAttribute('tabindex', '0');
             div.setAttribute('aria-label', 'Visiter ' + sponsor.name);
-
             div.addEventListener('click', function(e) {
                 e.preventDefault();
                 window.open(website, '_blank', 'noopener,noreferrer');
             });
-
             div.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -810,12 +863,11 @@
     for (var i = 0; i < sponsors.length; i++) {
         fragment.appendChild(createSponsorItem(sponsors[i]));
     }
-
     grid.appendChild(fragment);
 })();
 
 // ============================================================
-// APERÇU DES PAROLES — CORRIGÉ (BUGS FIXÉS)
+// APERÇU DES PAROLES
 // ============================================================
 (function() {
     'use strict';
@@ -823,7 +875,6 @@
     var grid = document.getElementById('lyricsPreview');
     if (!grid) return;
 
-    // ✅ FIX 1 : Vérifier si lyrics_preview existe avant la boucle Jinja
     var lyricsPreview = [];
     {% if lyrics_preview %}
         {% for lyric in lyrics_preview %}
@@ -838,13 +889,11 @@
         {% endfor %}
     {% endif %}
 
-    // ✅ FIX 2 : Vérifier que c'est bien un tableau et non vide
     if (!Array.isArray(lyricsPreview) || lyricsPreview.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px 0;">Aucune parole disponible pour le moment.</div>';
         return;
     }
 
-    // ✅ FIX 3 : Fonction d'échappement robuste
     function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         var d = document.createElement('div');
@@ -864,18 +913,15 @@
         if (lyric.artistPhoto && lyric.artistPhoto.trim() !== '') {
             photoHtml = '<img src="' + escapeHTML(lyric.artistPhoto) + '" ' +
                         'alt="' + escapeHTML(lyric.artistName) + ' - ' + escapeHTML(lyric.songTitle) + '" ' +
-                        'class="lyric-avatar" ' +
-                        'loading="lazy" decoding="async" ' +
-                        'width="56" height="56" ' +
+                        'class="lyric-avatar" loading="lazy" decoding="async" width="56" height="56" ' +
                         'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
                         '<div class="lyric-avatar-placeholder" style="display:none;"><i class="fas fa-user"></i></div>';
         } else {
             photoHtml = '<div class="lyric-avatar-placeholder"><i class="fas fa-user"></i></div>';
         }
 
-        // ✅ FIX 4 : Construction sécurisée avec textContent au lieu d'innerHTML
         var headerDiv = document.createElement('div');
-        headerDiv.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:16px;';
+        headerDiv.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;';
         headerDiv.innerHTML = photoHtml;
 
         var infoDiv = document.createElement('div');
@@ -933,7 +979,7 @@
 })();
 
 // ============================================================
-// FORMULAIRE DE CONTACT — CORRIGÉ
+// FORMULAIRE DE CONTACT
 // ============================================================
 (function() {
     'use strict';
@@ -959,14 +1005,11 @@
     }
 
     function resetFieldErrors() {
-        form.querySelectorAll('.error').forEach(function(el) {
-            el.classList.remove('error');
-        });
+        form.querySelectorAll('.error').forEach(function(el) { el.classList.remove('error'); });
     }
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-
         hideMessages();
         resetFieldErrors();
 
@@ -977,7 +1020,6 @@
         required.forEach(function(fieldName) {
             var field = form.querySelector('[name="' + fieldName + '"]');
             if (!field) return;
-
             var value = (field.value || '').trim();
             data[fieldName] = value;
 
@@ -986,20 +1028,13 @@
                 valid = false;
             } else if (fieldName === 'email') {
                 var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(value)) {
-                    field.classList.add('error');
-                    valid = false;
-                }
+                if (!emailRegex.test(value)) { field.classList.add('error'); valid = false; }
             } else if (fieldName === 'message' && value.length < 10) {
-                field.classList.add('error');
-                valid = false;
+                field.classList.add('error'); valid = false;
             }
         });
 
-        if (!valid) {
-            showError('Veuillez vérifier les champs du formulaire.');
-            return;
-        }
+        if (!valid) { showError('Veuillez vérifier les champs du formulaire.'); return; }
 
         var btn = form.querySelector('button[type="submit"]');
         var originalHTML = btn.innerHTML;
@@ -1009,16 +1044,11 @@
 
         fetch('/api/contact', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify(data)
         })
         .then(function(response) {
-            return response.json().then(function(json) {
-                return { ok: response.ok, json: json };
-            });
+            return response.json().then(function(json) { return { ok: response.ok, json: json }; });
         })
         .then(function(result) {
             btn.disabled = false;
@@ -1028,10 +1058,7 @@
                 if (successDiv) successDiv.classList.remove('hidden');
                 form.reset();
                 resetFieldErrors();
-
-                setTimeout(function() {
-                    if (successDiv) successDiv.classList.add('hidden');
-                }, 5000);
+                setTimeout(function() { if (successDiv) successDiv.classList.add('hidden'); }, 5000);
             } else {
                 showError(result.json.message || 'Une erreur est survenue.');
             }
@@ -1044,12 +1071,8 @@
     });
 
     form.querySelectorAll('.form-input').forEach(function(input) {
-        input.addEventListener('focus', function() {
-            this.classList.remove('error');
-        });
-        input.addEventListener('input', function() {
-            if (this.value.trim()) this.classList.remove('error');
-        });
+        input.addEventListener('focus', function() { this.classList.remove('error'); });
+        input.addEventListener('input', function() { if (this.value.trim()) this.classList.remove('error'); });
     });
 })();
 </script>

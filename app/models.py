@@ -199,3 +199,162 @@ class Lyric(db.Model):
 
     def __repr__(self):
         return f"<Lyric {self.song_title} - {self.artist_name}>"
+
+# ============================================================
+# MODULE VOTE PUBLIC — INDÉPENDANT
+# ============================================================
+
+class VoteConfig(db.Model):
+    """Configuration globale du vote — Mode flexible"""
+    __tablename__ = "vote_configs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    mode = db.Column(db.String(20), nullable=False, default="PER_SESSION")
+    # 'GLOBAL' = 1 vote pour toute l'édition
+    # 'PER_SESSION' = 1 vote par soirée
+    
+    is_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    closed_message = db.Column(db.String(300), default="Le vote du public est actuellement fermé.")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("mode IN ('GLOBAL', 'PER_SESSION')", name="check_vote_mode"),
+    )
+
+    def __repr__(self):
+        return f"<VoteConfig mode={self.mode} enabled={self.is_enabled}>"
+
+
+class VoteSession(db.Model):
+    """Session de vote par soirée — Indépendant"""
+    __tablename__ = "vote_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.Integer, nullable=False, unique=True, index=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    is_open = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    closed_message = db.Column(db.String(300), default="Le vote pour cette soirée est actuellement fermé.")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    votes = db.relationship('PublicVote', backref='session', lazy='dynamic', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"<VoteSession {self.number} - {self.title}>"
+
+
+class PublicVote(db.Model):
+    """Vote du public — Fonctionne en mode GLOBAL ou PER_SESSION"""
+    __tablename__ = "public_votes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    voter_first_name = db.Column(db.String(100), nullable=False)
+    voter_last_name = db.Column(db.String(100), nullable=False)
+    voter_fingerprint = db.Column(db.String(64), nullable=False, index=True)
+    voter_ip = db.Column(db.String(45))
+    voter_user_agent = db.Column(db.String(255))
+    artist_id = db.Column(db.Integer, db.ForeignKey("artists.id", ondelete="CASCADE"), nullable=False, index=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("vote_sessions.id", ondelete="CASCADE"), nullable=True, index=True)
+    # ↑ NULL quand mode=GLOBAL, renseigné quand mode=PER_SESSION
+    
+    mode = db.Column(db.String(20), nullable=False, default="PER_SESSION", index=True)
+    # ↑ Enregistre le mode utilisé au moment du vote (historique)
+    
+    edition = db.Column(db.String(20), nullable=False, default="4e", index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        # Unicité en mode PER_SESSION : 1 vote par (fingerprint, session)
+        db.UniqueConstraint('voter_fingerprint', 'session_id', name='unique_vote_per_session'),
+        # Unicité en mode GLOBAL : 1 vote par (fingerprint, edition)
+        db.UniqueConstraint('voter_fingerprint', 'edition', name='unique_vote_per_edition'),
+    )
+
+    artist = db.relationship('Artist', backref=db.backref('public_votes', lazy='dynamic', cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f"<PublicVote {self.voter_first_name} {self.voter_last_name} → S{self.session_id} A{self.artist_id}>"
+
+
+class FinanceCategory(db.Model):
+    __tablename__ = "finance_categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    type = db.Column(db.String(10), nullable=False, index=True)
+    icon = db.Column(db.String(50), default='fa-tag')
+    color = db.Column(db.String(20), default='#facc15')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("type IN ('income', 'expense')", name="check_finance_type"),
+    )
+
+
+class FinanceTransaction(db.Model):
+    __tablename__ = "finance_transactions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(10), nullable=False, index=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("finance_categories.id", ondelete="SET NULL"), nullable=True, index=True)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    currency = db.Column(db.String(5), nullable=False, default='HTG')
+    description = db.Column(db.String(500), nullable=False)
+    source = db.Column(db.String(200))
+    reference = db.Column(db.String(100))
+    transaction_date = db.Column(db.Date, nullable=False, index=True, default=lambda: datetime.utcnow().date())
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    category = db.relationship('FinanceCategory', backref=db.backref('transactions', lazy='dynamic'))
+    author = db.relationship('User', foreign_keys=[created_by])
+
+    __table_args__ = (
+        db.CheckConstraint("type IN ('income', 'expense')", name="check_transaction_type"),
+        db.CheckConstraint("amount > 0", name="check_amount_positive"),
+    )
+
+
+class Poll(db.Model):
+    __tablename__ = "polls"
+
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(300), nullable=False)
+    description = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    allow_multiple = db.Column(db.Boolean, default=False, nullable=False)
+    author_name = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    closes_at = db.Column(db.DateTime)
+
+    options = db.relationship('PollOption', backref='poll', lazy='dynamic', cascade='all, delete-orphan')
+    poll_votes = db.relationship('PollVote', backref='poll', lazy='dynamic', cascade='all, delete-orphan')
+
+
+class PollOption(db.Model):
+    __tablename__ = "poll_options"
+
+    id = db.Column(db.Integer, primary_key=True)
+    poll_id = db.Column(db.Integer, db.ForeignKey("polls.id", ondelete="CASCADE"), nullable=False, index=True)
+    text = db.Column(db.String(200), nullable=False)
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    option_votes = db.relationship('PollVote', backref='option', lazy='dynamic', cascade='all, delete-orphan')
+
+
+class PollVote(db.Model):
+    __tablename__ = "poll_votes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    poll_id = db.Column(db.Integer, db.ForeignKey("polls.id", ondelete="CASCADE"), nullable=False, index=True)
+    option_id = db.Column(db.Integer, db.ForeignKey("poll_options.id", ondelete="CASCADE"), nullable=False, index=True)
+    voter_fingerprint = db.Column(db.String(64), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('poll_id', 'voter_fingerprint', name='unique_vote_per_poll'),
+    )

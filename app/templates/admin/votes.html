@@ -1,0 +1,248 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Votes du public{% endblock %}
+
+{% block content %}
+<div class="section-dark py-6 sm:py-8">
+    <div class="container mx-auto px-3 sm:px-4 max-w-7xl">
+
+        <!-- EN-TÊTE -->
+        <div class="glass-card rounded-2xl p-4 sm:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white">🗳️ Votes du public</h1>
+                    <p class="text-gray-400 text-xs sm:text-sm mt-1">
+                        Mode: 
+                        <span class="font-bold text-yellow-400">
+                            {% if config.mode == 'GLOBAL' %}Vote global (édition){% else %}Vote par soirée{% endif %}
+                        </span>
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="document.getElementById('configForm').classList.toggle('hidden')"
+                            class="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 text-sm font-bold rounded-xl hover:bg-white/10 transition">
+                        <i class="fas fa-cog mr-1"></i>Configuration
+                    </button>
+                    {% if voters %}
+                    <a href="{{ url_for('admin.export_votes', session_id=current_session.id if current_session else None, edition=edition) }}"
+                       class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-[#0B1120] text-sm font-bold rounded-xl transition inline-flex items-center gap-2">
+                        <i class="fas fa-download"></i>Export CSV
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURATION -->
+        <div id="configForm" class="hidden glass-card rounded-2xl p-4 sm:p-6 mb-6">
+            <h2 class="text-lg font-bold text-white mb-4">⚙️ Configuration du vote</h2>
+
+            <form method="POST" action="{{ url_for('admin.update_vote_config') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition
+                                  {% if config.mode == 'GLOBAL' %}border-yellow-400 bg-yellow-400/5{% else %}border-white/10 hover:border-white/20{% endif %}">
+                        <input type="radio" name="mode" value="GLOBAL" {% if config.mode == 'GLOBAL' %}checked{% endif %} class="mt-1">
+                        <div>
+                            <div class="font-bold text-white">🌍 Vote global</div>
+                            <div class="text-xs text-gray-400 mt-1">1 vote par personne pour toute l'édition</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition
+                                  {% if config.mode == 'PER_SESSION' %}border-yellow-400 bg-yellow-400/5{% else %}border-white/10 hover:border-white/20{% endif %}">
+                        <input type="radio" name="mode" value="PER_SESSION" {% if config.mode == 'PER_SESSION' %}checked{% endif %} class="mt-1">
+                        <div>
+                            <div class="font-bold text-white">📅 Vote par soirée</div>
+                            <div class="text-xs text-gray-400 mt-1">1 vote par personne par soirée</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mb-4 flex items-center gap-2">
+                    <input type="checkbox" name="is_enabled" id="is_enabled" {% if config.is_enabled %}checked{% endif %}
+                           class="w-4 h-4">
+                    <label for="is_enabled" class="text-gray-300 text-sm">Vote activé</label>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-medium mb-1">Message quand fermé</label>
+                    <input type="text" name="closed_message" maxlength="300" value="{{ config.closed_message }}"
+                           class="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
+                </div>
+
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] font-bold rounded-xl text-sm">
+                    <i class="fas fa-save mr-1"></i>Enregistrer
+                </button>
+            </form>
+        </div>
+
+        <!-- CRÉER SOIRÉE (mode PER_SESSION) -->
+        {% if config.mode == 'PER_SESSION' %}
+        <div class="glass-card rounded-2xl p-4 sm:p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-white">📅 Soirées de vote</h2>
+                <button onclick="document.getElementById('createSessionForm').classList.toggle('hidden')"
+                        class="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] text-sm font-bold rounded-xl">
+                    <i class="fas fa-plus mr-1"></i>Nouvelle soirée
+                </button>
+            </div>
+
+            <div id="createSessionForm" class="hidden mb-4 p-4 bg-white/5 rounded-xl">
+                <form method="POST" action="{{ url_for('admin.create_vote_session') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                        <input type="number" name="number" required min="1" max="20" placeholder="N°"
+                               class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
+                        <input type="text" name="title" required maxlength="150" placeholder="Titre"
+                               class="sm:col-span-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-yellow-500 text-[#0B1120] font-bold rounded-lg text-sm">
+                        Créer
+                    </button>
+                </form>
+            </div>
+
+            {% if sessions %}
+            <div class="flex flex-wrap gap-2">
+                {% for s in sessions %}
+                <a href="{{ url_for('admin.votes_dashboard', session_id=s.id) }}"
+                   class="px-4 py-2.5 rounded-xl font-semibold text-sm transition inline-flex items-center gap-2
+                          {% if current_session and current_session.id == s.id %}bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120]{% else %}bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10{% endif %}">
+                    <span>D{{ s.number }}</span>
+                    {% if s.is_open %}<span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>{% else %}<span class="w-2 h-2 rounded-full bg-red-400"></span>{% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if current_session %}
+        <!-- STATUT SESSION -->
+        <div class="glass-card rounded-2xl p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-white">{{ current_session.title }}</h3>
+                    <p class="text-xs text-gray-500">{{ total_votes }} vote(s)</p>
+                </div>
+                <form method="POST" action="{{ url_for('admin.toggle_vote_session', session_id=current_session.id) }}" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="px-4 py-2 {% if current_session.is_open %}bg-red-600{% else %}bg-green-600{% endif %} text-white text-sm font-bold rounded-lg">
+                        {{ 'Fermer' if current_session.is_open else 'Ouvrir' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- STATS -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="glass-card rounded-xl p-4" style="border-left: 3px solid #facc15;">
+                <div class="text-xs text-gray-400">Total votes</div>
+                <div class="text-3xl font-black text-yellow-400">{{ total_votes }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-4" style="border-left: 3px solid #22c55e;">
+                <div class="text-xs text-gray-400">Artistes votés</div>
+                <div class="text-3xl font-black text-green-400">{{ results|length }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-4" style="border-left: 3px solid #7c3aed;">
+                <div class="text-xs text-gray-400">Votants</div>
+                <div class="text-3xl font-black text-purple-400">{{ voters|length }}</div>
+            </div>
+        </div>
+
+        <!-- RÉSULTATS -->
+        <div class="glass-card rounded-2xl overflow-hidden mb-6">
+            <div class="p-4 border-b border-white/10">
+                <h2 class="text-lg font-bold text-white">🏆 Classement</h2>
+            </div>
+            {% if results %}
+            <div class="p-4 space-y-3">
+                {% for item in results %}
+                <div class="p-4 bg-white/5 rounded-xl">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center
+                            {% if loop.index == 1 %}bg-yellow-500 text-[#0B1120]{% elif loop.index == 2 %}bg-gray-400 text-[#0B1120]{% elif loop.index == 3 %}bg-orange-500 text-white{% else %}bg-white/10 text-gray-400{% endif %} font-black">
+                            {{ loop.index }}
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-white font-bold">{{ item.artist.user.full_name() }}</div>
+                            <div class="text-xs text-gray-500 font-mono">{{ item.artist.code }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-black text-yellow-400">{{ item.votes }}</div>
+                            <div class="text-xs text-gray-500">{{ item.percentage }}%</div>
+                        </div>
+                    </div>
+                    <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-yellow-400 to-yellow-600"
+                             style="width: {{ item.percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-12 text-center text-gray-400">Aucun vote pour le moment</div>
+            {% endif %}
+        </div>
+
+        <!-- LISTE VOTANTS -->
+        <div class="glass-card rounded-2xl overflow-hidden">
+            <div class="p-4 border-b border-white/10">
+                <h2 class="text-lg font-bold text-white">
+                    👥 Liste des votants ({{ voters|length }})
+                </h2>
+            </div>
+            {% if voters %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-white/5 border-b border-white/10">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Prénom</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Nom</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">A voté pour</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase hidden md:table-cell">Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for v in voters %}
+                        <tr class="hover:bg-white/5">
+                            <td class="px-4 py-3 text-gray-500 text-xs">{{ loop.index }}</td>
+                            <td class="px-4 py-3 text-white font-semibold">{{ v.voter_first_name }}</td>
+                            <td class="px-4 py-3 text-white font-semibold">{{ v.voter_last_name }}</td>
+                            <td class="px-4 py-3">
+                                <span class="text-yellow-400 font-semibold">{{ v.artist.user.full_name() }}</span>
+                                <span class="text-gray-500 text-xs ml-1">({{ v.artist.code }})</span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-400 text-xs hidden md:table-cell">
+                                {{ v.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <form method="POST" action="{{ url_for('admin.delete_vote', vote_id=v.id) }}" class="inline"
+                                      onsubmit="return confirm('Supprimer ?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="text-red-400 text-xs">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-12 text-center text-gray-400">
+                <i class="fas fa-user-slash text-5xl text-gray-600 mb-4"></i>
+                <p>Aucun votant</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
