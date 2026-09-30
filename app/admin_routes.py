@@ -5,12 +5,22 @@ import math
 from email_validator import EmailNotValidError, validate_email
 from sqlalchemy import func
 from app import db
-from app.models import Poll, User, Artist, CompetitionSession, Criterion, Assignment, Score, Comment, Sponsor, Moment, ContactMessage, Lyric, FinanceCategory, FinanceTransaction,    Poll, PollOption, PollVote,VoteConfig, VoteSession, PublicVote
-
+from app.models import (
+    Poll, User, Artist, CompetitionSession, Criterion, Assignment, Score,
+    Comment, Sponsor, Moment, ContactMessage, Lyric, FinanceCategory,
+    FinanceTransaction, PollOption, PollVote, VoteConfig, VoteSession, PublicVote,
+)
 from app.permissions import admin_required, rate_limit
 from app.utils import save_uploaded_file, delete_uploaded_file, validate_http_url
+from app.services_ranking import (
+    compute_ranking,
+    get_sessions_for_ranking,
+    get_matrix_for_session,
+    invalidate_ranking_cache,
+)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
 
 # ============================================================
 # DASHBOARD
@@ -63,7 +73,6 @@ def dashboard():
 @admin_bp.route('/artists')
 @admin_required
 def artists():
-    """Liste des artistes"""
     try:
         artists = Artist.query.join(User).order_by(User.last_name).all()
         return render_template('admin/artists.html', artists=artists)
@@ -76,7 +85,6 @@ def artists():
 @admin_bp.route('/artists/create', methods=['GET', 'POST'])
 @admin_required
 def create_artist():
-    """Créer un artiste"""
     if request.method == 'POST':
         try:
             first_name = request.form.get('first_name', '').strip()
@@ -144,6 +152,7 @@ def create_artist():
 
             db.session.add(artist)
             db.session.commit()
+            invalidate_ranking_cache()
 
             flash(f'Artiste {user.full_name()} créé avec succès!', 'success')
             return redirect(url_for('admin.artists'))
@@ -160,7 +169,6 @@ def create_artist():
 @admin_bp.route('/artists/<int:artist_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_artist(artist_id):
-    """Modifier un artiste"""
     artist = Artist.query.get_or_404(artist_id)
 
     if request.method == 'POST':
@@ -217,6 +225,7 @@ def edit_artist(artist_id):
                     return render_template('admin/artist_form.html', artist=artist)
 
             db.session.commit()
+            invalidate_ranking_cache()
             flash('Artiste mis à jour avec succès!', 'success')
             return redirect(url_for('admin.artists'))
 
@@ -240,6 +249,7 @@ def toggle_artist_account_status(artist_id):
             artist.user.account_status = 'ACTIVE'
             flash(f'Compte de {artist.user.full_name()} activé.', 'success')
         db.session.commit()
+        invalidate_ranking_cache()
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur toggle status artiste: {str(e)}")
@@ -259,6 +269,7 @@ def toggle_artist_competition_status(artist_id):
             artist.competition_status = 'ACTIVE'
             flash(f'{artist.code} - {artist.user.full_name()} réintégré dans la compétition.', 'success')
         db.session.commit()
+        invalidate_ranking_cache()
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Erreur toggle competition artiste: {str(e)}")
@@ -455,7 +466,6 @@ def delete_criterion(criterion_id):
 @admin_bp.route('/criteria/<int:criterion_id>/force-delete', methods=['POST'])
 @admin_required
 def force_delete_criterion(criterion_id):
-    """Supprimer un critère FORCÉMENT (supprime aussi les affectations et notes)"""
     criterion = Criterion.query.get_or_404(criterion_id)
     try:
         if Criterion.query.count() <= 10:
@@ -469,6 +479,7 @@ def force_delete_criterion(criterion_id):
 
         db.session.delete(criterion)
         db.session.commit()
+        invalidate_ranking_cache()
 
         flash(f'Critère supprimé avec succès! ({assignments_count} affectations et {scores_count} notes supprimées)', 'success')
     except Exception as e:
@@ -479,13 +490,12 @@ def force_delete_criterion(criterion_id):
 
 
 # ============================================================
-# GESTION DES DIMANCHES ET AFFECTATIONS (CRUD DIMANCHES)
+# GESTION DES DIMANCHES
 # ============================================================
 
 @admin_bp.route('/sundays')
 @admin_required
 def sundays():
-    """READ: Affichage de la liste des dimanches et des données associées"""
     try:
         sessions = CompetitionSession.query.order_by(CompetitionSession.number).all()
         juries = User.query.filter_by(role='jury', account_status='ACTIVE').all()
@@ -536,7 +546,6 @@ def sundays():
 @admin_bp.route('/sundays/create', methods=['POST'])
 @admin_required
 def create_sunday():
-    """CREATE: Création d'un nouveau dimanche"""
     try:
         number = int(request.form.get('number', 0))
         date_str = request.form.get('date', '')
@@ -576,7 +585,6 @@ def create_sunday():
 @admin_bp.route('/sundays/<int:session_id>/edit', methods=['POST'])
 @admin_required
 def edit_sunday(session_id):
-    """UPDATE: Modification des détails d'un dimanche (numéro et date)"""
     session_obj = CompetitionSession.query.get_or_404(session_id)
     try:
         number = request.form.get('number')
@@ -610,16 +618,15 @@ def edit_sunday(session_id):
 @admin_bp.route('/sundays/<int:session_id>/delete', methods=['POST'])
 @admin_required
 def delete_sunday(session_id):
-    """DELETE: Suppression d'un dimanche et de ses affectations/notes dépendantes"""
     session_obj = CompetitionSession.query.get_or_404(session_id)
     try:
-        # Nettoyage des enregistrements associés
         Assignment.query.filter_by(session_id=session_id).delete()
         Score.query.filter_by(session_id=session_id).delete()
         Moment.query.filter_by(session_id=session_id).delete()
 
         db.session.delete(session_obj)
         db.session.commit()
+        invalidate_ranking_cache()
         flash('Dimanche et ses données associées ont été supprimés avec succès!', 'success')
     except Exception as e:
         db.session.rollback()
@@ -717,7 +724,6 @@ def assign_criteria(session_id):
 @admin_bp.route('/sundays/<int:session_id>/status', methods=['POST'])
 @admin_required
 def update_session_status(session_id):
-    """UPDATE: Mise à jour du statut d'une session (PENDING, IN_PROGRESS, COMPLETED)"""
     try:
         session_obj = CompetitionSession.query.get_or_404(session_id)
         new_status = request.form.get('status', '')
@@ -737,13 +743,12 @@ def update_session_status(session_id):
 
 
 # ============================================================
-# GESTION DES AFFECTATIONS (CRUD AFFECTATIONS)
+# GESTION DES AFFECTATIONS
 # ============================================================
 
 @admin_bp.route('/assignments/<int:assignment_id>/delete', methods=['POST'])
 @admin_required
 def delete_assignment(assignment_id):
-    """Supprimer une affectation spécifique"""
     try:
         assignment = Assignment.query.get_or_404(assignment_id)
         db.session.delete(assignment)
@@ -760,7 +765,6 @@ def delete_assignment(assignment_id):
 @admin_bp.route('/assignments/<int:assignment_id>/edit', methods=['POST'])
 @admin_required
 def edit_assignment(assignment_id):
-    """Modifier une affectation (changer le critère ou le jury)"""
     try:
         assignment = Assignment.query.get_or_404(assignment_id)
 
@@ -1072,6 +1076,7 @@ def admin_save_score():
             existing_score.score = score_value
             existing_score.updated_at = datetime.utcnow()
             db.session.commit()
+            invalidate_ranking_cache()   # ✅ AJOUT
             return jsonify({
                 'success': True,
                 'score': score_value,
@@ -1089,6 +1094,7 @@ def admin_save_score():
             )
             db.session.add(new_score)
             db.session.commit()
+            invalidate_ranking_cache()   # ✅ AJOUT
             return jsonify({
                 'success': True,
                 'score': score_value,
@@ -1141,6 +1147,7 @@ def admin_delete_score():
 
         db.session.delete(score)
         db.session.commit()
+        invalidate_ranking_cache()   # ✅ AJOUT
 
         return jsonify({
             'success': True,
@@ -1155,13 +1162,12 @@ def admin_delete_score():
 
 
 # ============================================================
-# GESTION DES MESSAGES DE CONTACT
+# GESTION DES MESSAGES
 # ============================================================
 
 @admin_bp.route('/messages')
 @admin_required
 def messages():
-    """Liste des messages de contact"""
     try:
         messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
         return render_template('admin/messages.html', messages=messages)
@@ -1174,7 +1180,6 @@ def messages():
 @admin_bp.route('/messages/<int:message_id>/mark-read', methods=['POST'])
 @admin_required
 def mark_message_read(message_id):
-    """Marquer un message comme lu"""
     try:
         message = ContactMessage.query.get_or_404(message_id)
         message.status = 'READ'
@@ -1189,7 +1194,6 @@ def mark_message_read(message_id):
 @admin_bp.route('/messages/<int:message_id>/delete', methods=['POST'])
 @admin_required
 def delete_message(message_id):
-    """Supprimer un message"""
     try:
         message = ContactMessage.query.get_or_404(message_id)
         db.session.delete(message)
@@ -1202,13 +1206,12 @@ def delete_message(message_id):
 
 
 # ============================================================
-# GESTION DES PAROLES (LYRICS) — MODULE INDÉPENDANT
+# GESTION DES PAROLES (LYRICS)
 # ============================================================
 
 @admin_bp.route('/lyrics')
 @admin_required
 def lyrics():
-    """Liste des paroles"""
     try:
         lyrics_list = Lyric.query.order_by(Lyric.created_at.desc()).all()
         return render_template('admin/lyrics.html', lyrics=lyrics_list)
@@ -1221,7 +1224,6 @@ def lyrics():
 @admin_bp.route('/lyrics/create', methods=['POST'])
 @admin_required
 def create_lyric():
-    """Créer une nouvelle parole avec artiste saisi manuellement"""
     try:
         artist_name = request.form.get('artist_name', '').strip()
         artist_code = request.form.get('artist_code', '').strip().upper()
@@ -1267,7 +1269,6 @@ def create_lyric():
 @admin_bp.route('/lyrics/<int:lyric_id>/edit', methods=['POST'])
 @admin_required
 def edit_lyric(lyric_id):
-    """Modifier une parole"""
     lyric = Lyric.query.get_or_404(lyric_id)
     try:
         artist_name = request.form.get('artist_name', '').strip()
@@ -1313,7 +1314,6 @@ def edit_lyric(lyric_id):
 @admin_bp.route('/lyrics/<int:lyric_id>/delete', methods=['POST'])
 @admin_required
 def delete_lyric(lyric_id):
-    """Supprimer une parole"""
     lyric = Lyric.query.get_or_404(lyric_id)
     try:
         if lyric.artist_photo:
@@ -1331,7 +1331,6 @@ def delete_lyric(lyric_id):
 @admin_bp.route('/lyrics/<int:lyric_id>/toggle-publish', methods=['POST'])
 @admin_required
 def toggle_lyric_publish(lyric_id):
-    """Publier/Dépublier une parole"""
     lyric = Lyric.query.get_or_404(lyric_id)
     try:
         lyric.is_published = not lyric.is_published
@@ -1343,39 +1342,32 @@ def toggle_lyric_publish(lyric_id):
         flash('Erreur lors du changement de statut.', 'danger')
     return redirect(url_for('admin.lyrics'))
 
+
 # ============================================================
-# GESTION FINANCIÈRE — MODULE INDÉPENDANT
+# GESTION FINANCIÈRE
 # ============================================================
 
 @admin_bp.route('/finance')
 @admin_required
 def finance():
-    """Dashboard financier"""
     try:
-        from sqlalchemy import func
-
-        # Total rentrées
         total_income = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
             FinanceTransaction.type == 'income'
         ).scalar() or 0
 
-        # Total sorties
         total_expense = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
             FinanceTransaction.type == 'expense'
         ).scalar() or 0
 
         balance = float(total_income) - float(total_expense)
 
-        # Par catégorie
         categories = FinanceCategory.query.order_by(FinanceCategory.type, FinanceCategory.name).all()
 
-        # Transactions récentes
         transactions = FinanceTransaction.query.order_by(
             FinanceTransaction.transaction_date.desc(),
             FinanceTransaction.created_at.desc()
         ).limit(50).all()
 
-        # Totaux par catégorie
         category_totals = {}
         for cat in categories:
             cat_total = db.session.query(func.coalesce(func.sum(FinanceTransaction.amount), 0)).filter(
@@ -1399,7 +1391,6 @@ def finance():
 @admin_bp.route('/finance/transaction/create', methods=['POST'])
 @admin_required
 def create_transaction():
-    """Créer une transaction"""
     try:
         t_type = request.form.get('type', '').strip()
         category_id = request.form.get('category_id')
@@ -1410,7 +1401,6 @@ def create_transaction():
         transaction_date_str = request.form.get('transaction_date', '').strip()
         currency = request.form.get('currency', 'HTG').strip()
 
-        # Validations
         if t_type not in ('income', 'expense'):
             flash('Type invalide.', 'danger')
             return redirect(url_for('admin.finance'))
@@ -1432,7 +1422,6 @@ def create_transaction():
             flash('Montant invalide.', 'danger')
             return redirect(url_for('admin.finance'))
 
-        # Date
         if transaction_date_str:
             try:
                 transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
@@ -1442,14 +1431,12 @@ def create_transaction():
         else:
             transaction_date = datetime.utcnow().date()
 
-        # Catégorie (optionnelle)
         cat_id = None
         if category_id and category_id.isdigit():
             cat = FinanceCategory.query.get(int(category_id))
             if cat:
                 cat_id = cat.id
 
-        # Créer
         transaction = FinanceTransaction(
             type=t_type,
             category_id=cat_id,
@@ -1475,7 +1462,6 @@ def create_transaction():
 @admin_bp.route('/finance/transaction/<int:tid>/delete', methods=['POST'])
 @admin_required
 def delete_transaction(tid):
-    """Supprimer une transaction"""
     try:
         transaction = FinanceTransaction.query.get_or_404(tid)
         db.session.delete(transaction)
@@ -1490,7 +1476,6 @@ def delete_transaction(tid):
 @admin_bp.route('/finance/category/create', methods=['POST'])
 @admin_required
 def create_finance_category():
-    """Créer une catégorie"""
     try:
         name = request.form.get('name', '').strip()
         cat_type = request.form.get('type', '').strip()
@@ -1520,10 +1505,8 @@ def create_finance_category():
 @admin_bp.route('/finance/category/<int:cid>/delete', methods=['POST'])
 @admin_required
 def delete_finance_category(cid):
-    """Supprimer une catégorie"""
     try:
         category = FinanceCategory.query.get_or_404(cid)
-        # Détacher les transactions
         FinanceTransaction.query.filter_by(category_id=cid).update({'category_id': None})
         db.session.delete(category)
         db.session.commit()
@@ -1533,14 +1516,14 @@ def delete_finance_category(cid):
         flash('Erreur.', 'danger')
     return redirect(url_for('admin.finance'))
 
+
 # ============================================================
-# GESTION DES SONDAGES — 100% INDÉPENDANT
+# GESTION DES SONDAGES
 # ============================================================
 
 @admin_bp.route('/polls')
 @admin_required
 def polls_list():
-    """Liste des sondages (admin)"""
     try:
         polls_data = Poll.query.order_by(Poll.created_at.desc()).all()
         return render_template('admin/polls.html', polls=polls_data)
@@ -1554,7 +1537,6 @@ def polls_list():
 @admin_bp.route('/polls/create', methods=['POST'])
 @admin_required
 def create_poll():
-    """Créer un sondage avec ses options"""
     try:
         question = request.form.get('question', '').strip()
         description = request.form.get('description', '').strip()
@@ -1623,7 +1605,6 @@ def create_poll():
 @admin_bp.route('/polls/<int:poll_id>/delete', methods=['POST'])
 @admin_required
 def delete_poll(poll_id):
-    """Supprimer un sondage"""
     try:
         poll = Poll.query.get_or_404(poll_id)
         db.session.delete(poll)
@@ -1639,7 +1620,6 @@ def delete_poll(poll_id):
 @admin_bp.route('/polls/<int:poll_id>/toggle-active', methods=['POST'])
 @admin_required
 def toggle_poll_active(poll_id):
-    """Activer/Désactiver un sondage"""
     try:
         poll = Poll.query.get_or_404(poll_id)
         poll.is_active = not poll.is_active
@@ -1654,16 +1634,13 @@ def toggle_poll_active(poll_id):
 
 
 # ============================================================
-# GESTION DES VOTES PUBLICS — ADMIN
+# GESTION DES VOTES PUBLICS
 # ============================================================
 
 @admin_bp.route('/votes')
 @admin_required
 def votes_dashboard():
-    """Dashboard des votes publics"""
     try:
-        from sqlalchemy import func
-
         config = VoteConfig.query.first()
         if not config:
             config = VoteConfig(mode="PER_SESSION", is_enabled=True)
@@ -1673,7 +1650,6 @@ def votes_dashboard():
         edition = request.args.get('edition', '4e')
         sessions = VoteSession.query.order_by(VoteSession.number).all()
 
-        # Session courante (mode PER_SESSION)
         current_session = None
         if config.mode == 'PER_SESSION' and sessions:
             session_id = request.args.get('session_id', type=int)
@@ -1682,16 +1658,14 @@ def votes_dashboard():
             if not current_session:
                 current_session = sessions[0]
 
-        # Filtrer les votes selon le mode
         if config.mode == 'GLOBAL':
             vote_query = PublicVote.query.filter_by(mode='GLOBAL', edition=edition)
         else:
             if current_session:
                 vote_query = PublicVote.query.filter_by(session_id=current_session.id)
             else:
-                vote_query = PublicVote.query.filter_by(id=-1)  # vide
+                vote_query = PublicVote.query.filter_by(id=-1)
 
-        # Résultats par artiste
         results_raw = db.session.query(
             PublicVote.artist_id,
             func.count(PublicVote.id).label('votes')
@@ -1743,7 +1717,6 @@ def votes_dashboard():
 @admin_bp.route('/votes/config', methods=['POST'])
 @admin_required
 def update_vote_config():
-    """Changer le mode de vote"""
     try:
         config = VoteConfig.query.first()
         if not config:
@@ -1774,7 +1747,6 @@ def update_vote_config():
 @admin_bp.route('/votes/sessions/create', methods=['POST'])
 @admin_required
 def create_vote_session():
-    """Créer une soirée de vote"""
     try:
         number_str = request.form.get('number', '').strip()
         title = request.form.get('title', '').strip()
@@ -1819,7 +1791,6 @@ def create_vote_session():
 @admin_bp.route('/votes/sessions/<int:session_id>/toggle', methods=['POST'])
 @admin_required
 def toggle_vote_session(session_id):
-    """Ouvrir/Fermer le vote d'une soirée"""
     try:
         session_obj = VoteSession.query.get_or_404(session_id)
         session_obj.is_open = not session_obj.is_open
@@ -1840,7 +1811,6 @@ def toggle_vote_session(session_id):
 @admin_bp.route('/votes/sessions/<int:session_id>/delete', methods=['POST'])
 @admin_required
 def delete_vote_session(session_id):
-    """Supprimer une soirée"""
     try:
         session_obj = VoteSession.query.get_or_404(session_id)
         number = session_obj.number
@@ -1856,7 +1826,6 @@ def delete_vote_session(session_id):
 @admin_bp.route('/votes/<int:vote_id>/delete', methods=['POST'])
 @admin_required
 def delete_vote(vote_id):
-    """Supprimer un vote individuel"""
     try:
         vote_obj = PublicVote.query.get_or_404(vote_id)
         db.session.delete(vote_obj)
@@ -1871,7 +1840,6 @@ def delete_vote(vote_id):
 @admin_bp.route('/votes/export')
 @admin_required
 def export_votes():
-    """Exporter en CSV"""
     try:
         import csv
         from io import StringIO
@@ -1919,3 +1887,97 @@ def export_votes():
         current_app.logger.error(f"Erreur export: {str(e)}")
         flash('Erreur lors de l\'export.', 'danger')
         return redirect(url_for('admin.votes_dashboard'))
+
+
+# ═══════════════════════════════════════════════════════════
+# NOTES DÉTAILLÉES
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/scores')
+@admin_required
+@rate_limit(limit_per_minute=120)
+def scores():
+    try:
+        sessions = CompetitionSession.query.order_by(CompetitionSession.number).all()
+
+        if not sessions:
+            return render_template(
+                'admin/scores.html',
+                sessions=[],
+                current_session=None,
+                matrix=None,
+                now=datetime.utcnow(),
+            )
+
+        session_id = request.args.get('session_id', type=int)
+        valid_ids = [s.id for s in sessions]
+        if session_id is None or session_id not in valid_ids:
+            session_id = sessions[0].id
+
+        current_session = next(
+            (s for s in sessions if s.id == session_id), None
+        )
+
+        matrix = get_matrix_for_session(current_session.id)
+
+        return render_template(
+            'admin/scores.html',
+            sessions=sessions,
+            current_session=current_session,
+            matrix=matrix,
+            now=datetime.utcnow(),
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur admin.scores: {e}")
+        current_app.logger.exception("Détail")
+        flash('Erreur lors du chargement des notes.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+
+# ═══════════════════════════════════════════════════════════
+# CLASSEMENT GLOBAL
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/ranking')
+@admin_required
+@rate_limit(limit_per_minute=120)
+def ranking():
+    try:
+        session_id = request.args.get('session_id', type=int)
+        include_eliminated = request.args.get('eliminated', '1') == '1'
+
+        sessions = get_sessions_for_ranking()
+        session_obj = None
+        if session_id is not None:
+            session_obj = CompetitionSession.query.get(session_id)
+
+        entries = compute_ranking(
+            session_id=session_obj.id if session_obj else None,
+            include_eliminated=include_eliminated,
+            include_details=True,
+        )
+
+        for i, e in enumerate(entries, start=1):
+            e.rank = i
+
+        stats = {
+            'total_artists': len(entries),
+            'total_scores': sum(e.scores_count for e in entries),
+            'sessions_count': len(sessions),
+            'eliminated_count': sum(1 for e in entries if e.competition_status == 'ELIMINATED'),
+        }
+
+        return render_template(
+            'admin/ranking.html',
+            entries=entries,
+            sessions=sessions,
+            current_session=session_obj,
+            include_eliminated=include_eliminated,
+            stats=stats,
+            now=datetime.utcnow(),
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur admin.ranking: {e}")
+        current_app.logger.exception("Détail")
+        flash('Erreur lors du chargement du classement.', 'danger')
+        return redirect(url_for('admin.dashboard'))

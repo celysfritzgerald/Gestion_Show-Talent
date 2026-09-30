@@ -1,5 +1,7 @@
 import os
 import logging
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
@@ -29,22 +31,25 @@ def create_app(config_name=None):
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-    # Initialisation des extensions
+    # ─── Logging ───
+    _setup_logging(app, config_name)
+
+    # ─── Extensions ───
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
 
-    # Initialisation de la sécurité
+    # ─── Sécurité WAF ───
     from app.security import init_security
     init_security(app)
 
-    # Route pour servir les fichiers uploadés
+    # ─── Route uploads ───
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         upload_folder = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
         return send_from_directory(upload_folder, filename)
 
-    # Enregistrement des blueprints
+    # ─── Blueprints ───
     from app.routes import main_bp
     from app.auth import auth_bp
     from app.admin_routes import admin_bp
@@ -60,7 +65,7 @@ def create_app(config_name=None):
     create_upload_directories(app)
     register_error_handlers(app)
 
-    # Filtres Jinja2 pour les uploads
+    # ─── Filtres Jinja2 ───
     @app.template_filter('upload_url')
     def upload_url_filter(filename, subfolder='artists'):
         if not filename:
@@ -73,7 +78,7 @@ def create_app(config_name=None):
             return ''
         return f"/static/uploads/{subfolder}/{filename}"
 
-    # Context processor pour les uploads
+    # ─── Context processor ───
     @app.context_processor
     def utility_processor():
         def get_upload_url(filename, subfolder='artists'):
@@ -88,27 +93,32 @@ def create_app(config_name=None):
 
         return dict(
             get_upload_url=get_upload_url,
-            get_static_upload_url=get_static_upload_url
+            get_static_upload_url=get_static_upload_url,
+            now=datetime.utcnow(),
         )
 
-    # ============================================================
-    # HEADERS DE SÉCURITÉ — CSP CORRIGÉE
-    # ============================================================
+    # ═══════════════════════════════════════════════════════════
+    # HEADERS DE SÉCURITÉ + SEO
+    # ═══════════════════════════════════════════════════════════
     @app.after_request
     def add_security_headers(response):
-        # Headers de base
+        # ─── Headers de base ───
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-XSS-Protection", "1; mode=block")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
 
-        # ✅ CSP COMPLÈTE — Autorise Tailwind CDN, Font Awesome, Google Fonts, Unsplash
+        # ─── CSP resserrée (unsafe-eval retiré, connect-src restreint) ───
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "script-src 'self' 'unsafe-inline' "
                 "https://cdn.tailwindcss.com "
-                "https://cdnjs.cloudflare.com; "
+                "https://cdnjs.cloudflare.com "
+                "https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' "
                 "https://cdnjs.cloudflare.com "
                 "https://fonts.googleapis.com "
@@ -117,17 +127,24 @@ def create_app(config_name=None):
                 "https://cdnjs.cloudflare.com "
                 "https://fonts.gstatic.com; "
             "img-src 'self' data: blob: "
-                "https://images.unsplash.com "  # ← Ajout pour les images Unsplash
+                "https://images.unsplash.com "
                 "https:; "
-            "connect-src 'self' https:; "
-            "media-src 'self' https:; "
+            "connect-src 'self' "
+                "https://cdn.jsdelivr.net "
+                "https://cdn.tailwindcss.com; "
+            "media-src 'self'; "
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "
-            "frame-ancestors 'none'"
+            "frame-ancestors 'none'; "
+            "upgrade-insecure-requests"
         )
 
-        # HSTS (HTTPS uniquement)
+        # ─── SEO : noindex sur les zones privées ───
+        if request.path.startswith(('/admin', '/jury', '/artist', '/observer', '/uploads')):
+            response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
+
+        # ─── HSTS (HTTPS uniquement) ───
         if request.is_secure:
             response.headers.setdefault(
                 "Strict-Transport-Security",
@@ -136,7 +153,47 @@ def create_app(config_name=None):
 
         return response
 
+    # ═══════════════════════════════════════════════════════════
+    # CACHE HTTP intelligent
+    # ═══════════════════════════════════════════════════════════
+    @app.after_request
+    def add_cache_headers(response):
+        path = request.path
+
+        if path.startswith('/uploads/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        elif path in ('/sitemap.xml', '/robots.txt'):
+            response.headers['Cache-Control'] = 'public, max-age=3600'
+        elif path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+        elif path.startswith('/api/'):
+            response.headers['Cache-Control'] = 'no-store, must-revalidate'
+
+        return response
+
     return app
+
+
+# ═══════════════════════════════════════════════════════════════
+# HELPERS
+# ═══════════════════════════════════════════════════════════════
+
+def _setup_logging(app, config_name):
+    """Configure le logging selon l'environnement."""
+    if config_name == 'production':
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+        file_handler = RotatingFileHandler(
+            'logs/showtalent.log',
+            maxBytes=10 * 1024 * 1024,
+            backupCount=10
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s [%(name)s] %(message)s'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
 
 
 def create_upload_directories(app):

@@ -1,18 +1,10 @@
-{% extends "base.html" %}
+{% extends "jury/jury_base.html" %}
 
-{% block title %}Dashboard Jury - Show Talent{% endblock %}
+{% block title %}Dashboard · Jury{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* ============================================================
-       DASHBOARD JURY - STYLE MODERNE
-       ============================================================ */
-    .dashboard-jury {
-        background: #0B1120;
-        min-height: 100vh;
-    }
-    
-    /* Carte de session */
     .session-card {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.06);
@@ -27,43 +19,31 @@
         height: 100%;
         cursor: pointer;
     }
-    
     .session-card::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
+        top: 0; left: 0; right: 0;
         height: 3px;
         background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
         opacity: 0;
         transition: opacity 0.4s ease;
     }
-    
     .session-card:hover {
         transform: translateY(-6px);
         background: rgba(255, 255, 255, 0.05);
         border-color: rgba(59, 130, 246, 0.15);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
     }
-    
-    .session-card:hover::before {
-        opacity: 1;
-    }
-    
+    .session-card:hover::before { opacity: 1; }
+
     .session-card .session-number {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #f8fafc;
-        line-height: 1.2;
+        font-size: 2rem; font-weight: 800;
+        color: #f8fafc; line-height: 1.2;
     }
-    
     .session-card .session-date {
-        font-size: 0.85rem;
-        color: #94a3b8;
+        font-size: 0.85rem; color: #94a3b8;
         margin-bottom: 8px;
     }
-    
     .session-card .session-status {
         display: inline-block;
         padding: 3px 14px;
@@ -73,55 +53,38 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    
     .session-card .session-status.pending {
         background: rgba(251, 191, 36, 0.15);
         color: #fbbf24;
         border: 1px solid rgba(251, 191, 36, 0.1);
     }
-    
     .session-card .session-status.in-progress {
         background: rgba(59, 130, 246, 0.15);
         color: #60a5fa;
         border: 1px solid rgba(59, 130, 246, 0.1);
     }
-    
     .session-card .session-status.completed {
         background: rgba(34, 197, 94, 0.15);
         color: #4ade80;
         border: 1px solid rgba(34, 197, 94, 0.1);
     }
-    
     .session-card .session-icon {
-        width: 48px;
-        height: 48px;
+        width: 48px; height: 48px;
         border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; flex-shrink: 0;
         background: rgba(59, 130, 246, 0.1);
         color: #60a5fa;
     }
-    
     .session-card .session-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.8rem;
-        font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.8rem; font-weight: 600;
         color: #3b82f6;
         transition: all 0.3s ease;
         margin-top: 12px;
     }
-    
-    .session-card:hover .session-action {
-        gap: 12px;
-        color: #60a5fa;
-    }
-    
-    /* Badge jury */
+    .session-card:hover .session-action { gap: 12px; color: #60a5fa; }
+
     .badge-jury {
         background: rgba(59, 130, 246, 0.15);
         color: #60a5fa;
@@ -132,236 +95,163 @@
         font-weight: 600;
         display: inline-block;
     }
-    
-    /* Statistiques rapides */
+
     .stat-mini {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 12px;
         padding: 14px 18px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        display: flex; align-items: center; gap: 12px;
         transition: all 0.3s ease;
     }
-    
-    .stat-mini:hover {
-        background: rgba(255, 255, 255, 0.04);
-    }
-    
+    .stat-mini:hover { background: rgba(255, 255, 255, 0.04); }
     .stat-mini .stat-icon {
-        width: 40px;
-        height: 40px;
+        width: 40px; height: 40px;
         border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; flex-shrink: 0;
         background: rgba(59, 130, 246, 0.1);
         color: #60a5fa;
     }
-    
     .stat-mini .stat-number {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #f8fafc;
-        line-height: 1.2;
+        font-size: 1.5rem; font-weight: 700;
+        color: #f8fafc; line-height: 1.2;
     }
-    
-    .stat-mini .stat-label {
-        font-size: 0.8rem;
-        color: #94a3b8;
-    }
-    
-    /* Scrollbar */
-    .sessions-grid {
-        max-height: calc(100vh - 300px);
-        overflow-y: auto;
-        padding-right: 4px;
-    }
-    
-    .sessions-grid::-webkit-scrollbar {
-        width: 4px;
-    }
-    
-    .sessions-grid::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    .sessions-grid::-webkit-scrollbar-thumb {
-        background: rgba(59, 130, 246, 0.2);
-        border-radius: 9999px;
-    }
-    
-    /* Responsive */
+    .stat-mini .stat-label { font-size: 0.8rem; color: #94a3b8; }
+
     @media (max-width: 768px) {
-        .session-card {
-            padding: 18px;
-        }
-        
-        .session-card .session-number {
-            font-size: 1.5rem;
-        }
-        
-        .stat-mini .stat-number {
-            font-size: 1.2rem;
-        }
-        
-        .stat-mini {
-            padding: 12px 16px;
-        }
+        .session-card { padding: 18px; }
+        .session-card .session-number { font-size: 1.5rem; }
+        .stat-mini .stat-number { font-size: 1.2rem; }
+        .stat-mini { padding: 12px 16px; }
     }
-    
     @media (max-width: 480px) {
-        .session-card {
-            padding: 14px;
-            border-radius: 14px;
-        }
-        
-        .session-card .session-number {
-            font-size: 1.2rem;
-        }
-        
-        .session-card .session-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
+        .session-card { padding: 14px; border-radius: 14px; }
+        .session-card .session-number { font-size: 1.2rem; }
+        .session-card .session-icon { width: 40px; height: 40px; font-size: 1rem; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-jury py-8">
-    <div class="container mx-auto px-4">
+<div class="py-8 px-4 lg:px-6">
 
-        <!-- ============================================================
-             EN-TÊTE
-             ============================================================ -->
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-2xl md:text-3xl font-bold text-white">Dashboard Jury</h1>
-                    <span class="badge-jury">Jury</span>
-                </div>
-                <p class="text-gray-400 text-sm md:text-base mt-1">
-                    Bienvenue sur votre espace d'évaluation, {{ session.user_name }}
-                </p>
-            </div>
-            <div class="flex items-center gap-3 text-sm text-gray-400">
-                <i class="fas fa-calendar-alt text-blue-400"></i>
-                <span>{{ now.strftime('%d %B %Y') if now else '' }}</span>
-            </div>
-        </div>
-
-        <!-- ============================================================
-             STATISTIQUES RAPIDES
-             ============================================================ -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="stat-mini">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div>
-                    <div class="stat-number">{{ sessions|length }}</div>
-                    <div class="stat-label">Dimanches</div>
-                </div>
-            </div>
-            <div class="stat-mini">
-                <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1); color: #4ade80;">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div>
-                    <div class="stat-number">
-                        {% set completed = sessions|selectattr('status', 'equalto', 'COMPLETED')|list|length %}
-                        {{ completed }}
-                    </div>
-                    <div class="stat-label">Terminés</div>
-                </div>
-            </div>
-            <div class="stat-mini">
-                <div class="stat-icon" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div>
-                    <div class="stat-number">
-                        {% set pending = sessions|selectattr('status', 'equalto', 'PENDING')|list|length %}
-                        {{ pending }}
-                    </div>
-                    <div class="stat-label">En attente</div>
-                </div>
-            </div>
-            <div class="stat-mini">
-                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;">
-                    <i class="fas fa-play-circle"></i>
-                </div>
-                <div>
-                    <div class="stat-number">
-                        {% set in_progress = sessions|selectattr('status', 'equalto', 'IN_PROGRESS')|list|length %}
-                        {{ in_progress }}
-                    </div>
-                    <div class="stat-label">En cours</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================
-             SESSIONS ASSIGNÉES
-             ============================================================ -->
+    <!-- EN-TÊTE -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
-            <div class="flex items-center gap-3 mb-4">
-                <i class="fas fa-gavel text-blue-400"></i>
-                <h2 class="text-lg font-bold text-white">Mes dimanches assignés</h2>
-                <div class="flex-1 h-px bg-gradient-to-r from-white/5 to-transparent"></div>
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl md:text-3xl font-bold text-white">Dashboard Jury</h1>
+                <span class="badge-jury">Jury</span>
             </div>
+            <p class="text-gray-400 text-sm md:text-base mt-1">
+                Bienvenue sur votre espace d'évaluation, {{ session.user_name }}
+            </p>
+        </div>
+        <div class="flex items-center gap-3 text-sm text-gray-400">
+            <i class="fas fa-calendar-alt text-blue-400"></i>
+            <span>{{ now.strftime('%d %B %Y') if now is defined and now else '' }}</span>
+        </div>
+    </div>
 
-            {% if sessions %}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {% for session in sessions %}
-                <a href="{{ url_for('jury.evaluate', session_id=session.id) }}" class="session-card">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="session-number">Dimanche {{ session.number }}</div>
-                            <div class="session-date">
-                                <i class="fas fa-calendar-alt mr-1"></i>
-                                {{ session.date.strftime('%d/%m/%Y') }}
-                            </div>
-                        </div>
-                        <div class="session-icon">
-                            <i class="fas fa-gavel"></i>
-                        </div>
-                    </div>
+    <!-- STATISTIQUES -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-mini">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div>
+                <div class="stat-number">{{ sessions|length }}</div>
+                <div class="stat-label">Dimanches</div>
+            </div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1); color: #4ade80;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <div class="stat-number">
+                    {% set completed = sessions|selectattr('status', 'equalto', 'COMPLETED')|list|length %}
+                    {{ completed }}
+                </div>
+                <div class="stat-label">Terminés</div>
+            </div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <div class="stat-number">
+                    {% set pending = sessions|selectattr('status', 'equalto', 'PENDING')|list|length %}
+                    {{ pending }}
+                </div>
+                <div class="stat-label">En attente</div>
+            </div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+            <div>
+                <div class="stat-number">
+                    {% set in_progress = sessions|selectattr('status', 'equalto', 'IN_PROGRESS')|list|length %}
+                    {{ in_progress }}
+                </div>
+                <div class="stat-label">En cours</div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="flex items-center gap-3 mt-2">
-                        <span class="session-status 
-                            {% if session.status == 'COMPLETED' %}completed
-                            {% elif session.status == 'IN_PROGRESS' %}in-progress
-                            {% else %}pending{% endif %}">
-                            {{ session.status }}
-                        </span>
-                        {% if session.status != 'COMPLETED' %}
-                        <span class="session-action">
-                            Évaluer <i class="fas fa-arrow-right"></i>
-                        </span>
-                        {% else %}
-                        <span class="text-xs text-gray-500">
-                            <i class="fas fa-check-circle text-green-400 mr-1"></i>Terminé
-                        </span>
-                        {% endif %}
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="glass-card rounded-2xl p-12 text-center">
-                <div class="text-5xl mb-4 text-gray-600">📋</div>
-                <p class="text-gray-400 text-lg">Aucun dimanche assigné pour le moment</p>
-                <p class="text-sm text-gray-600 mt-2">Contactez l'administrateur pour obtenir des assignments</p>
-            </div>
-            {% endif %}
+    <!-- SESSIONS -->
+    <div>
+        <div class="flex items-center gap-3 mb-4">
+            <i class="fas fa-gavel text-blue-400"></i>
+            <h2 class="text-lg font-bold text-white">Mes dimanches assignés</h2>
+            <div class="flex-1 h-px bg-gradient-to-r from-white/5 to-transparent"></div>
         </div>
 
+        {% if sessions %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for session in sessions %}
+            <a href="{{ url_for('jury.evaluate', session_id=session.id) }}" class="session-card">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="session-number">Dimanche {{ session.number }}</div>
+                        <div class="session-date">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            {{ session.date.strftime('%d/%m/%Y') }}
+                        </div>
+                    </div>
+                    <div class="session-icon">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 mt-2">
+                    <span class="session-status
+                        {% if session.status == 'COMPLETED' %}completed
+                        {% elif session.status == 'IN_PROGRESS' %}in-progress
+                        {% else %}pending{% endif %}">
+                        {{ session.status }}
+                    </span>
+                    {% if session.status != 'COMPLETED' %}
+                    <span class="session-action">
+                        Évaluer <i class="fas fa-arrow-right"></i>
+                    </span>
+                    {% else %}
+                    <span class="text-xs text-gray-500">
+                        <i class="fas fa-check-circle text-green-400 mr-1"></i>Terminé
+                    </span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass-card p-12 text-center">
+            <div class="text-5xl mb-4 text-gray-600">📋</div>
+            <p class="text-gray-400 text-lg">Aucun dimanche assigné pour le moment</p>
+            <p class="text-sm text-gray-600 mt-2">
+                Contactez l'administrateur pour obtenir des assignments
+            </p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

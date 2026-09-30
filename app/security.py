@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 XSS_PATTERNS = [
     re.compile(r'<\s*script[^>]*>', re.IGNORECASE),
     re.compile(r'javascript\s*:', re.IGNORECASE),
-    re.compile(r'on\w+\s*=', re.IGNORECASE),  # onclick=, onerror=, etc.
+    re.compile(r'on\w+\s*=', re.IGNORECASE),
     re.compile(r'<\s*iframe', re.IGNORECASE),
     re.compile(r'<\s*object', re.IGNORECASE),
     re.compile(r'<\s*embed', re.IGNORECASE),
@@ -49,6 +49,17 @@ CMD_INJECTION_PATTERNS = [
     re.compile(r'\$\(.*\)'),
     re.compile(r'>\s*/'),
 ]
+
+
+# ============================================================
+# USER-AGENTS MALVEILLANTS (scanners connus)
+# ============================================================
+
+BLOCKED_AGENTS = {
+    'sqlmap', 'nikto', 'nmap', 'masscan', 'nuclei',
+    'acunetix', 'w3af', 'netsparker', 'havij', 'dirbuster',
+    'zgrab', 'gobuster', 'wfuzz', 'whatweb',
+}
 
 
 # ============================================================
@@ -119,7 +130,6 @@ def check_rate_limit(limit=100, period=60):
     Vérifie le rate limit par IP
     Retourne True si OK, False si limite dépassée
     """
-    from flask import current_app
     if not current_app.config.get('RATELIMIT_ENABLED', True):
         return True
 
@@ -130,7 +140,6 @@ def check_rate_limit(limit=100, period=60):
     key = f"{ip}:{request.endpoint}"
 
     if key in _rate_limit_store:
-        # Nettoyer les vieilles entrées
         _rate_limit_store[key] = [t for t in _rate_limit_store[key] if t > now - period]
     else:
         _rate_limit_store[key] = []
@@ -181,10 +190,8 @@ def init_security(app):
     # ---------------------------------------------------------
     @app.before_request
     def check_security_patterns():
-        # Ne pas bloquer les routes statiques
         if request.path.startswith('/static') or request.path.startswith('/uploads'):
             return
-        # Ne pas bloquer les requêtes OPTIONS (CORS preflight)
         if request.method == 'OPTIONS':
             return
 
@@ -199,7 +206,6 @@ def init_security(app):
         if request.path.startswith('/static') or request.path.startswith('/uploads'):
             return
 
-        # Limite globale : 200 requêtes/minute par IP
         if not check_rate_limit(limit=200, period=60):
             abort(429)
 
@@ -209,17 +215,14 @@ def init_security(app):
     @app.before_request
     def enforce_https():
         if app.config.get('ENV') == 'production' or not app.debug:
-            # Ne rediriger que si on est en production ET pas déjà en HTTPS
             if not request.is_secure and request.headers.get('X-Forwarded-Proto') != 'https':
-                # Exception : healthcheck
                 if request.path == '/health':
                     return
-                # En prod, rediriger vers HTTPS (géré par Railway/nginx en amont)
-                # Ici on laisse passer car Railway fait la redirection
+                # Géré par Railway/nginx en amont
                 pass
 
     # ---------------------------------------------------------
-    # 6. Réponses sécurisées pour les erreurs 400/413/429
+    # 6. Réponses sécurisées pour les erreurs
     # ---------------------------------------------------------
     @app.errorhandler(400)
     def bad_request(e):
@@ -238,6 +241,23 @@ def init_security(app):
         if request.is_json or request.path.startswith('/api/'):
             return jsonify({'error': 'Requête trop volumineuse'}), 413
         return render_template('errors/404.html'), 413
+
+    # ---------------------------------------------------------
+    # 7. Blocage des User-Agents malveillants (scanners)
+    # ---------------------------------------------------------
+    @app.before_request
+    def block_bad_agents():
+        # Ne pas bloquer les routes internes / health
+        if request.path.startswith(('/static', '/uploads', '/health')):
+            return
+
+        ua = (request.headers.get('User-Agent') or '').lower()
+        if any(bad in ua for bad in BLOCKED_AGENTS):
+            logger.warning(
+                f"🚨 User-Agent bloqué: {ua[:100]} "
+                f"depuis {request.remote_addr}"
+            )
+            abort(403)
 
     logger.info("✅ Module de sécurité initialisé")
 

@@ -1,0 +1,376 @@
+{% extends "jury/jury_base.html" %}
+
+{% block title %}Notes détaillées · Jury{% endblock %}
+{% block page_title %}Notes détaillées{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tableau croisé */
+    .matrix-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.85rem;
+    }
+    .matrix-table thead th {
+        position: sticky;
+        top: 0;
+        background: #0f1729;
+        z-index: 10;
+        padding: 12px 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        white-space: nowrap;
+    }
+    .matrix-table thead th.artist-col {
+        text-align: left;
+        position: sticky;
+        left: 0;
+        background: #0f1729;
+        z-index: 11;
+        min-width: 180px;
+    }
+    .matrix-table thead th.total-col {
+        background: rgba(59, 130, 246, 0.08);
+        color: #60a5fa;
+        text-align: right;
+    }
+
+    .matrix-table tbody td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        color: #cbd5e1;
+        text-align: center;
+    }
+    .matrix-table tbody td.artist-cell {
+        text-align: left;
+        position: sticky;
+        left: 0;
+        background: #0f1729;
+        z-index: 5;
+    }
+    .matrix-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .matrix-table tbody tr:hover td.artist-cell {
+        background: #131c30;
+    }
+    .matrix-table tbody td.total-cell {
+        background: rgba(59, 130, 246, 0.05);
+        color: #fff;
+        font-weight: 700;
+        text-align: right;
+        font-size: 0.95rem;
+    }
+    .matrix-table tbody tr:hover td.total-cell {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Note colorée selon valeur */
+    .score-badge {
+        display: inline-block;
+        min-width: 42px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-family: 'SF Mono', 'Monaco', monospace;
+        font-size: 0.8rem;
+    }
+    .score-high   { background: rgba(34, 197, 94, 0.15);  color: #4ade80; }
+    .score-mid    { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .score-low    { background: rgba(239, 68, 68, 0.15);  color: #f87171; }
+    .score-empty  { background: rgba(255, 255, 255, 0.03); color: #475569; }
+
+    /* Onglets dimanches */
+    .tabs {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 4px 0;
+        scrollbar-width: thin;
+    }
+    .tabs::-webkit-scrollbar { height: 4px; }
+    .tabs::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 9999px;
+    }
+    .tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.25s ease;
+    }
+    .tab:hover {
+        background: rgba(59, 130, 246, 0.08);
+        color: #e2e8f0;
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    .tab.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #fff;
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    }
+    .tab .tab-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    .tab.active .tab-num {
+        background: #3b82f6;
+        color: #fff;
+    }
+    .tab .tab-status {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    .tab .tab-status.pending      { background: #fbbf24; }
+    .tab .tab-status.in-progress  { background: #60a5fa; }
+    .tab .tab-status.completed    { background: #4ade80; }
+
+    /* Légende */
+    .legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+    }
+
+    /* Wrapper scroll */
+    .matrix-wrapper {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(15, 23, 41, 0.5);
+    }
+    .matrix-wrapper::-webkit-scrollbar { height: 8px; }
+    .matrix-wrapper::-webkit-scrollbar-track { background: transparent; }
+    .matrix-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.25);
+        border-radius: 9999px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8 px-4 lg:px-6 space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Notes détaillées</h1>
+            <p class="text-sm text-gray-400 mt-1">
+                Vue complète : <span class="text-blue-400">artistes × critères</span> pour chaque dimanche.
+            </p>
+        </div>
+        <div class="legend">
+            <span class="legend-item">
+                <span class="legend-dot" style="background: rgba(34,197,94,0.5);"></span>
+                ≥ 8.0
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: rgba(251,191,36,0.5);"></span>
+                5.0 – 7.9
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: rgba(239,68,68,0.5);"></span>
+                &lt; 5.0
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: rgba(255,255,255,0.05);"></span>
+                Non noté
+            </span>
+        </div>
+    </div>
+
+    {% if sessions %}
+
+        <!-- Onglets dimanches -->
+        <div class="tabs">
+            {% for s in sessions %}
+                <a href="{{ url_for('jury.scores', session_id=s.id) }}"
+                   class="tab {{ 'active' if current_session and current_session.id == s.id else '' }}">
+                    <span class="tab-num">D{{ s.number }}</span>
+                    <span>{{ s.date.strftime('%d/%m/%Y') }}</span>
+                    <span class="tab-status
+                        {% if s.status == 'COMPLETED' %}completed
+                        {% elif s.status == 'IN_PROGRESS' %}in-progress
+                        {% else %}pending{% endif %}"></span>
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Infos session -->
+        {% if matrix %}
+        <div class="flex flex-wrap items-center justify-between gap-3
+                    bg-white/[0.02] border border-white/5 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400
+                            flex items-center justify-center font-bold">
+                    D{{ matrix.session.number }}
+                </div>
+                <div>
+                    <div class="text-white font-semibold">
+                        Dimanche {{ matrix.session.number }}
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        {{ matrix.session.date.strftime('%d/%m/%Y') }}
+                        · {{ matrix.criteria|length }} critères
+                        · {{ matrix.rows|length }} artistes
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs px-3 py-1.5 rounded-full
+                    {% if matrix.session.status == 'COMPLETED' %}bg-emerald-500/10 text-emerald-400
+                    {% elif matrix.session.status == 'IN_PROGRESS' %}bg-blue-500/10 text-blue-400
+                    {% else %}bg-amber-500/10 text-amber-400{% endif %}">
+                    {{ matrix.session.status }}
+                </span>
+                <a href="{{ url_for('jury.evaluate', session_id=matrix.session.id) }}"
+                   class="text-xs px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500
+                          text-white font-medium transition">
+                    <i class="fas fa-pen mr-1"></i>Évaluer
+                </a>
+            </div>
+        </div>
+
+        <!-- Tableau croisé -->
+        {% if matrix.rows and matrix.criteria %}
+        <div class="matrix-wrapper">
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th class="artist-col">Artiste</th>
+                        {% for crit in matrix.criteria %}
+                            <th title="{{ crit.name }}">
+                                {{ crit.name[:20] }}{% if crit.name|length > 20 %}…{% endif %}
+                            </th>
+                        {% endfor %}
+                        <th class="total-col">TOTAL / {{ matrix.criteria|length * 10 }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in matrix.rows %}
+                    <tr>
+                        <td class="artist-cell">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center
+                                            text-[10px] font-bold
+                                    {% if row.rank == 1 %} bg-amber-500/20 text-amber-400
+                                    {% elif row.rank == 2 %} bg-slate-400/20 text-slate-300
+                                    {% elif row.rank == 3 %} bg-orange-700/30 text-orange-400
+                                    {% else %} bg-white/5 text-gray-500 {% endif %}">
+                                    {{ row.rank }}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm text-white font-medium truncate">
+                                        {{ row.artist.user.full_name() }}
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 font-mono">
+                                        {{ row.artist.code }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        {% for crit in matrix.criteria %}
+                            {% set value = row.scores_by_criterion[crit.id] %}
+                            <td>
+                                {% if value is none %}
+                                    <span class="score-badge score-empty">—</span>
+                                {% elif value >= 8 %}
+                                    <span class="score-badge score-high">{{ '%.1f'|format(value) }}</span>
+                                {% elif value >= 5 %}
+                                    <span class="score-badge score-mid">{{ '%.1f'|format(value) }}</span>
+                                {% else %}
+                                    <span class="score-badge score-low">{{ '%.1f'|format(value) }}</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="total-cell">
+                            {{ '%.1f'|format(row.total) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: rgba(255,255,255,0.02);">
+                        <td class="artist-cell"
+                            style="text-align: left; font-size: 0.75rem; color: #64748b;
+                                   text-transform: uppercase; letter-spacing: 0.5px;">
+                            Moyenne par critère
+                        </td>
+                        {% for crit in matrix.criteria %}
+                            {% set total_crit = matrix.totals_by_criterion[crit.id] %}
+                            {% set avg_crit = total_crit / matrix.rows|length if matrix.rows|length > 0 else 0 %}
+                            <td style="font-size: 0.75rem; color: #64748b; font-family: monospace;">
+                                {{ '%.1f'|format(avg_crit) }}
+                            </td>
+                        {% endfor %}
+                        <td class="total-cell" style="font-size: 0.75rem; color: #64748b;"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        {% else %}
+        <div class="glass-card p-12 text-center">
+            <i class="fas fa-table text-4xl text-gray-700 mb-3"></i>
+            <p class="text-gray-400">Aucune donnée disponible pour ce dimanche.</p>
+            <p class="text-xs text-gray-600 mt-2">
+                Vérifiez que les critères ont été assignés et que des artistes sont actifs.
+            </p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="glass-card p-12 text-center">
+            <i class="fas fa-exclamation-triangle text-4xl text-amber-700 mb-3"></i>
+            <p class="text-gray-400">Impossible de charger les données de ce dimanche.</p>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Aucun dimanche assigné -->
+        <div class="glass-card p-12 text-center">
+            <i class="fas fa-clipboard-list text-4xl text-gray-700 mb-3"></i>
+            <p class="text-gray-400 text-lg">Aucun dimanche assigné</p>
+            <p class="text-sm text-gray-600 mt-2">
+                Contactez l'administrateur pour obtenir des assignments.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, Response
 from app import db
 from datetime import datetime
+from sqlalchemy import func
 from app.models import (
     Artist, CompetitionSession, Sponsor, Moment, User,
     Score, Criterion, ContactMessage, Lyric,
@@ -97,7 +98,7 @@ def artists():
 @main_bp.route('/results')
 @rate_limit(limit_per_minute=60)
 def results():
-    """Page des résultats"""
+    """Page des résultats — GLOBAL + par dimanche"""
     try:
         sessions = CompetitionSession.query.order_by(
             CompetitionSession.number
@@ -118,6 +119,29 @@ def sponsors_page():
     except Exception as e:
         current_app.logger.error(f"Erreur page sponsors: {str(e)}")
         return render_template('errors/500.html'), 500
+
+
+# ============================================================
+# HEALTH CHECK (pour monitoring / uptime)
+# ============================================================
+
+@main_bp.route('/health')
+def health():
+    """Health check : DB + timestamp. Utilisé par Railway / UptimeRobot."""
+    try:
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({
+            'status': 'ok',
+            'timestamp': datetime.utcnow().isoformat(),
+            'database': 'connected',
+        }), 200
+    except Exception as e:
+        current_app.logger.error(f"Health check FAILED: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat(),
+        }), 500
 
 
 # ============================================================
@@ -171,56 +195,140 @@ def contact():
 
 
 # ============================================================
-# API RÉSULTATS
+# API RÉSULTATS (par session — OPTIMISÉ : 1 seule requête SQL)
 # ============================================================
 
 @main_bp.route('/api/results/<int:session_id>')
 @rate_limit(limit_per_minute=120)
 def api_results(session_id):
-    """API pour les résultats d'une session"""
+    """
+    API pour les résultats d'une session.
+    ✅ Optimisé : 1 seule requête SQL au lieu de N+1.
+    """
     try:
         session_obj = CompetitionSession.query.get_or_404(session_id)
 
-        scores = Score.query.filter_by(session_id=session_id).all()
+        # ✅ UNE SEULE requête avec jointure + agrégation + HAVING
+        rows = (
+            db.session.query(
+                Artist.id,
+                Artist.code,
+                User.first_name,
+                User.last_name,
+                func.sum(Score.score).label('total'),
+                func.count(Score.id).label('count'),
+            )
+            .join(User, User.id == Artist.user_id)
+            .join(Score, Score.artist_id == Artist.id)
+            .filter(
+                Score.session_id == session_id,
+                User.account_status == 'ACTIVE',
+            )
+            .group_by(Artist.id, Artist.code, User.first_name, User.last_name)
+            .having(func.count(Score.id) == 10)
+            .order_by(func.sum(Score.score).desc())
+        ).all()
 
-        artist_totals = {}
-        for score in scores:
-            if score.artist_id not in artist_totals:
-                artist_totals[score.artist_id] = {
-                    'total': 0,
-                    'count': 0
-                }
-            artist_totals[score.artist_id]['total'] += score.score
-            artist_totals[score.artist_id]['count'] += 1
-
-        results = []
-        for artist_id, data in sorted(
-            artist_totals.items(),
-            key=lambda x: x[1]['total'],
-            reverse=True
-        ):
-            artist = Artist.query.get(artist_id)
-            if artist and artist.user.account_status == 'ACTIVE':
-                if data['count'] == 10:
-                    results.append({
-                        'position': len(results) + 1,
-                        'artist_id': artist.id,
-                        'code': artist.code,
-                        'first_name': artist.user.first_name,
-                        'last_name': artist.user.last_name,
-                        'total': round(data['total'], 1),
-                        'max_score': 100
-                    })
+        results = [
+            {
+                'position': i,
+                'artist_id': row[0],
+                'code': row[1],
+                'first_name': row[2],
+                'last_name': row[3],
+                'total': round(float(row[4]), 1),
+                'max_score': 100,
+            }
+            for i, row in enumerate(rows, 1)
+        ]
 
         return jsonify({
             'results': results,
             'session': session_obj.number,
-            'session_status': session_obj.status
+            'session_status': session_obj.status,
         })
 
     except Exception as e:
         current_app.logger.error(f"Erreur API résultats: {str(e)}")
+        current_app.logger.exception("Détail")
         return jsonify({'error': 'Erreur lors du chargement des résultats'}), 500
+
+
+# ============================================================
+# API CLASSEMENT PUBLIC — GLOBAL + PAR DIMANCHE
+# ============================================================
+
+@main_bp.route('/api/public-ranking')
+@rate_limit(limit_per_minute=120)
+def api_public_ranking():
+    """
+    Classement public (JSON).
+
+    Query params :
+        ?session_id=N   → classement d'un dimanche (score total)
+        ?session_id=0   → (défaut) classement GLOBAL (somme des dimanches)
+
+    NOTE : pas de détail par critère (public).
+    """
+    from app.services_ranking import compute_ranking
+
+    try:
+        session_id = request.args.get('session_id', type=int)
+        session_obj = None
+
+        if session_id and session_id > 0:
+            session_obj = CompetitionSession.query.get(session_id)
+            if not session_obj:
+                return jsonify({
+                    'success': False,
+                    'error': 'Session introuvable'
+                }), 404
+
+        entries = compute_ranking(
+            session_id=session_obj.id if session_obj else None,
+            include_eliminated=True,
+            include_details=False,
+        )
+
+        sessions_count = CompetitionSession.query.count()
+
+        results = []
+        for i, e in enumerate(entries, start=1):
+            parts = (e.artist_name or '').split(' ', 1)
+            first_name = parts[0] if parts else ''
+            last_name = parts[1] if len(parts) > 1 else ''
+
+            results.append({
+                'position': i,
+                'artist_id': e.artist_id,
+                'code': e.artist_code,
+                'first_name': first_name,
+                'last_name': last_name,
+                'full_name': e.artist_name,
+                'photo': e.artist_photo,
+                'total': round(e.total_score, 1),
+                'average': round(e.average_score, 2),
+                'scores_count': e.scores_count,
+                'eliminated': e.competition_status == 'ELIMINATED',
+                'status': e.competition_status,
+            })
+
+        return jsonify({
+            'success': True,
+            'mode': 'SESSION' if session_obj else 'GLOBAL',
+            'session': session_obj.number if session_obj else None,
+            'session_id': session_obj.id if session_obj else None,
+            'sessions_count': sessions_count,
+            'results': results,
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Erreur API public-ranking: {str(e)}")
+        current_app.logger.exception("Détail")
+        return jsonify({
+            'success': False,
+            'error': 'Erreur lors du chargement'
+        }), 500
 
 
 # ============================================================
@@ -271,8 +379,6 @@ def lyric_detail(lyric_id):
 def vote():
     """Page publique de vote — s'adapte au mode configuré"""
     try:
-        from sqlalchemy import func
-
         config = _get_vote_config()
         edition = request.args.get('edition', '4e')
 
@@ -474,7 +580,6 @@ def api_vote():
         db.session.add(vote_obj)
         db.session.commit()
 
-        from sqlalchemy import func
         if config.mode == 'GLOBAL':
             new_count = PublicVote.query.filter_by(
                 artist_id=artist_id, mode='GLOBAL', edition=edition
@@ -505,8 +610,6 @@ def api_vote():
 def api_vote_results():
     """Résultats en temps réel selon le mode"""
     try:
-        from sqlalchemy import func
-
         config = _get_vote_config()
         edition = request.args.get('edition', '4e')
 
@@ -566,8 +669,6 @@ def api_vote_results():
 def public_polls():
     """Page publique des sondages actifs"""
     try:
-        from sqlalchemy import func
-
         polls_list = Poll.query.filter_by(is_active=True).filter(
             db.or_(Poll.closes_at.is_(None), Poll.closes_at > datetime.utcnow())
         ).order_by(Poll.created_at.desc()).all()
@@ -682,8 +783,6 @@ def api_poll_vote():
 def api_poll_results(poll_id):
     """Résultats en temps réel d'un sondage"""
     try:
-        from sqlalchemy import func
-
         poll = Poll.query.get_or_404(poll_id)
 
         vote_counts = dict(
@@ -714,3 +813,63 @@ def api_poll_results(poll_id):
     except Exception as e:
         current_app.logger.error(f"Erreur API poll results: {str(e)}")
         return jsonify({'success': False, 'message': 'Erreur interne.'}), 500
+
+
+# ============================================================
+# SEO — SITEMAP DYNAMIQUE
+# ============================================================
+
+@main_bp.route('/sitemap.xml')
+@rate_limit(limit_per_minute=10)
+def sitemap():
+    """Sitemap XML dynamique pour les moteurs de recherche."""
+    base_url = request.url_root.rstrip('/')
+
+    static_pages = [
+        ('/',          '1.0', 'daily'),
+        ('/artists',   '0.9', 'weekly'),
+        ('/results',   '0.9', 'daily'),
+        ('/sponsors',  '0.7', 'weekly'),
+        ('/lyrics',    '0.8', 'weekly'),
+        ('/sondages',  '0.6', 'daily'),
+        ('/about',     '0.5', 'monthly'),
+    ]
+
+    lyrics = Lyric.query.filter_by(is_published=True).all()
+
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+
+    for path, priority, changefreq in static_pages:
+        xml.append('<url>')
+        xml.append(f'  <loc>{base_url}{path}</loc>')
+        xml.append(f'  <changefreq>{changefreq}</changefreq>')
+        xml.append(f'  <priority>{priority}</priority>')
+        xml.append('</url>')
+
+    for lyric in lyrics:
+        xml.append('<url>')
+        xml.append(f'  <loc>{base_url}/lyrics/{lyric.id}</loc>')
+        xml.append(f'  <lastmod>{lyric.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+        xml.append('  <changefreq>monthly</changefreq>')
+        xml.append('  <priority>0.6</priority>')
+        xml.append('</url>')
+
+    xml.append('</urlset>')
+
+    return Response(
+        '\n'.join(xml),
+        mimetype='application/xml',
+        headers={'Cache-Control': 'public, max-age=3600'}
+    )
+
+
+# ============================================================
+# SEO — robots.txt
+# ============================================================
+
+@main_bp.route('/robots.txt')
+def robots():
+    """Sert le fichier robots.txt depuis /static/"""
+    from flask import send_from_directory, current_app as app
+    return send_from_directory(app.static_folder, 'robots.txt')

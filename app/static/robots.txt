@@ -1,0 +1,25 @@
+# robots.txt — Show Talent
+User-agent: *
+Allow: /
+Allow: /artists
+Allow: /artists/*
+Allow: /results
+Allow: /sponsors
+Allow: /lyrics
+Allow: /lyrics/*
+Allow: /sondages
+Allow: /about
+Allow: /vote
+Allow: /static/
+
+# Zones privées : blocage total
+Disallow: /admin/
+Disallow: /jury/
+Disallow: /artist/
+Disallow: /observer/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /uploads/
+
+# Sitemap
+Sitemap: https://showtalent2026.com/sitemap.xml

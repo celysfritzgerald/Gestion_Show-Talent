@@ -1,0 +1,124 @@
+{% extends "jury/jury_base.html" %}
+
+{% block title %}Classement · Jury{% endblock %}
+{% block page_title %}Classement{% endblock %}
+
+{% block content %}
+<div class="py-8 px-4 lg:px-6 space-y-6">
+
+    <div>
+        <h1 class="text-2xl font-bold text-white">Classement</h1>
+        <p class="text-sm text-gray-400 mt-1">
+            Classement établi sur l'ensemble des notes (tous jurys confondus).
+        </p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="glass-card p-4">
+        <form method="GET" class="flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs text-gray-400 mb-1.5">Session</label>
+                <select name="session_id"
+                        class="w-full px-3 py-2 bg-white/5 border border-white/10
+                               rounded-lg text-sm text-gray-200
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Toutes les sessions</option>
+                    {% for s in sessions %}
+                    <option value="{{ s.id }}"
+                        {{ 'selected' if current_session and current_session.id == s.id else '' }}>
+                        Dimanche {{ s.number }} — {{ s.date.strftime('%d/%m/%Y') }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <label class="inline-flex items-center gap-2 text-sm cursor-pointer pb-2">
+                <input type="checkbox" name="eliminated" value="1"
+                       {{ 'checked' if include_eliminated else '' }}
+                       class="w-4 h-4 rounded bg-white/5 border-white/10
+                              text-blue-500 focus:ring-blue-500">
+                <span class="text-gray-400">Inclure éliminés</span>
+            </label>
+
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white
+                           text-sm font-medium rounded-lg transition">
+                <i class="fas fa-filter mr-1.5"></i>Filtrer
+            </button>
+
+            {% if current_session or include_eliminated %}
+            <a href="{{ url_for('jury.ranking') }}"
+               class="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300
+                      text-sm font-medium rounded-lg transition">
+                Réinitialiser
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="glass-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-white/[0.02] border-b border-white/5">
+                    <tr class="text-left text-xs uppercase tracking-wider text-gray-500">
+                        <th class="px-4 py-3 w-16">Rang</th>
+                        <th class="px-4 py-3">Artiste</th>
+                        <th class="px-4 py-3 text-right">Total</th>
+                        <th class="px-4 py-3 text-right">Moyenne</th>
+                        <th class="px-4 py-3 text-center">Notes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for e in entries %}
+                    <tr class="hover:bg-white/[0.02] transition">
+                        <td class="px-4 py-3">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center
+                                        text-sm font-bold
+                                {% if e.rank == 1 %} bg-amber-500/20 text-amber-400
+                                {% elif e.rank == 2 %} bg-slate-400/20 text-slate-300
+                                {% elif e.rank == 3 %} bg-orange-700/30 text-orange-400
+                                {% else %} bg-white/5 text-gray-500 {% endif %}">
+                                {{ e.rank }}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium text-white flex items-center gap-2">
+                                {{ e.artist_name }}
+                                {% if e.competition_status == 'ELIMINATED' %}
+                                <span class="text-[10px] px-1.5 py-0.5 rounded
+                                             bg-red-500/10 text-red-400 border border-red-500/20">
+                                    Éliminé
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-gray-500 font-mono">
+                                {{ e.artist_code }}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right font-semibold text-white">
+                            {{ '%.1f'|format(e.total_score) }}
+                        </td>
+                        <td class="px-4 py-3 text-right text-gray-400">
+                            {{ '%.2f'|format(e.average_score) }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="text-xs px-2 py-1 rounded bg-white/5 text-gray-400">
+                                {{ e.scores_count }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not entries %}
+        <div class="p-12 text-center">
+            <i class="fas fa-trophy text-4xl text-gray-700 mb-3"></i>
+            <p class="text-gray-400">Aucun résultat.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

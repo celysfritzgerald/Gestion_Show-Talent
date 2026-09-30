@@ -165,6 +165,17 @@
         <i class="fas fa-vote-yea w-5 text-center"></i>
         <span class="font-medium">Votes public</span>
     </a>
+    <a href="{{ url_for('admin.scores') }}"
+   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'scores' in request.endpoint %}active{% endif %}">
+    <i class="fas fa-clipboard-list w-5 text-center"></i>
+    <span class="font-medium">Notes</span>
+</a>
+
+<a href="{{ url_for('admin.ranking') }}"
+   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if 'ranking' in request.endpoint %}active{% endif %}">
+    <i class="fas fa-trophy w-5 text-center"></i>
+    <span class="font-medium">Classement</span>
+</a>
 
                 <div class="pt-3 mt-3 border-t border-white/5">
                     <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">

@@ -1,0 +1,141 @@
+"""
+Fonctions utilitaires pour calculer les notes et classements
+Partagées entre Admin, Jury et Observer
+"""
+from app import db
+from app.models import Artist, CompetitionSession, Score, Criterion, User
+
+
+def get_artist_scores_by_session(artist_id, session_id):
+    """
+    Récupère toutes les notes d'un artiste pour une session donnée.
+    Retourne un dict : { criterion_id: { 'criterion': obj, 'scores': [...], 'total': float, 'average': float } }
+    """
+    scores = Score.query.filter_by(
+        artist_id=artist_id,
+        session_id=session_id
+    ).all()
+
+    criteria = Criterion.query.order_by(Criterion.id).all()
+
+    result = {}
+    for criterion in criteria:
+        criterion_scores = [s for s in scores if s.criterion_id == criterion.id]
+        if criterion_scores:
+            total = sum(s.score for s in criterion_scores)
+            average = round(total / len(criterion_scores), 2)
+            result[criterion.id] = {
+                'criterion': criterion,
+                'scores': criterion_scores,
+                'total': round(total, 2),
+                'average': average,
+                'count': len(criterion_scores)
+            }
+        else:
+            result[criterion.id] = {
+                'criterion': criterion,
+                'scores': [],
+                'total': 0,
+                'average': 0,
+                'count': 0
+            }
+
+    return result
+
+
+def get_artist_total_for_session(artist_id, session_id):
+    """
+    Calcule le total d'un artiste pour une session.
+    Retourne (total, is_complete)
+    """
+    scores = Score.query.filter_by(
+        artist_id=artist_id,
+        session_id=session_id
+    ).all()
+
+    if not scores:
+        return 0, False
+
+    total = sum(s.score for s in scores)
+    # Une session est complète si l'artiste a 10 notes (= 10 critères évalués)
+    is_complete = len(scores) == 10
+
+    return round(total, 2), is_complete
+
+
+def get_ranking_for_session(session_id):
+    """
+    Retourne le classement des artistes pour une session donnée.
+    Retourne une liste de dicts triés par total décroissant :
+    [ { 'position': 1, 'artist': obj, 'total': 95.5, 'is_complete': True }, ... ]
+    """
+    artists = Artist.query.join(User).filter(
+        User.account_status == 'ACTIVE',
+        Artist.competition_status == 'ACTIVE'
+    ).all()
+
+    results = []
+    for artist in artists:
+        total, is_complete = get_artist_total_for_session(artist.id, session_id)
+        if total > 0:
+            results.append({
+                'artist': artist,
+                'total': total,
+                'is_complete': is_complete
+            })
+
+    # Trier par total décroissant
+    results.sort(key=lambda x: x['total'], reverse=True)
+
+    # Ajouter la position
+    for i, item in enumerate(results):
+        item['position'] = i + 1
+
+    return results
+
+
+def get_general_ranking():
+    """
+    Retourne le classement général cumulé sur toutes les sessions.
+    Seuls les artistes ayant complété TOUTES leurs notes sont classés.
+    Retourne une liste de dicts triés par total décroissant.
+    """
+    artists = Artist.query.join(User).filter(
+        User.account_status == 'ACTIVE',
+        Artist.competition_status == 'ACTIVE'
+    ).all()
+
+    sessions = CompetitionSession.query.order_by(CompetitionSession.number).all()
+
+    results = []
+    for artist in artists:
+        total_points = 0
+        total_possible = 0
+        sessions_completed = 0
+
+        for session_obj in sessions:
+            total, is_complete = get_artist_total_for_session(artist.id, session_obj.id)
+            if is_complete:
+                total_points += total
+                total_possible += 100  # 10 critères × 10 points
+                sessions_completed += 1
+
+        if total_points > 0:
+            percentage = round((total_points / total_possible) * 100, 1) if total_possible > 0 else 0
+            results.append({
+                'artist': artist,
+                'total': round(total_points, 2),
+                'max_possible': total_possible,
+                'percentage': percentage,
+                'sessions_completed': sessions_completed,
+                'total_sessions': len(sessions)
+            })
+
+    # Trier par total décroissant
+    results.sort(key=lambda x: x['total'], reverse=True)
+
+    # Ajouter la position
+    for i, item in enumerate(results):
+        item['position'] = i + 1
+
+    return results
