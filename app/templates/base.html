@@ -239,6 +239,9 @@
                     <a href="{{ url_for('main.public_polls') }}" class="hover:text-yellow-400 transition {% if request.endpoint and 'poll' in request.endpoint %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
                          Sondages
                     </a>
+                    <a href="{{ url_for('main.moments') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.moments' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
+    Moments
+</a>
                     <a href="{{ url_for('main.sponsors_page') }}" class="hover:text-yellow-400 transition {% if request.endpoint == 'main.sponsors_page' %}text-yellow-400 border-b-2 border-yellow-400 pb-1{% endif %}">
                         Sponsors
                     </a>

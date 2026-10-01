@@ -7,7 +7,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import current_app
 
 
-ALLOWED_SUBFOLDERS = {"artists", "moments", "sponsors", "lyrics"}
+ALLOWED_SUBFOLDERS = {"artists", "moments", "sponsors", "lyrics","votes"}
 
 
 def allowed_file(filename):

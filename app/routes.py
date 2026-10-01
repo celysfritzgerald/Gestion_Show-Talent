@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, current_app, Response
+from flask import Blueprint, render_template, request, jsonify, current_app, Response, send_from_directory
 from app import db
 from datetime import datetime
 from sqlalchemy import func
@@ -19,7 +19,7 @@ main_bp = Blueprint('main', __name__)
 # ============================================================
 
 def _generate_fingerprint(request, secret):
-    """Génère une empreinte unique à partir de IP + User-Agent + Secret"""
+    """Génère une empreinte unique à partir de IP + User-Agent + Secret."""
     import hashlib
     ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
     ua = request.headers.get('User-Agent', 'unknown')
@@ -28,10 +28,25 @@ def _generate_fingerprint(request, secret):
 
 
 def _get_vote_config():
-    """Récupère ou crée la config du vote"""
+    """Récupère ou crée la config du vote avec TOUS les défauts."""
     config = VoteConfig.query.first()
     if not config:
-        config = VoteConfig(mode="PER_SESSION", is_enabled=True)
+        config = VoteConfig(
+            mode="PER_SESSION",
+            is_enabled=True,
+            title="Qui va gagner cette édition ?",
+            subtitle="Votez pour votre artiste préféré",
+            cta_text="Voter pour cet artiste",
+            primary_color="#facc15",
+            show_results_live=True,
+            show_vote_counts=True,
+            show_percentages=True,
+            show_progress_bars=True,
+            show_ranking_badge=True,
+            require_first_name=True,
+            require_last_name=True,
+            max_votes_per_session=1,
+        )
         db.session.add(config)
         db.session.commit()
     return config
@@ -44,7 +59,7 @@ def _get_vote_config():
 @main_bp.route('/')
 @rate_limit(limit_per_minute=120)
 def index():
-    """Page d'accueil"""
+    """Page d'accueil."""
     try:
         artists = Artist.query.join(User).filter(
             User.account_status == 'ACTIVE'
@@ -77,19 +92,19 @@ def index():
 
 @main_bp.route('/about')
 def about():
-    """Page À propos"""
+    """Page À propos."""
     return render_template('public/about.html')
 
 
 @main_bp.route('/artists')
 @rate_limit(limit_per_minute=60)
 def artists():
-    """Page des artistes"""
+    """Page des artistes."""
     try:
-        artists = Artist.query.join(User).filter(
+        artists_list = Artist.query.join(User).filter(
             User.account_status == 'ACTIVE'
         ).order_by(User.last_name).all()
-        return render_template('public/artists.html', artists=artists)
+        return render_template('public/artists.html', artists=artists_list)
     except Exception as e:
         current_app.logger.error(f"Erreur page artistes: {str(e)}")
         return render_template('errors/500.html'), 500
@@ -98,7 +113,7 @@ def artists():
 @main_bp.route('/results')
 @rate_limit(limit_per_minute=60)
 def results():
-    """Page des résultats — GLOBAL + par dimanche"""
+    """Page des résultats — GLOBAL + par dimanche."""
     try:
         sessions = CompetitionSession.query.order_by(
             CompetitionSession.number
@@ -112,22 +127,69 @@ def results():
 @main_bp.route('/sponsors')
 @rate_limit(limit_per_minute=60)
 def sponsors_page():
-    """Page des sponsors"""
+    """Page des sponsors."""
     try:
-        sponsors = Sponsor.query.all()
-        return render_template('public/sponsors.html', sponsors=sponsors)
+        sponsors_list = Sponsor.query.all()
+        return render_template('public/sponsors.html', sponsors=sponsors_list)
     except Exception as e:
         current_app.logger.error(f"Erreur page sponsors: {str(e)}")
         return render_template('errors/500.html'), 500
 
 
 # ============================================================
-# HEALTH CHECK (pour monitoring / uptime)
+# MOMENTS FORTS — PAGE PUBLIQUE
+# ============================================================
+
+@main_bp.route('/moments')
+@rate_limit(limit_per_minute=60)
+def moments():
+    """Galerie publique des moments forts."""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = 24
+        if page < 1:
+            page = 1
+
+        session_id = request.args.get('session_id', type=int)
+
+        if session_id:
+            pagination = (
+                Moment.query
+                .filter_by(session_id=session_id)
+                .order_by(Moment.created_at.desc())
+                .paginate(page=page, per_page=per_page, error_out=False)
+            )
+        else:
+            pagination = (
+                Moment.query
+                .order_by(Moment.created_at.desc())
+                .paginate(page=page, per_page=per_page, error_out=False)
+            )
+
+        sessions = CompetitionSession.query.order_by(
+            CompetitionSession.number
+        ).all()
+
+        return render_template(
+            'public/moments.html',
+            pagination=pagination,
+            moments=pagination.items,
+            sessions=sessions,
+            current_session_id=session_id,
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"Erreur page moments: {str(e)}")
+        return render_template('errors/500.html'), 500
+
+
+# ============================================================
+# HEALTH CHECK
 # ============================================================
 
 @main_bp.route('/health')
 def health():
-    """Health check : DB + timestamp. Utilisé par Railway / UptimeRobot."""
+    """Health check : DB + timestamp."""
     try:
         db.session.execute(db.text('SELECT 1'))
         return jsonify({
@@ -151,7 +213,7 @@ def health():
 @main_bp.route('/api/contact', methods=['POST'])
 @rate_limit(limit_per_minute=30)
 def contact():
-    """API pour le formulaire de contact"""
+    """API pour le formulaire de contact."""
     try:
         data = request.get_json(silent=True) or {}
 
@@ -174,14 +236,14 @@ def contact():
         if len(message) < 10:
             return jsonify({'success': False, 'message': 'Le message doit contenir au moins 10 caractères.'}), 400
 
-        contact = ContactMessage(
+        contact_obj = ContactMessage(
             first_name=first_name,
             last_name=last_name,
             email=email,
             message=message,
             status='NEW'
         )
-        db.session.add(contact)
+        db.session.add(contact_obj)
         db.session.commit()
 
         current_app.logger.info(f"📩 Message de contact de {first_name} {last_name} ({email})")
@@ -195,20 +257,16 @@ def contact():
 
 
 # ============================================================
-# API RÉSULTATS (par session — OPTIMISÉ : 1 seule requête SQL)
+# API RÉSULTATS (par session — optimisé)
 # ============================================================
 
 @main_bp.route('/api/results/<int:session_id>')
 @rate_limit(limit_per_minute=120)
 def api_results(session_id):
-    """
-    API pour les résultats d'une session.
-    ✅ Optimisé : 1 seule requête SQL au lieu de N+1.
-    """
+    """API pour les résultats d'une session."""
     try:
         session_obj = CompetitionSession.query.get_or_404(session_id)
 
-        # ✅ UNE SEULE requête avec jointure + agrégation + HAVING
         rows = (
             db.session.query(
                 Artist.id,
@@ -255,21 +313,13 @@ def api_results(session_id):
 
 
 # ============================================================
-# API CLASSEMENT PUBLIC — GLOBAL + PAR DIMANCHE
+# API CLASSEMENT PUBLIC
 # ============================================================
 
 @main_bp.route('/api/public-ranking')
 @rate_limit(limit_per_minute=120)
 def api_public_ranking():
-    """
-    Classement public (JSON).
-
-    Query params :
-        ?session_id=N   → classement d'un dimanche (score total)
-        ?session_id=0   → (défaut) classement GLOBAL (somme des dimanches)
-
-    NOTE : pas de détail par critère (public).
-    """
+    """Classement public (JSON)."""
     from app.services_ranking import compute_ranking
 
     try:
@@ -279,10 +329,7 @@ def api_public_ranking():
         if session_id and session_id > 0:
             session_obj = CompetitionSession.query.get(session_id)
             if not session_obj:
-                return jsonify({
-                    'success': False,
-                    'error': 'Session introuvable'
-                }), 404
+                return jsonify({'success': False, 'error': 'Session introuvable'}), 404
 
         entries = compute_ranking(
             session_id=session_obj.id if session_obj else None,
@@ -325,10 +372,7 @@ def api_public_ranking():
     except Exception as e:
         current_app.logger.error(f"Erreur API public-ranking: {str(e)}")
         current_app.logger.exception("Détail")
-        return jsonify({
-            'success': False,
-            'error': 'Erreur lors du chargement'
-        }), 500
+        return jsonify({'success': False, 'error': 'Erreur lors du chargement'}), 500
 
 
 # ============================================================
@@ -338,7 +382,7 @@ def api_public_ranking():
 @main_bp.route('/lyrics')
 @rate_limit(limit_per_minute=60)
 def lyrics():
-    """Page publique des paroles"""
+    """Page publique des paroles."""
     try:
         lyrics_list = Lyric.query.filter_by(is_published=True).order_by(
             Lyric.created_at.desc()
@@ -357,7 +401,7 @@ def lyrics():
 @main_bp.route('/lyrics/<int:lyric_id>')
 @rate_limit(limit_per_minute=60)
 def lyric_detail(lyric_id):
-    """Page détail d'une parole"""
+    """Page détail d'une parole."""
     try:
         lyric = Lyric.query.filter_by(id=lyric_id, is_published=True).first_or_404()
 
@@ -371,13 +415,13 @@ def lyric_detail(lyric_id):
 
 
 # ============================================================
-# VOTE PUBLIC — MODULE FLEXIBLE (GLOBAL ou PER_SESSION)
+# VOTE PUBLIC
 # ============================================================
 
 @main_bp.route('/vote')
 @rate_limit(limit_per_minute=30)
 def vote():
-    """Page publique de vote — s'adapte au mode configuré"""
+    """Page publique de vote — s'adapte à la config."""
     try:
         config = _get_vote_config()
         edition = request.args.get('edition', '4e')
@@ -438,7 +482,10 @@ def vote():
                 'percentage': percentage
             })
 
-        artists_data.sort(key=lambda x: x['votes'], reverse=True)
+        if config.show_results_live:
+            artists_data.sort(key=lambda x: x['votes'], reverse=True)
+        else:
+            artists_data.sort(key=lambda x: x['artist'].user.last_name.lower())
 
         secret = current_app.config.get('SECRET_KEY', 'fallback')
         fingerprint = _generate_fingerprint(request, secret)
@@ -476,7 +523,7 @@ def vote():
 @main_bp.route('/api/vote', methods=['POST'])
 @rate_limit(limit_per_minute=10)
 def api_vote():
-    """API pour enregistrer un vote"""
+    """API pour enregistrer un vote."""
     try:
         config = _get_vote_config()
 
@@ -608,7 +655,7 @@ def api_vote():
 @main_bp.route('/api/vote/results')
 @rate_limit(limit_per_minute=60)
 def api_vote_results():
-    """Résultats en temps réel selon le mode"""
+    """Résultats en temps réel selon le mode."""
     try:
         config = _get_vote_config()
         edition = request.args.get('edition', '4e')
@@ -661,13 +708,13 @@ def api_vote_results():
 
 
 # ============================================================
-# SONDAGES PUBLICS — MODULE INDÉPENDANT
+# SONDAGES PUBLICS
 # ============================================================
 
 @main_bp.route('/sondages')
 @rate_limit(limit_per_minute=60)
 def public_polls():
-    """Page publique des sondages actifs"""
+    """Page publique des sondages actifs."""
     try:
         polls_list = Poll.query.filter_by(is_active=True).filter(
             db.or_(Poll.closes_at.is_(None), Poll.closes_at > datetime.utcnow())
@@ -718,7 +765,7 @@ def public_polls():
 @main_bp.route('/api/poll/vote', methods=['POST'])
 @rate_limit(limit_per_minute=10)
 def api_poll_vote():
-    """API pour voter dans un sondage"""
+    """API pour voter dans un sondage."""
     try:
         data = request.get_json(silent=True) or {}
         poll_id = data.get('poll_id')
@@ -781,7 +828,7 @@ def api_poll_vote():
 @main_bp.route('/api/poll/<int:poll_id>/results')
 @rate_limit(limit_per_minute=60)
 def api_poll_results(poll_id):
-    """Résultats en temps réel d'un sondage"""
+    """Résultats en temps réel d'un sondage."""
     try:
         poll = Poll.query.get_or_404(poll_id)
 
@@ -829,13 +876,14 @@ def sitemap():
         ('/',          '1.0', 'daily'),
         ('/artists',   '0.9', 'weekly'),
         ('/results',   '0.9', 'daily'),
+        ('/moments',   '0.8', 'weekly'),
         ('/sponsors',  '0.7', 'weekly'),
         ('/lyrics',    '0.8', 'weekly'),
         ('/sondages',  '0.6', 'daily'),
         ('/about',     '0.5', 'monthly'),
     ]
 
-    lyrics = Lyric.query.filter_by(is_published=True).all()
+    lyrics_list = Lyric.query.filter_by(is_published=True).all()
 
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
@@ -847,7 +895,7 @@ def sitemap():
         xml.append(f'  <priority>{priority}</priority>')
         xml.append('</url>')
 
-    for lyric in lyrics:
+    for lyric in lyrics_list:
         xml.append('<url>')
         xml.append(f'  <loc>{base_url}/lyrics/{lyric.id}</loc>')
         xml.append(f'  <lastmod>{lyric.updated_at.strftime("%Y-%m-%d")}</lastmod>')
@@ -870,6 +918,5 @@ def sitemap():
 
 @main_bp.route('/robots.txt')
 def robots():
-    """Sert le fichier robots.txt depuis /static/"""
-    from flask import send_from_directory, current_app as app
-    return send_from_directory(app.static_folder, 'robots.txt')
+    """Sert le fichier robots.txt depuis /static/."""
+    return send_from_directory(current_app.static_folder, 'robots.txt')

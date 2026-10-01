@@ -6,6 +6,11 @@
 
 {% block meta_keywords %}Show Talent, ACDA, concours chant Haïti, vote public, sondages, paroles chansons, artistes haïtiens, Yon ti chans pou Ayiti, compétition musicale{% endblock %}
 
+{% block meta_robots %}
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ url_for('main.index', _external=True) }}">
+{% endblock %}
+
 {% block og_title %}Show Talent 4e Édition - Votez et Participez{% endblock %}
 {% block og_description %}Votez pour votre artiste préféré et participez aux sondages du concours Show Talent 4e Édition. Thème : Yon ti chans pou Ayiti.{% endblock %}
 {% block og_type %}website{% endblock %}
@@ -13,15 +18,18 @@
 
 {% block twitter_card %}summary_large_image{% endblock %}
 {% block twitter_title %}Show Talent 4e Édition - Votez et Participez{% endblock %}
-{% block twitter_description %}Vote du public, sondages, résultats, artistes et paroles du concours Show Talent.{% endblock %}
+{% block twitter_description %}Vote public, sondages, résultats, artistes et paroles du concours Show Talent.{% endblock %}
 
 {% block extra_css %}
+{# ⚡ Performance : preconnect en amont #}
 <link rel="preconnect" href="https://cdn.tailwindcss.com">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="preconnect" href="https://images.unsplash.com">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+
 <style>
     /* ============================================================
-       IMAGE SLIDER
+       HERO SLIDER
     ============================================================ */
     .image-slide {
         transition: opacity 1.2s ease-in-out, transform 1.5s ease-in-out;
@@ -53,9 +61,7 @@
     }
 
     @media (max-width: 480px) {
-        .hero-buttons {
-            gap: 10px;
-        }
+        .hero-buttons { gap: 10px; }
         .hero-buttons .btn {
             flex: 1;
             min-width: 120px;
@@ -65,7 +71,7 @@
     }
 
     /* ============================================================
-       TITRE "SHOW TALENT" - EFFET LETTRE PAR LETTRE INFINI
+       TYPEWRITER
     ============================================================ */
     .typewriter-letter {
         display: inline-block;
@@ -74,26 +80,10 @@
     }
 
     @keyframes letterLoop {
-        0% {
-            opacity: 0;
-            transform: translateY(20px) scale(0.8);
-            filter: blur(4px);
-        }
-        10% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            filter: blur(0);
-        }
-        85% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            filter: blur(0);
-        }
-        100% {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.8);
-            filter: blur(4px);
-        }
+        0%   { opacity: 0; transform: translateY(20px) scale(0.8); filter: blur(4px); }
+        10%  { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        85%  { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        100% { opacity: 0; transform: translateY(-20px) scale(0.8); filter: blur(4px); }
     }
 
     .typewriter-cursor {
@@ -108,15 +98,11 @@
 
     @keyframes cursorBlink {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
+        50%      { opacity: 0; }
     }
 
     @media (max-width: 480px) {
-        .typewriter-cursor {
-            width: 2px;
-            height: 0.8em;
-            margin-left: 4px;
-        }
+        .typewriter-cursor { width: 2px; height: 0.8em; margin-left: 4px; }
     }
 
     /* ============================================================
@@ -143,9 +129,7 @@
         border: none;
     }
 
-    .sponsor-item:hover {
-        transform: scale(1.08);
-    }
+    .sponsor-item:hover { transform: scale(1.08); }
 
     .sponsor-item img {
         max-height: 280px;
@@ -157,10 +141,7 @@
         transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    .sponsor-item:hover img {
-        opacity: 1;
-        transform: scale(1.05);
-    }
+    .sponsor-item:hover img { opacity: 1; transform: scale(1.05); }
 
     .sponsor-item .sponsor-name {
         color: #94a3b8;
@@ -171,72 +152,33 @@
         letter-spacing: 0.5px;
     }
 
-    .sponsor-item:hover .sponsor-name {
-        color: #fcd34d;
-    }
+    .sponsor-item:hover .sponsor-name { color: #fcd34d; }
 
     @media (max-width: 1200px) {
-        .sponsors-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-        }
-        .sponsor-item {
-            height: 260px;
-        }
-        .sponsor-item img {
-            max-height: 240px;
-        }
+        .sponsors-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .sponsor-item { height: 260px; }
+        .sponsor-item img { max-height: 240px; }
     }
 
     @media (max-width: 992px) {
-        .sponsors-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-        .sponsor-item {
-            height: 220px;
-            padding: 10px 12px;
-        }
-        .sponsor-item img {
-            max-height: 200px;
-        }
-        .sponsor-item .sponsor-name {
-            font-size: 1.3rem;
-        }
+        .sponsors-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .sponsor-item { height: 220px; padding: 10px 12px; }
+        .sponsor-item img { max-height: 200px; }
+        .sponsor-item .sponsor-name { font-size: 1.3rem; }
     }
 
     @media (max-width: 768px) {
-        .sponsors-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        .sponsor-item {
-            height: 180px;
-            padding: 8px 10px;
-        }
-        .sponsor-item img {
-            max-height: 160px;
-        }
-        .sponsor-item .sponsor-name {
-            font-size: 1.1rem;
-        }
+        .sponsors-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .sponsor-item { height: 180px; padding: 8px 10px; }
+        .sponsor-item img { max-height: 160px; }
+        .sponsor-item .sponsor-name { font-size: 1.1rem; }
     }
 
     @media (max-width: 480px) {
-        .sponsors-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-        .sponsor-item {
-            height: 160px;
-            padding: 6px 8px;
-        }
-        .sponsor-item img {
-            max-height: 140px;
-        }
-        .sponsor-item .sponsor-name {
-            font-size: 0.9rem;
-        }
+        .sponsors-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .sponsor-item { height: 160px; padding: 6px 8px; }
+        .sponsor-item img { max-height: 140px; }
+        .sponsor-item .sponsor-name { font-size: 0.9rem; }
     }
 
     /* ============================================================
@@ -248,9 +190,7 @@
         border-radius: 20px;
         padding: 24px;
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                    background 0.4s,
-                    border-color 0.4s,
-                    box-shadow 0.4s;
+                    background 0.4s, border-color 0.4s, box-shadow 0.4s;
         backdrop-filter: blur(10px);
         display: flex;
         flex-direction: column;
@@ -312,8 +252,54 @@
         margin-top: auto;
     }
 
-    .lyric-link:hover {
-        gap: 12px;
+    .lyric-link:hover { gap: 12px; }
+
+    /* ============================================================
+       CARROUSEL MOMENTS
+    ============================================================ */
+    .moments-carousel-section {
+        background: linear-gradient(180deg, #0B1120 0%, #0F1A2E 50%, #0B1120 100%);
+    }
+
+    .carousel-slide {
+        transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity;
+    }
+
+    .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .carousel-slide.opacity-100 img {
+        animation: kenburns 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes kenburns {
+        0%   { transform: scale(1) translate(0, 0); }
+        100% { transform: scale(1.08) translate(-1%, -1%); }
+    }
+
+    .carousel-slide.opacity-100 .absolute.bottom-0 {
+        animation: slideUpCaption 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+    }
+
+    @keyframes slideUpCaption {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .carousel-prev:active,
+    .carousel-next:active { transform: translateY(-50%) scale(0.95); }
+
+    .carousel-dot[aria-selected="true"] {
+        animation: dotPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
+        50%      { box-shadow: 0 0 0 8px rgba(250, 204, 21, 0); }
     }
 
     /* ============================================================
@@ -328,39 +314,24 @@
     /* ============================================================
        RESPONSIVE
     ============================================================ */
-    body, html {
-        overflow-x: hidden;
-    }
-
-    .typewriter-letter {
-        max-width: 100%;
-    }
-
-    #contactForm {
-        width: 100%;
-        max-width: 100%;
-    }
+    body, html { overflow-x: hidden; }
+    #contactForm { width: 100%; max-width: 100%; }
 
     @media (max-width: 359px) {
-        .typewriter-letter {
-            font-size: 0.85em;
-        }
-        .typewriter-cursor {
-            width: 1.5px;
-            height: 0.7em;
-        }
+        .typewriter-letter { font-size: 0.85em; }
+        .typewriter-cursor { width: 1.5px; height: 0.7em; }
     }
 
     @media (min-width: 768px) and (max-width: 1024px) {
-        .lyric-card {
-            padding: 20px;
-        }
+        .lyric-card { padding: 20px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
         .typewriter-letter,
         .typewriter-cursor,
-        .image-slide {
+        .image-slide,
+        .carousel-slide.opacity-100 img,
+        .carousel-dot[aria-selected="true"] {
             animation: none !important;
             transition: none !important;
             opacity: 1 !important;
@@ -373,9 +344,9 @@
 
 {% block content %}
 
-<!-- ============================================================
-     SCHEMA.ORG - Structured Data
-     ============================================================ -->
+<!-- ═══════════════════════════════════════════════════════════
+     SCHEMA.ORG — Structured Data enrichi
+     ═══════════════════════════════════════════════════════════ -->
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
@@ -391,37 +362,47 @@
         "name": "Desbas d'Aquin, Haïti",
         "address": {
             "@type": "PostalAddress",
+            "addressLocality": "Desbas d'Aquin",
             "addressCountry": "HT"
         }
     },
     "organizer": {
         "@type": "Organization",
         "name": "ACDA",
-        "url": "{{ url_for('main.index', _external=True) }}"
+        "url": "{{ url_for('main.index', _external=True) }}",
+        "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
     },
+    "image": "{{ url_for('static', filename='images/og-image.jpg', _external=True) }}",
     "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "HTG",
-        "availability": "https://schema.org/InStock"
+        "availability": "https://schema.org/InStock",
+        "url": "{{ url_for('main.index', _external=True) }}"
+    },
+    "performer": {
+        "@type": "PerformingGroup",
+        "name": "Artistes Show Talent"
     }
 }
 </script>
 
-<!-- ============================================================
+<!-- ═══════════════════════════════════════════════════════════
      HERO SECTION
-     ============================================================ -->
+     ═══════════════════════════════════════════════════════════ -->
 <section class="py-8 sm:py-12 md:py-20" style="background: #0B1120;">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 items-center">
 
             <div class="order-1 lg:order-1 text-center lg:text-left">
-                <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4 break-words" aria-label="Show Talent 4e Édition">
-                    <span class="typewriter-letter" style="animation-delay: 0s">S</span><span class="typewriter-letter" style="animation-delay: 0.1s">H</span><span class="typewriter-letter" style="animation-delay: 0.2s">O</span><span class="typewriter-letter" style="animation-delay: 0.3s">W</span><span class="inline-block w-1 sm:w-2 md:w-3"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.4s">T</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.5s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.6s">L</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.7s">E</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.8s">N</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.9s">T</span><span class="typewriter-cursor"></span>
-                </h2>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-4 break-words"
+                    aria-label="Show Talent 4e Édition">
+                    <span class="typewriter-letter" style="animation-delay: 0s">S</span><span class="typewriter-letter" style="animation-delay: 0.1s">H</span><span class="typewriter-letter" style="animation-delay: 0.2s">O</span><span class="typewriter-letter" style="animation-delay: 0.3s">W</span><span class="inline-block w-1 sm:w-2 md:w-3"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.4s">T</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.5s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.6s">L</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.7s">E</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.8s">N</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 0.9s">T</span><span class="typewriter-cursor" aria-hidden="true"></span>
+                </h1>
 
-                <p class="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold text-gray-300 leading-tight mb-4 sm:mb-6 mt-2 break-words" aria-label="Yon ti chans pou Ayiti">
-                    <span class="typewriter-letter" style="animation-delay: 1.2s">T</span><span class="typewriter-letter" style="animation-delay: 1.3s">h</span><span class="typewriter-letter" style="animation-delay: 1.4s">è</span><span class="typewriter-letter" style="animation-delay: 1.5s">m</span><span class="typewriter-letter" style="animation-delay: 1.6s">e</span><span class="typewriter-letter" style="animation-delay: 1.7s">:</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 1.8s">Y</span><span class="typewriter-letter" style="animation-delay: 1.9s">o</span><span class="typewriter-letter" style="animation-delay: 2.0s">n</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.1s">t</span><span class="typewriter-letter" style="animation-delay: 2.2s">i</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.3s">c</span><span class="typewriter-letter" style="animation-delay: 2.4s">h</span><span class="typewriter-letter" style="animation-delay: 2.5s">a</span><span class="typewriter-letter" style="animation-delay: 2.6s">n</span><span class="typewriter-letter" style="animation-delay: 2.7s">s</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter" style="animation-delay: 2.8s">p</span><span class="typewriter-letter" style="animation-delay: 2.9s">o</span><span class="typewriter-letter" style="animation-delay: 3.0s">u</span><span class="inline-block w-1 md:w-2"></span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.1s">A</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.2s">y</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.3s">i</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.4s">t</span><span class="typewriter-letter bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent" style="animation-delay: 3.5s">i</span>
+                <p class="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold text-gray-300 leading-tight mb-4 sm:mb-6 mt-2 break-words"
+                   aria-label="Thème : Yon ti chans pou Ayiti">
+                    Thème : <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Yon ti chans pou Ayiti</span>
                 </p>
 
                 <p class="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed mb-3 text-justify">
@@ -435,31 +416,74 @@
                 </p>
 
                 <div class="hero-buttons">
-                    <a href="{{ url_for('main.results') }}" class="btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <a href="{{ url_for('main.results') }}"
+                       class="btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i class="fas fa-trophy" aria-hidden="true"></i> Voir les résultats
                     </a>
-                    <a href="{{ url_for('main.artists') }}" class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-blue-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <a href="{{ url_for('main.artists') }}"
+                       class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-blue-500/30 inline-flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i class="fas fa-users" aria-hidden="true"></i> Voir les participants
                     </a>
                 </div>
             </div>
 
             <div class="order-2 lg:order-2">
-                <div class="relative w-full h-[280px] sm:h-[350px] md:h-[450px] overflow-hidden rounded-2xl shadow-2xl border border-white/5" id="imageSlider">
-                    <img class="image-slide active absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image1.jpg') }}" alt="Show Talent 1" width="800" height="500" loading="eager" decoding="async" fetchpriority="high">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image2.jpg') }}" alt="Show Talent 2" width="800" height="500" loading="lazy" decoding="async">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image3.jpg') }}" alt="Show Talent 3" width="800" height="500" loading="lazy" decoding="async">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image4.jpg') }}" alt="Show Talent 4" width="800" height="500" loading="lazy" decoding="async">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image5.jpg') }}" alt="Show Talent 5" width="800" height="500" loading="lazy" decoding="async">
-                    <img class="image-slide absolute inset-0 w-full h-full object-cover" src="{{ url_for('static', filename='images/image6.jpg') }}" alt="Show Talent 6" width="800" height="500" loading="lazy" decoding="async">
+                <div class="relative w-full h-[280px] sm:h-[350px] md:h-[450px] overflow-hidden rounded-2xl shadow-2xl border border-white/5"
+                     id="imageSlider">
 
-                    <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot active bg-yellow-400 border-yellow-400" data-index="0" aria-label="Image 1"></button>
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="1" aria-label="Image 2"></button>
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="2" aria-label="Image 3"></button>
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="3" aria-label="Image 4"></button>
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="4" aria-label="Image 5"></button>
-                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="5" aria-label="Image 6"></button>
+                    {# ⚡ Performance : first image eager + preload, autres lazy #}
+                    <img class="image-slide active absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image1.jpg') }}"
+                         alt="Show Talent 1"
+                         width="800" height="500"
+                         loading="eager"
+                         decoding="async"
+                         fetchpriority="high">
+
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image2.jpg') }}"
+                         alt="Show Talent 2"
+                         width="800" height="500"
+                         loading="lazy"
+                         decoding="async">
+
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image3.jpg') }}"
+                         alt="Show Talent 3"
+                         width="800" height="500"
+                         loading="lazy"
+                         decoding="async">
+
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image4.jpg') }}"
+                         alt="Show Talent 4"
+                         width="800" height="500"
+                         loading="lazy"
+                         decoding="async">
+
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image5.jpg') }}"
+                         alt="Show Talent 5"
+                         width="800" height="500"
+                         loading="lazy"
+                         decoding="async">
+
+                    <img class="image-slide absolute inset-0 w-full h-full object-cover"
+                         src="{{ url_for('static', filename='images/image6.jpg') }}"
+                         alt="Show Talent 6"
+                         width="800" height="500"
+                         loading="lazy"
+                         decoding="async">
+
+                    <div class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10"
+                         role="tablist"
+                         aria-label="Navigation du diaporama">
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot active bg-yellow-400 border-yellow-400" data-index="0" aria-label="Image 1" role="tab" aria-selected="true"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="1" aria-label="Image 2" role="tab" aria-selected="false"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="2" aria-label="Image 3" role="tab" aria-selected="false"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="3" aria-label="Image 4" role="tab" aria-selected="false"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="4" aria-label="Image 5" role="tab" aria-selected="false"></button>
+                        <button class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white/30 transition slider-dot" data-index="5" aria-label="Image 6" role="tab" aria-selected="false"></button>
                     </div>
                 </div>
             </div>
@@ -468,22 +492,26 @@
     </div>
 </section>
 
-<!-- ============================================================
+<!-- ═══════════════════════════════════════════════════════════
      ABOUT SECTION
-     ============================================================ -->
-<section id="about" class="py-12 sm:py-16 md:py-20" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+     ═══════════════════════════════════════════════════════════ -->
+<section id="about"
+         class="py-12 sm:py-16 md:py-20"
+         style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
 
             <div class="hidden lg:block rounded-2xl overflow-hidden shadow-2xl border border-white/5 hover:-translate-y-2 transition">
                 <img src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&h=400&fit=crop"
-                     alt="Show Talent"
+                     alt="Scène du concours Show Talent avec artistes en performance"
                      class="w-full h-[400px] object-cover hover:scale-105 transition duration-700"
                      width="800" height="400" loading="lazy" decoding="async">
             </div>
 
             <div class="text-center lg:text-left">
-                <span class="text-yellow-400 font-semibold text-base sm:text-xl md:text-2xl uppercase tracking-widest">À propos du concours</span>
+                <span class="text-yellow-400 font-semibold text-base sm:text-xl md:text-2xl uppercase tracking-widest">
+                    À propos du concours
+                </span>
                 <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mt-2 mb-4">
                     La compétition qui <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">révèle</span> les talents
                 </h2>
@@ -514,17 +542,182 @@
     </div>
 </section>
 
-<!-- ============================================================
-     VOTE PUBLIC SECTION — H1
-     ============================================================ -->
-<section id="vote" class="py-8 sm:py-12 bg-[#0B1120] border-t border-b border-white/5" itemscope itemtype="https://schema.org/Event">
+<!-- ═══════════════════════════════════════════════════════════
+     MOMENTS — CARROUSEL
+     ═══════════════════════════════════════════════════════════ -->
+{% if moments %}
+<section class="moments-carousel-section relative overflow-hidden py-16 sm:py-20"
+         aria-label="Moments forts du concours">
+
+    <div class="absolute inset-0 pointer-events-none opacity-40">
+        <div class="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl"
+             style="background: radial-gradient(circle, rgba(250, 204, 21, 0.15), transparent 70%);"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl"
+             style="background: radial-gradient(circle, rgba(124, 58, 237, 0.15), transparent 70%);"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10 max-w-6xl">
+
+        <header class="text-center mb-10 sm:mb-14">
+            <span class="inline-block px-5 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full
+                         text-yellow-400 text-xs sm:text-sm font-bold uppercase tracking-wider mb-5">
+                📸 Galerie
+            </span>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+                Moments <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">forts</span>
+            </h2>
+            <p class="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto px-2">
+                Revivez les meilleurs instants du concours en images.
+            </p>
+            <div class="w-24 h-1.5 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-6 rounded-full"></div>
+        </header>
+
+        <div class="carousel-wrapper relative max-w-5xl mx-auto"
+             id="momentsCarousel"
+             role="region"
+             aria-roledescription="carrousel"
+             aria-label="Galerie des moments forts">
+
+            <div class="carousel-viewport relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-2xl overflow-hidden
+                        bg-slate-900/50 border border-white/10 shadow-2xl">
+
+                {% for m in moments %}
+                <div class="carousel-slide absolute inset-0 transition-opacity duration-700 ease-in-out
+                            {% if loop.first %}opacity-100 z-10{% else %}opacity-0 z-0{% endif %}"
+                     data-slide-index="{{ loop.index0 }}"
+                     role="group"
+                     aria-roledescription="slide"
+                     aria-label="{{ loop.index }} sur {{ moments|length }}"
+                     aria-hidden="{{ 'false' if loop.first else 'true' }}">
+
+                    <img src="{{ m.image|upload_url('moments') }}"
+                         alt="{{ m.caption|e if m.caption else 'Moment fort du concours Show Talent' }}"
+                         loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                         decoding="async"
+                         width="1200"
+                         height="675"
+                         class="w-full h-full object-cover">
+
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent"></div>
+
+                    {% if m.caption or m.session %}
+                    <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-8 text-white">
+                        {% if m.session %}
+                        <span class="inline-block px-3 py-1 rounded-full bg-yellow-400/20
+                                     border border-yellow-400/40 text-yellow-300 text-[10px]
+                                     font-bold uppercase tracking-wider mb-3 backdrop-blur">
+                            Dimanche {{ m.session.number }}
+                        </span>
+                        {% endif %}
+                        {% if m.caption %}
+                        <p class="text-sm sm:text-lg font-medium leading-snug max-w-3xl drop-shadow-lg">
+                            {{ m.caption }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="button"
+                        class="carousel-prev absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 z-20
+                               w-10 h-10 sm:w-12 sm:h-12 rounded-full
+                               bg-black/60 hover:bg-yellow-400 backdrop-blur-md
+                               border border-white/20 hover:border-yellow-400
+                               text-white hover:text-[#0B1120]
+                               flex items-center justify-center
+                               transition-all duration-300 hover:scale-110
+                               focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        aria-label="Image précédente">
+                    <i class="fas fa-chevron-left text-sm sm:text-base" aria-hidden="true"></i>
+                </button>
+
+                <button type="button"
+                        class="carousel-next absolute top-1/2 right-2 sm:right-4 -translate-y-1/2 z-20
+                               w-10 h-10 sm:w-12 sm:h-12 rounded-full
+                               bg-black/60 hover:bg-yellow-400 backdrop-blur-md
+                               border border-white/20 hover:border-yellow-400
+                               text-white hover:text-[#0B1120]
+                               flex items-center justify-center
+                               transition-all duration-300 hover:scale-110
+                               focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        aria-label="Image suivante">
+                    <i class="fas fa-chevron-right text-sm sm:text-base" aria-hidden="true"></i>
+                </button>
+
+                <div class="carousel-dots absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20
+                            flex items-center gap-2 px-3 py-2 rounded-full
+                            bg-black/50 backdrop-blur-md border border-white/10"
+                     role="tablist"
+                     aria-label="Navigation du carrousel">
+
+                    {% for m in moments %}
+                    <button type="button"
+                            class="carousel-dot transition-all duration-300
+                                   {% if loop.first %}w-8 bg-yellow-400{% else %}w-2.5 bg-white/40 hover:bg-white/70{% endif %}"
+                            style="height: 10px; border-radius: 9999px;"
+                            data-dot-index="{{ loop.index0 }}"
+                            role="tab"
+                            aria-selected="{{ 'true' if loop.first else 'false' }}"
+                            aria-label="Aller à l'image {{ loop.index }}">
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <div class="absolute top-0 left-0 right-0 h-0.5 bg-white/10 z-20 pointer-events-none">
+                    <div class="carousel-progress h-full bg-gradient-to-r from-yellow-400 to-yellow-600"
+                         style="width: 0%; transition: width 0.1s linear;"></div>
+                </div>
+
+                <div class="absolute top-3 right-3 z-20 px-3 py-1.5 rounded-full
+                            bg-black/60 backdrop-blur-md border border-white/10
+                            text-white text-xs font-mono">
+                    <span class="carousel-counter-current text-yellow-400 font-bold">1</span>
+                    <span class="text-white/50">/</span>
+                    <span class="text-white/70">{{ moments|length }}</span>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="carousel-toggle absolute -bottom-12 left-1/2 -translate-x-1/2
+                           flex items-center gap-2 px-4 py-2
+                           bg-white/5 hover:bg-white/10 border border-white/10
+                           rounded-full text-xs text-gray-400 hover:text-yellow-400
+                           transition"
+                    aria-label="Mettre en pause">
+                <i class="fas fa-pause carousel-toggle-icon" aria-hidden="true"></i>
+                <span class="carousel-toggle-text">Pause</span>
+            </button>
+        </div>
+
+        <div class="text-center mt-20">
+            <a href="{{ url_for('main.moments') }}"
+               class="inline-flex items-center gap-2 px-6 py-3
+                      bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40
+                      text-gray-300 hover:text-yellow-400
+                      rounded-full font-semibold text-sm transition-all group">
+                <span>Voir toute la galerie</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
+            </a>
+        </div>
+
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════
+     VOTE PUBLIC — H2
+     ═══════════════════════════════════════════════════════════ -->
+<section id="vote" class="py-8 sm:py-12 bg-[#0B1120] border-t border-b border-white/5"
+         itemscope itemtype="https://schema.org/Event">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="max-w-3xl mx-auto">
             <div class="glass-card rounded-2xl p-5 sm:p-6 border-l-4 border-yellow-400">
 
                 <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
 
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/30 flex-shrink-0" aria-hidden="true">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/30 flex-shrink-0"
+                         aria-hidden="true">
                         <i class="fas fa-vote-yea text-2xl text-[#0B1120]"></i>
                     </div>
 
@@ -532,9 +725,9 @@
                         <span class="inline-block text-yellow-400 text-[10px] font-bold uppercase tracking-wider mb-1">
                             🗳️ Vote du public
                         </span>
-                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1" itemprop="name">
+                        <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1" itemprop="name">
                             Votez pour votre artiste préféré
-                        </h1>
+                        </h2>
                         <p class="text-gray-400 text-xs sm:text-sm leading-relaxed">
                             Soutenez votre candidat. 1 vote par personne, résultats en direct.
                         </p>
@@ -554,9 +747,9 @@
     </div>
 </section>
 
-<!-- ============================================================
+<!-- ═══════════════════════════════════════════════════════════
      LYRICS SECTION
-     ============================================================ -->
+     ═══════════════════════════════════════════════════════════ -->
 <section id="lyrics" class="py-12 sm:py-16 md:py-20 bg-[#0B1120] border-t border-b border-white/5">
     <div class="container mx-auto px-3 sm:px-4">
 
@@ -573,9 +766,7 @@
             <div class="w-16 sm:w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-4 sm:mt-5 rounded-full"></div>
         </div>
 
-        <div id="lyricsPreview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto mb-8 sm:mb-10">
-            <!-- Cartes injectées dynamiquement -->
-        </div>
+        <div id="lyricsPreview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto mb-8 sm:mb-10"></div>
 
         <div class="text-center">
             <a href="{{ url_for('main.lyrics') }}"
@@ -592,9 +783,9 @@
     </div>
 </section>
 
-<!-- ============================================================
-     SONDAGES SECTION — H1
-     ============================================================ -->
+<!-- ═══════════════════════════════════════════════════════════
+     SONDAGES — H2
+     ═══════════════════════════════════════════════════════════ -->
 <section id="sondages" class="py-8 sm:py-12 bg-[#0B1120] border-t border-b border-white/5">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="max-w-3xl mx-auto">
@@ -602,7 +793,8 @@
 
                 <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
 
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0" aria-hidden="true">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0"
+                         aria-hidden="true">
                         <i class="fas fa-poll text-2xl text-white"></i>
                     </div>
 
@@ -610,9 +802,9 @@
                         <span class="inline-block text-blue-400 text-[10px] font-bold uppercase tracking-wider mb-1">
                             📊 Sondages
                         </span>
-                        <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1">
+                        <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1">
                             Participez aux sondages
-                        </h1>
+                        </h2>
                         <p class="text-gray-400 text-xs sm:text-sm leading-relaxed">
                             Donnez votre avis sur le concours. Résultats en temps réel.
                         </p>
@@ -631,40 +823,53 @@
     </div>
 </section>
 
-<!-- ============================================================
+<!-- ═══════════════════════════════════════════════════════════
      SPONSORS SECTION
-     ============================================================ -->
-<section id="sponsors" class="py-12 sm:py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+     ═══════════════════════════════════════════════════════════ -->
+<section id="sponsors" class="py-12 sm:py-16"
+         style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="text-center mb-6 sm:mb-8">
-            <span class="text-yellow-400 text-base sm:text-xl md:text-2xl uppercase tracking-wider font-semibold">Nos partenaires et sponsors</span>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">Qui rend possible cette édition</h2>
+            <span class="text-yellow-400 text-base sm:text-xl md:text-2xl uppercase tracking-wider font-semibold">
+                Nos partenaires et sponsors
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2">
+                Qui rend possible cette édition
+            </h2>
             <div class="w-16 sm:w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-3 rounded-full"></div>
         </div>
 
-        <div class="sponsors-grid" id="sponsorGrid">
-            <!-- Sponsors injectés dynamiquement -->
-        </div>
+        <div class="sponsors-grid" id="sponsorGrid"></div>
 
         <div class="text-center mt-6">
-            <a href="{{ url_for('main.sponsors_page') }}" class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-xs sm:text-sm">
+            <a href="{{ url_for('main.sponsors_page') }}"
+               class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#0B1120] px-5 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold hover:scale-105 transition shadow-lg shadow-yellow-500/20 text-xs sm:text-sm">
                 <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>Voir tous les sponsors
             </a>
         </div>
     </div>
 </section>
 
-<!-- ============================================================
+<!-- ═══════════════════════════════════════════════════════════
      CONTACT SECTION
-     ============================================================ -->
-<section id="contact" class="py-12 sm:py-16" style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05);">
+     ═══════════════════════════════════════════════════════════ -->
+<section id="contact" class="py-12 sm:py-16"
+         style="background: #0B1120; border-top: 1px solid rgba(255,255,255,0.05);">
     <div class="container mx-auto px-3 sm:px-4">
         <div class="max-w-2xl mx-auto text-center">
-            <span class="text-yellow-400 text-xs sm:text-sm uppercase tracking-wider font-semibold">Contactez-nous</span>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2 mb-4 sm:mb-6">Une question ? Un projet ?</h2>
-            <p class="text-gray-400 text-sm sm:text-base mb-6 sm:mb-8 text-justify">N'hésitez pas à nous contacter pour toute information concernant le concours.</p>
+            <span class="text-yellow-400 text-xs sm:text-sm uppercase tracking-wider font-semibold">
+                Contactez-nous
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mt-2 mb-4 sm:mb-6">
+                Une question ? Un projet ?
+            </h2>
+            <p class="text-gray-400 text-sm sm:text-base mb-6 sm:mb-8 text-justify">
+                N'hésitez pas à nous contacter pour toute information concernant le concours.
+            </p>
 
-            <form id="contactForm" class="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl text-left" novalidate>
+            <form id="contactForm"
+                  class="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl text-left"
+                  novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -674,7 +879,7 @@
                         </label>
                         <input type="text" id="first_name" name="first_name"
                                class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
-                               placeholder="Votre prénom" required autocomplete="given-name">
+                               placeholder="Votre prénom" required autocomplete="given-name" maxlength="100">
                     </div>
                     <div>
                         <label class="block text-gray-400 text-xs sm:text-sm font-medium mb-2" for="last_name">
@@ -682,7 +887,7 @@
                         </label>
                         <input type="text" id="last_name" name="last_name"
                                class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
-                               placeholder="Votre nom" required autocomplete="family-name">
+                               placeholder="Votre nom" required autocomplete="family-name" maxlength="100">
                     </div>
                 </div>
 
@@ -692,7 +897,7 @@
                     </label>
                     <input type="email" id="email" name="email"
                            class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none"
-                           placeholder="votre@email.com" required autocomplete="email">
+                           placeholder="votre@email.com" required autocomplete="email" maxlength="255">
                 </div>
 
                 <div class="mt-4 sm:mt-5">
@@ -701,7 +906,7 @@
                     </label>
                     <textarea id="message" name="message" rows="5"
                               class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition outline-none resize-y"
-                              placeholder="Votre message..." required minlength="10"></textarea>
+                              placeholder="Votre message..." required minlength="10" maxlength="5000"></textarea>
                 </div>
 
                 <button type="submit"
@@ -710,11 +915,15 @@
                     <span id="submitBtnText">Envoyer le message</span>
                 </button>
 
-                <div id="formSuccess" class="hidden mt-4 p-3 sm:p-4 bg-green-900/30 border border-green-500/30 rounded-xl text-green-400 text-sm text-center" role="status" aria-live="polite">
+                <div id="formSuccess"
+                     class="hidden mt-4 p-3 sm:p-4 bg-green-900/30 border border-green-500/30 rounded-xl text-green-400 text-sm text-center"
+                     role="status" aria-live="polite">
                     <i class="fas fa-check-circle mr-2" aria-hidden="true"></i>
                     Votre message a été envoyé avec succès !
                 </div>
-                <div id="formError" class="hidden mt-4 p-3 sm:p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-sm text-center" role="alert" aria-live="assertive">
+                <div id="formError"
+                     class="hidden mt-4 p-3 sm:p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-sm text-center"
+                     role="alert" aria-live="assertive">
                     <i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>
                     <span id="formErrorText">Une erreur est survenue. Veuillez réessayer.</span>
                 </div>
@@ -727,173 +936,12 @@
 
 {% block extra_js %}
 <script>
-// ============================================================
-// SLIDER HERO
-// ============================================================
 (function() {
     'use strict';
 
-    var slides = document.querySelectorAll('.image-slide');
-    var dots = document.querySelectorAll('.slider-dot');
-    var total = slides.length;
-
-    if (total === 0) return;
-
-    var current = 0;
-    var interval = null;
-
-    function showSlide(index) {
-        if (index < 0 || index >= total) return;
-        if (!slides[index]) return;
-
-        slides.forEach(function(s) { s.classList.remove('active'); });
-        dots.forEach(function(d) { d.classList.remove('active', 'bg-yellow-400', 'border-yellow-400'); });
-
-        slides[index].classList.add('active');
-        if (dots[index]) {
-            dots[index].classList.add('active', 'bg-yellow-400', 'border-yellow-400');
-        }
-        current = index;
-    }
-
-    function nextSlide() { showSlide((current + 1) % total); }
-    function goToSlide(index) { showSlide(index); resetInterval(); }
-    function resetInterval() {
-        if (interval) clearInterval(interval);
-        interval = setInterval(nextSlide, 5000);
-    }
-
-    showSlide(0);
-    resetInterval();
-
-    dots.forEach(function(dot) {
-        dot.addEventListener('click', function() {
-            var idx = parseInt(this.dataset.index, 10);
-            if (!isNaN(idx)) goToSlide(idx);
-        });
-    });
-
-    var container = document.getElementById('imageSlider');
-    if (container) {
-        container.addEventListener('mouseenter', function() { if (interval) clearInterval(interval); });
-        container.addEventListener('mouseleave', resetInterval);
-    }
-
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) { if (interval) clearInterval(interval); }
-        else { resetInterval(); }
-    });
-})();
-
-// ============================================================
-// SPONSORS
-// ============================================================
-(function() {
-    'use strict';
-
-    var grid = document.getElementById('sponsorGrid');
-    if (!grid) return;
-
-    var sponsors = [
-        {% for sponsor in sponsors %}
-        {
-            name: {{ sponsor.name|tojson }},
-            logo: {{ (sponsor.logo|upload_url('sponsors'))|tojson if sponsor.logo else '""'|safe }},
-            website: {{ (sponsor.website or '')|tojson }}
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    if (!sponsors || sponsors.length === 0) {
-        grid.innerHTML = '<div style="color: #94a3b8; padding: 30px; text-align: center; width: 100%; font-size: 1rem; grid-column: 1 / -1;">Aucun sponsor pour le moment</div>';
-        return;
-    }
-
-    function createSponsorItem(sponsor) {
-        var div = document.createElement('div');
-        div.className = 'sponsor-item';
-
-        var website = (sponsor.website || '').trim();
-        var isValidUrl = website.indexOf('http://') === 0 || website.indexOf('https://') === 0;
-
-        if (isValidUrl) {
-            div.style.cursor = 'pointer';
-            div.setAttribute('role', 'link');
-            div.setAttribute('tabindex', '0');
-            div.setAttribute('aria-label', 'Visiter ' + sponsor.name);
-            div.addEventListener('click', function(e) {
-                e.preventDefault();
-                window.open(website, '_blank', 'noopener,noreferrer');
-            });
-            div.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    window.open(website, '_blank', 'noopener,noreferrer');
-                }
-            });
-        }
-
-        var logo = (sponsor.logo || '').trim();
-        if (logo !== '') {
-            var img = document.createElement('img');
-            img.src = logo;
-            img.alt = sponsor.name + ' - Logo';
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            img.draggable = false;
-            img.onerror = function() {
-                this.style.display = 'none';
-                var span = document.createElement('span');
-                span.className = 'sponsor-name';
-                span.textContent = sponsor.name;
-                div.appendChild(span);
-            };
-            div.appendChild(img);
-        } else {
-            var span = document.createElement('span');
-            span.className = 'sponsor-name';
-            span.textContent = sponsor.name;
-            div.appendChild(span);
-        }
-
-        return div;
-    }
-
-    var fragment = document.createDocumentFragment();
-    for (var i = 0; i < sponsors.length; i++) {
-        fragment.appendChild(createSponsorItem(sponsors[i]));
-    }
-    grid.appendChild(fragment);
-})();
-
-// ============================================================
-// APERÇU DES PAROLES
-// ============================================================
-(function() {
-    'use strict';
-
-    var grid = document.getElementById('lyricsPreview');
-    if (!grid) return;
-
-    var lyricsPreview = [];
-    {% if lyrics_preview %}
-        {% for lyric in lyrics_preview %}
-        lyricsPreview.push({
-            artistName: {{ lyric.artist_name|tojson }},
-            artistCode: {{ lyric.artist_code|tojson }},
-            artistPhoto: {{ (lyric.artist_photo|upload_url('lyrics'))|tojson if lyric.artist_photo else '""'|safe }},
-            songTitle: {{ lyric.song_title|tojson }},
-            content: {{ (lyric.content[:180] ~ ('...' if lyric.content|length > 180 else ''))|tojson }},
-            url: {{ url_for('main.lyric_detail', lyric_id=lyric.id)|tojson }}
-        });
-        {% endfor %}
-    {% endif %}
-
-    if (!Array.isArray(lyricsPreview) || lyricsPreview.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px 0;">Aucune parole disponible pour le moment.</div>';
-        return;
-    }
-
+    // ═══════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════
     function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         var d = document.createElement('div');
@@ -901,179 +949,464 @@
         return d.innerHTML;
     }
 
-    var fragment = document.createDocumentFragment();
+    // ═══════════════════════════════════════════════════════════
+    // HERO SLIDER
+    // ═══════════════════════════════════════════════════════════
+    (function() {
+        var slides = document.querySelectorAll('.image-slide');
+        var dots = document.querySelectorAll('.slider-dot');
+        var total = slides.length;
 
-    lyricsPreview.forEach(function(lyric) {
-        if (!lyric || !lyric.songTitle) return;
+        if (total === 0) return;
 
-        var card = document.createElement('article');
-        card.className = 'lyric-card';
+        var current = 0;
+        var interval = null;
 
-        var photoHtml;
-        if (lyric.artistPhoto && lyric.artistPhoto.trim() !== '') {
-            photoHtml = '<img src="' + escapeHTML(lyric.artistPhoto) + '" ' +
-                        'alt="' + escapeHTML(lyric.artistName) + ' - ' + escapeHTML(lyric.songTitle) + '" ' +
-                        'class="lyric-avatar" loading="lazy" decoding="async" width="56" height="56" ' +
-                        'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
-                        '<div class="lyric-avatar-placeholder" style="display:none;"><i class="fas fa-user"></i></div>';
-        } else {
-            photoHtml = '<div class="lyric-avatar-placeholder"><i class="fas fa-user"></i></div>';
+        function showSlide(index) {
+            if (index < 0 || index >= total || !slides[index]) return;
+
+            slides.forEach(function(s) { s.classList.remove('active'); });
+            dots.forEach(function(d) {
+                d.classList.remove('active', 'bg-yellow-400', 'border-yellow-400');
+                d.setAttribute('aria-selected', 'false');
+            });
+
+            slides[index].classList.add('active');
+            if (dots[index]) {
+                dots[index].classList.add('active', 'bg-yellow-400', 'border-yellow-400');
+                dots[index].setAttribute('aria-selected', 'true');
+            }
+            current = index;
         }
 
-        var headerDiv = document.createElement('div');
-        headerDiv.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;';
-        headerDiv.innerHTML = photoHtml;
+        function nextSlide() { showSlide((current + 1) % total); }
+        function resetInterval() {
+            if (interval) clearInterval(interval);
+            interval = setInterval(nextSlide, 5000);
+        }
 
-        var infoDiv = document.createElement('div');
-        infoDiv.style.cssText = 'min-width:0;flex:1;';
+        showSlide(0);
+        resetInterval();
 
-        var nameEl = document.createElement('div');
-        nameEl.style.cssText = 'color:#ffffff;font-weight:700;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-        nameEl.textContent = lyric.artistName || '';
-
-        var codeEl = document.createElement('div');
-        codeEl.style.cssText = 'color:#6b7280;font-size:0.75rem;font-weight:500;';
-        codeEl.textContent = lyric.artistCode || '';
-
-        var titleEl = document.createElement('div');
-        titleEl.style.cssText = 'color:#facc15;font-size:0.875rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-        titleEl.textContent = '🎵 ' + (lyric.songTitle || '');
-
-        infoDiv.appendChild(nameEl);
-        infoDiv.appendChild(codeEl);
-        infoDiv.appendChild(titleEl);
-        headerDiv.appendChild(infoDiv);
-
-        var contentEl = document.createElement('p');
-        contentEl.className = 'lyric-content';
-        contentEl.textContent = lyric.content || '';
-
-        var linkEl = document.createElement('a');
-        linkEl.href = lyric.url;
-        linkEl.className = 'lyric-link';
-        linkEl.setAttribute('aria-label', 'Lire les paroles de ' + lyric.songTitle);
-
-        var linkText = document.createTextNode('Lire les paroles');
-        var linkIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        linkIcon.setAttribute('width', '16');
-        linkIcon.setAttribute('height', '16');
-        linkIcon.setAttribute('viewBox', '0 0 24 24');
-        linkIcon.setAttribute('fill', 'none');
-        linkIcon.setAttribute('stroke', 'currentColor');
-        linkIcon.setAttribute('stroke-width', '2.5');
-        linkIcon.setAttribute('stroke-linecap', 'round');
-        linkIcon.setAttribute('stroke-linejoin', 'round');
-        linkIcon.innerHTML = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
-
-        linkEl.appendChild(linkText);
-        linkEl.appendChild(linkIcon);
-
-        card.appendChild(headerDiv);
-        card.appendChild(contentEl);
-        card.appendChild(linkEl);
-
-        fragment.appendChild(card);
-    });
-
-    grid.appendChild(fragment);
-})();
-
-// ============================================================
-// FORMULAIRE DE CONTACT
-// ============================================================
-(function() {
-    'use strict';
-
-    var form = document.getElementById('contactForm');
-    if (!form) return;
-
-    var successDiv = document.getElementById('formSuccess');
-    var errorDiv = document.getElementById('formError');
-    var errorText = document.getElementById('formErrorText');
-
-    var csrfInput = form.querySelector('input[name="csrf_token"]');
-    var csrfToken = csrfInput ? csrfInput.value : '';
-
-    function showError(message) {
-        if (errorText) errorText.textContent = message;
-        if (errorDiv) errorDiv.classList.remove('hidden');
-    }
-
-    function hideMessages() {
-        if (successDiv) successDiv.classList.add('hidden');
-        if (errorDiv) errorDiv.classList.add('hidden');
-    }
-
-    function resetFieldErrors() {
-        form.querySelectorAll('.error').forEach(function(el) { el.classList.remove('error'); });
-    }
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        hideMessages();
-        resetFieldErrors();
-
-        var data = {};
-        var required = ['first_name', 'last_name', 'email', 'message'];
-        var valid = true;
-
-        required.forEach(function(fieldName) {
-            var field = form.querySelector('[name="' + fieldName + '"]');
-            if (!field) return;
-            var value = (field.value || '').trim();
-            data[fieldName] = value;
-
-            if (!value) {
-                field.classList.add('error');
-                valid = false;
-            } else if (fieldName === 'email') {
-                var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(value)) { field.classList.add('error'); valid = false; }
-            } else if (fieldName === 'message' && value.length < 10) {
-                field.classList.add('error'); valid = false;
-            }
+        dots.forEach(function(dot) {
+            dot.addEventListener('click', function() {
+                var idx = parseInt(this.dataset.index, 10);
+                if (!isNaN(idx)) { showSlide(idx); resetInterval(); }
+            });
         });
 
-        if (!valid) { showError('Veuillez vérifier les champs du formulaire.'); return; }
+        var container = document.getElementById('imageSlider');
+        if (container) {
+            container.addEventListener('mouseenter', function() { if (interval) clearInterval(interval); });
+            container.addEventListener('mouseleave', resetInterval);
+        }
 
-        var btn = form.querySelector('button[type="submit"]');
-        var originalHTML = btn.innerHTML;
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) { if (interval) clearInterval(interval); }
+            else { resetInterval(); }
+        });
+    })();
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi en cours...';
+    // ═══════════════════════════════════════════════════════════
+    // MOMENTS CARROUSEL
+    // ═══════════════════════════════════════════════════════════
+    (function() {
+        var carousel = document.getElementById('momentsCarousel');
+        if (!carousel) return;
 
-        fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify(data)
-        })
-        .then(function(response) {
-            return response.json().then(function(json) { return { ok: response.ok, json: json }; });
-        })
-        .then(function(result) {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
+        var slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
+        var dots = Array.from(carousel.querySelectorAll('.carousel-dot'));
+        var prevBtn = carousel.querySelector('.carousel-prev');
+        var nextBtn = carousel.querySelector('.carousel-next');
+        var toggleBtn = carousel.querySelector('.carousel-toggle');
+        var toggleIcon = carousel.querySelector('.carousel-toggle-icon');
+        var toggleText = carousel.querySelector('.carousel-toggle-text');
+        var counterCurrent = carousel.querySelector('.carousel-counter-current');
+        var progressBar = carousel.querySelector('.carousel-progress');
 
-            if (result.ok && result.json.success) {
-                if (successDiv) successDiv.classList.remove('hidden');
-                form.reset();
-                resetFieldErrors();
-                setTimeout(function() { if (successDiv) successDiv.classList.add('hidden'); }, 5000);
+        if (slides.length === 0) return;
+
+        var currentIndex = 0;
+        var autoplayInterval = null;
+        var progressInterval = null;
+        var isPaused = false;
+        var AUTOPLAY_DELAY = 6000;
+        var PROGRESS_TICK = 50;
+
+        function showSlide(index) {
+            if (index < 0) index = slides.length - 1;
+            if (index >= slides.length) index = 0;
+
+            slides.forEach(function(slide, i) {
+                var isActive = (i === index);
+                slide.classList.toggle('opacity-100', isActive);
+                slide.classList.toggle('z-10', isActive);
+                slide.classList.toggle('opacity-0', !isActive);
+                slide.classList.toggle('z-0', !isActive);
+                slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+            });
+
+            dots.forEach(function(dot, i) {
+                var isActive = (i === index);
+                if (isActive) {
+                    dot.classList.add('w-8', 'bg-yellow-400');
+                    dot.classList.remove('w-2.5', 'bg-white/40', 'hover:bg-white/70');
+                    dot.setAttribute('aria-selected', 'true');
+                } else {
+                    dot.classList.remove('w-8', 'bg-yellow-400');
+                    dot.classList.add('w-2.5', 'bg-white/40', 'hover:bg-white/70');
+                    dot.setAttribute('aria-selected', 'false');
+                }
+            });
+
+            counterCurrent.textContent = String(index + 1);
+            progressBar.style.width = '0%';
+            currentIndex = index;
+        }
+
+        function startProgress() {
+            stopProgress();
+            var startTime = Date.now();
+            progressInterval = setInterval(function() {
+                var elapsed = Date.now() - startTime;
+                var percent = Math.min((elapsed / AUTOPLAY_DELAY) * 100, 100);
+                progressBar.style.width = percent + '%';
+            }, PROGRESS_TICK);
+        }
+
+        function stopProgress() {
+            if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+        }
+
+        function startAutoplay() {
+            stopAutoplay();
+            if (isPaused) return;
+            autoplayInterval = setInterval(function() {
+                showSlide(currentIndex + 1);
+                startProgress();
+            }, AUTOPLAY_DELAY);
+            startProgress();
+        }
+
+        function stopAutoplay() {
+            if (autoplayInterval) { clearInterval(autoplayInterval); autoplayInterval = null; }
+            stopProgress();
+        }
+
+        function pauseAutoplay() {
+            isPaused = true;
+            stopAutoplay();
+            toggleIcon.classList.remove('fa-pause');
+            toggleIcon.classList.add('fa-play');
+            toggleText.textContent = 'Lecture';
+            toggleBtn.setAttribute('aria-label', 'Reprendre la lecture automatique');
+        }
+
+        function resumeAutoplay() {
+            isPaused = false;
+            startAutoplay();
+            toggleIcon.classList.remove('fa-play');
+            toggleIcon.classList.add('fa-pause');
+            toggleText.textContent = 'Pause';
+            toggleBtn.setAttribute('aria-label', 'Mettre en pause');
+        }
+
+        function restart() { if (!isPaused) { stopAutoplay(); startAutoplay(); } }
+
+        prevBtn.addEventListener('click', function() { showSlide(currentIndex - 1); restart(); });
+        nextBtn.addEventListener('click', function() { showSlide(currentIndex + 1); restart(); });
+
+        dots.forEach(function(dot, i) {
+            dot.addEventListener('click', function() { showSlide(i); restart(); });
+        });
+
+        toggleBtn.addEventListener('click', function() {
+            if (isPaused) resumeAutoplay(); else pauseAutoplay();
+        });
+
+        var touchStartX = 0;
+        carousel.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        carousel.addEventListener('touchend', function(e) {
+            var diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) {
+                showSlide(diff > 0 ? currentIndex + 1 : currentIndex - 1);
+                restart();
+            }
+        }, { passive: true });
+
+        carousel.addEventListener('mouseenter', function() { if (!isPaused) stopAutoplay(); });
+        carousel.addEventListener('mouseleave', function() { if (!isPaused) startAutoplay(); });
+
+        showSlide(0);
+        startAutoplay();
+    })();
+
+    // ═══════════════════════════════════════════════════════════
+    // SPONSORS
+    // ═══════════════════════════════════════════════════════════
+    (function() {
+        var grid = document.getElementById('sponsorGrid');
+        if (!grid) return;
+
+        var sponsors = [
+            {% for sponsor in sponsors %}
+            {
+                name: {{ sponsor.name|tojson }},
+                logo: {{ (sponsor.logo|upload_url('sponsors'))|tojson if sponsor.logo else '""'|safe }},
+                website: {{ (sponsor.website or '')|tojson }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        if (!sponsors || sponsors.length === 0) {
+            grid.innerHTML = '<div style="color: #94a3b8; padding: 30px; text-align: center; width: 100%; font-size: 1rem; grid-column: 1 / -1;">Aucun sponsor pour le moment</div>';
+            return;
+        }
+
+        function createSponsorItem(sponsor) {
+            var div = document.createElement('div');
+            div.className = 'sponsor-item';
+
+            var website = (sponsor.website || '').trim();
+            var isValidUrl = website.indexOf('http://') === 0 || website.indexOf('https://') === 0;
+
+            if (isValidUrl) {
+                div.style.cursor = 'pointer';
+                div.setAttribute('role', 'link');
+                div.setAttribute('tabindex', '0');
+                div.setAttribute('aria-label', 'Visiter ' + sponsor.name);
+                div.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.open(website, '_blank', 'noopener,noreferrer');
+                });
+                div.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        window.open(website, '_blank', 'noopener,noreferrer');
+                    }
+                });
+            }
+
+            var logo = (sponsor.logo || '').trim();
+            if (logo !== '') {
+                var img = document.createElement('img');
+                img.src = logo;
+                img.alt = sponsor.name + ' - Logo';
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.draggable = false;
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    var span = document.createElement('span');
+                    span.className = 'sponsor-name';
+                    span.textContent = sponsor.name;
+                    div.appendChild(span);
+                };
+                div.appendChild(img);
             } else {
-                showError(result.json.message || 'Une erreur est survenue.');
+                var span = document.createElement('span');
+                span.className = 'sponsor-name';
+                span.textContent = sponsor.name;
+                div.appendChild(span);
             }
-        })
-        .catch(function() {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-            showError('Erreur de connexion. Veuillez réessayer.');
-        });
-    });
 
-    form.querySelectorAll('.form-input').forEach(function(input) {
-        input.addEventListener('focus', function() { this.classList.remove('error'); });
-        input.addEventListener('input', function() { if (this.value.trim()) this.classList.remove('error'); });
-    });
+            return div;
+        }
+
+        var fragment = document.createDocumentFragment();
+        for (var i = 0; i < sponsors.length; i++) {
+            fragment.appendChild(createSponsorItem(sponsors[i]));
+        }
+        grid.appendChild(fragment);
+    })();
+
+    // ═══════════════════════════════════════════════════════════
+    // LYRICS PREVIEW
+    // ═══════════════════════════════════════════════════════════
+    (function() {
+        var grid = document.getElementById('lyricsPreview');
+        if (!grid) return;
+
+        var lyricsPreview = [];
+        {% if lyrics_preview %}
+            {% for lyric in lyrics_preview %}
+            lyricsPreview.push({
+                artistName: {{ lyric.artist_name|tojson }},
+                artistCode: {{ lyric.artist_code|tojson }},
+                artistPhoto: {{ (lyric.artist_photo|upload_url('lyrics'))|tojson if lyric.artist_photo else '""'|safe }},
+                songTitle: {{ lyric.song_title|tojson }},
+                content: {{ (lyric.content[:180] ~ ('...' if lyric.content|length > 180 else ''))|tojson }},
+                url: {{ url_for('main.lyric_detail', lyric_id=lyric.id)|tojson }}
+            });
+            {% endfor %}
+        {% endif %}
+
+        if (!Array.isArray(lyricsPreview) || lyricsPreview.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:40px 0;">Aucune parole disponible pour le moment.</div>';
+            return;
+        }
+
+        var fragment = document.createDocumentFragment();
+
+        lyricsPreview.forEach(function(lyric) {
+            if (!lyric || !lyric.songTitle) return;
+
+            var card = document.createElement('article');
+            card.className = 'lyric-card';
+
+            var photoHtml;
+            if (lyric.artistPhoto && lyric.artistPhoto.trim() !== '') {
+                photoHtml = '<img src="' + escapeHTML(lyric.artistPhoto) + '" ' +
+                            'alt="' + escapeHTML(lyric.artistName) + ' - ' + escapeHTML(lyric.songTitle) + '" ' +
+                            'class="lyric-avatar" loading="lazy" decoding="async" width="56" height="56" ' +
+                            'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+                            '<div class="lyric-avatar-placeholder" style="display:none;"><i class="fas fa-user"></i></div>';
+            } else {
+                photoHtml = '<div class="lyric-avatar-placeholder"><i class="fas fa-user"></i></div>';
+            }
+
+            var headerDiv = document.createElement('div');
+            headerDiv.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;';
+            headerDiv.innerHTML = photoHtml;
+
+            var infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'min-width:0;flex:1;';
+
+            var nameEl = document.createElement('div');
+            nameEl.style.cssText = 'color:#ffffff;font-weight:700;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            nameEl.textContent = lyric.artistName || '';
+
+            var codeEl = document.createElement('div');
+            codeEl.style.cssText = 'color:#6b7280;font-size:0.75rem;font-weight:500;';
+            codeEl.textContent = lyric.artistCode || '';
+
+            var titleEl = document.createElement('div');
+            titleEl.style.cssText = 'color:#facc15;font-size:0.875rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            titleEl.textContent = '🎵 ' + (lyric.songTitle || '');
+
+            infoDiv.appendChild(nameEl);
+            infoDiv.appendChild(codeEl);
+            infoDiv.appendChild(titleEl);
+            headerDiv.appendChild(infoDiv);
+
+            var contentEl = document.createElement('p');
+            contentEl.className = 'lyric-content';
+            contentEl.textContent = lyric.content || '';
+
+            var linkEl = document.createElement('a');
+            linkEl.href = lyric.url;
+            linkEl.className = 'lyric-link';
+            linkEl.setAttribute('aria-label', 'Lire les paroles de ' + lyric.songTitle);
+            linkEl.innerHTML = 'Lire les paroles <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+
+            card.appendChild(headerDiv);
+            card.appendChild(contentEl);
+            card.appendChild(linkEl);
+
+            fragment.appendChild(card);
+        });
+
+        grid.appendChild(fragment);
+    })();
+
+    // ═══════════════════════════════════════════════════════════
+    // CONTACT FORM
+    // ═══════════════════════════════════════════════════════════
+    (function() {
+        var form = document.getElementById('contactForm');
+        if (!form) return;
+
+        var successDiv = document.getElementById('formSuccess');
+        var errorDiv = document.getElementById('formError');
+        var errorText = document.getElementById('formErrorText');
+
+        var csrfInput = form.querySelector('input[name="csrf_token"]');
+        var csrfToken = csrfInput ? csrfInput.value : '';
+
+        function showError(message) {
+            if (errorText) errorText.textContent = message;
+            if (errorDiv) errorDiv.classList.remove('hidden');
+        }
+
+        function hideMessages() {
+            if (successDiv) successDiv.classList.add('hidden');
+            if (errorDiv) errorDiv.classList.add('hidden');
+        }
+
+        function resetFieldErrors() {
+            form.querySelectorAll('.error').forEach(function(el) { el.classList.remove('error'); });
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideMessages();
+            resetFieldErrors();
+
+            var data = {};
+            var required = ['first_name', 'last_name', 'email', 'message'];
+            var valid = true;
+
+            required.forEach(function(fieldName) {
+                var field = form.querySelector('[name="' + fieldName + '"]');
+                if (!field) return;
+                var value = (field.value || '').trim();
+                data[fieldName] = value;
+
+                if (!value) {
+                    field.classList.add('error');
+                    valid = false;
+                } else if (fieldName === 'email') {
+                    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) { field.classList.add('error'); valid = false; }
+                } else if (fieldName === 'message' && value.length < 10) {
+                    field.classList.add('error'); valid = false;
+                }
+            });
+
+            if (!valid) { showError('Veuillez vérifier les champs du formulaire.'); return; }
+
+            var btn = form.querySelector('button[type="submit"]');
+            var originalHTML = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi en cours...';
+
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) {
+                return response.json().then(function(json) { return { ok: response.ok, json: json }; });
+            })
+            .then(function(result) {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+
+                if (result.ok && result.json.success) {
+                    if (successDiv) successDiv.classList.remove('hidden');
+                    form.reset();
+                    resetFieldErrors();
+                    setTimeout(function() { if (successDiv) successDiv.classList.add('hidden'); }, 5000);
+                } else {
+                    showError(result.json.message || 'Une erreur est survenue.');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                showError('Erreur de connexion. Veuillez réessayer.');
+            });
+        });
+
+        form.querySelectorAll('.form-input').forEach(function(input) {
+            input.addEventListener('focus', function() { this.classList.remove('error'); });
+            input.addEventListener('input', function() { if (this.value.trim()) this.classList.remove('error'); });
+        });
+    })();
+
 })();
 </script>
 {% endblock %}

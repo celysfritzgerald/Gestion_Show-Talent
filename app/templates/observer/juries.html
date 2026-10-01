@@ -1,0 +1,71 @@
+{% extends "observer/base.html" %}
+{% block title %}Jurys{% endblock %}
+{% block page_title %}Jurys{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-5">
+
+    <div>
+        <h1 class="text-2xl font-bold text-white">Jurys</h1>
+        <p class="text-sm text-slate-400 mt-1">
+            {{ juries|length }} jury(s) enregistré(s)
+        </p>
+    </div>
+
+    {% if juries %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for j in juries %}
+        <div class="glass-card p-5 hover:border-brand-500/30 transition">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700
+                            flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {{ j.first_name[0] }}{{ j.last_name[0] }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-white font-semibold truncate">{{ j.full_name() }}</h2>
+                    <p class="text-xs text-slate-500 truncate">@{{ j.username }}</p>
+                    {% if j.account_status == 'ACTIVE' %}
+                        <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full
+                                     bg-emerald-500/10 text-emerald-400">
+                            Actif
+                        </span>
+                    {% else %}
+                        <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full
+                                     bg-red-500/10 text-red-400">
+                            Inactif
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div class="bg-white/[0.02] rounded-lg p-3">
+                    <div class="text-xl font-bold text-white">
+                        {{ scores_count.get(j.id, 0) }}
+                    </div>
+                    <div class="text-[10px] text-slate-500 uppercase">Notes</div>
+                </div>
+                <div class="bg-white/[0.02] rounded-lg p-3">
+                    <div class="text-xl font-bold text-white">
+                        {{ jury_assignments.get(j.id, [])|length }}
+                    </div>
+                    <div class="text-[10px] text-slate-500 uppercase">Critères</div>
+                </div>
+            </div>
+
+            {% if j.last_login %}
+            <div class="text-[10px] text-slate-500 mt-3 text-center">
+                Dernière connexion : {{ j.last_login.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <i class="fas fa-gavel text-4xl text-slate-700 mb-3"></i>
+        <p class="text-slate-400">Aucun jury enregistré.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

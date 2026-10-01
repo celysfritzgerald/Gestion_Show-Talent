@@ -1981,3 +1981,311 @@ def ranking():
         current_app.logger.exception("Détail")
         flash('Erreur lors du chargement du classement.', 'danger')
         return redirect(url_for('admin.dashboard'))
+    
+
+# ═══════════════════════════════════════════════════════════
+# GESTION DES OBSERVATEURS
+# ═══════════════════════════════════════════════════════════
+
+from app.models import ObserverPermission
+
+
+@admin_bp.route('/observers')
+@admin_required
+def observers():
+    """Liste des observateurs avec leurs permissions."""
+    try:
+        observers_list = (
+            User.query
+            .filter_by(role='observer')
+            .order_by(User.last_name, User.first_name)
+            .all()
+        )
+        return render_template(
+            'admin/observers.html',
+            observers=observers_list,
+            now=datetime.utcnow(),
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur liste observers: {e}")
+        flash('Erreur lors du chargement des observateurs.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/observers/create', methods=['GET', 'POST'])
+@admin_required
+def create_observer():
+    """Créer un nouvel observateur + ses permissions."""
+    if request.method == 'POST':
+        try:
+            first_name = request.form.get('first_name', '').strip()
+            last_name = request.form.get('last_name', '').strip()
+            email = request.form.get('email', '').strip()
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
+
+            # Validation basique
+            if not all([first_name, last_name, email, username, password]):
+                flash('Tous les champs sont requis.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            try:
+                email = validate_email(email, check_deliverability=False).normalized
+            except EmailNotValidError:
+                flash('Email invalide.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            if any(len(v) > limit for v, limit in [
+                (first_name, 100), (last_name, 100), (email, 255), (username, 100)
+            ]):
+                flash('Un ou plusieurs champs sont trop longs.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            if User.query.filter_by(email=email).first():
+                flash('Cet email est déjà utilisé.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            if User.query.filter_by(username=username).first():
+                flash('Ce nom d\'utilisateur est déjà utilisé.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            if len(password) < 8:
+                flash('Le mot de passe doit contenir au moins 8 caractères.', 'danger')
+                return render_template('admin/observer_form.html', observer=None)
+
+            # Créer l'utilisateur
+            user = User(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                username=username,
+                role='observer',
+                account_status='ACTIVE',
+            )
+            user.set_password(password)
+            db.session.add(user)
+            db.session.flush()
+
+            # Créer les permissions
+            perm = ObserverPermission(
+                user_id=user.id,
+                artists=request.form.get('perm_artists') == 'on',
+                juries=request.form.get('perm_juries') == 'on',
+                ranking=request.form.get('perm_ranking') == 'on',
+                votes=request.form.get('perm_votes') == 'on',
+                polls=request.form.get('perm_polls') == 'on',
+                finance=request.form.get('perm_finance') == 'on',
+                sponsors=request.form.get('perm_sponsors') == 'on',
+                lyrics=request.form.get('perm_lyrics') == 'on',
+                moments=request.form.get('perm_moments') == 'on',
+                messages=request.form.get('perm_messages') == 'on',
+            )
+            db.session.add(perm)
+            db.session.commit()
+
+            flash(f'Observateur {user.full_name()} créé avec succès.', 'success')
+            return redirect(url_for('admin.observers'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erreur création observateur: {e}")
+            current_app.logger.exception("Détail")
+            flash('Une erreur interne est survenue.', 'danger')
+
+    return render_template('admin/observer_form.html', observer=None)
+
+
+@admin_bp.route('/observers/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_observer(user_id):
+    """Modifier un observateur + ses permissions."""
+    user = User.query.filter_by(id=user_id, role='observer').first_or_404()
+    perm = user.observer_permission
+
+    if not perm:
+        perm = ObserverPermission(user_id=user.id)
+        db.session.add(perm)
+        db.session.commit()
+
+    if request.method == 'POST':
+        try:
+            first_name = request.form.get('first_name', '').strip()
+            last_name = request.form.get('last_name', '').strip()
+            email = request.form.get('email', '').strip()
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
+
+            if not all([first_name, last_name, email, username]):
+                flash('Tous les champs obligatoires sont requis.', 'danger')
+                return render_template('admin/observer_form.html', observer=user)
+
+            try:
+                email = validate_email(email, check_deliverability=False).normalized
+            except EmailNotValidError:
+                flash('Email invalide.', 'danger')
+                return render_template('admin/observer_form.html', observer=user)
+
+            if any(len(v) > limit for v, limit in [
+                (first_name, 100), (last_name, 100), (email, 255), (username, 100)
+            ]):
+                flash('Un ou plusieurs champs sont trop longs.', 'danger')
+                return render_template('admin/observer_form.html', observer=user)
+
+            # Vérifier unicité (sauf soi-même)
+            if User.query.filter(User.email == email, User.id != user.id).first():
+                flash('Cet email est déjà utilisé.', 'danger')
+                return render_template('admin/observer_form.html', observer=user)
+
+            if User.query.filter(User.username == username, User.id != user.id).first():
+                flash('Ce nom d\'utilisateur est déjà utilisé.', 'danger')
+                return render_template('admin/observer_form.html', observer=user)
+
+            # Mise à jour
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.username = username
+
+            if password:
+                if len(password) < 8:
+                    flash('Le mot de passe doit contenir au moins 8 caractères.', 'danger')
+                    return render_template('admin/observer_form.html', observer=user)
+                user.set_password(password)
+
+            # Mise à jour permissions
+            perm.artists = request.form.get('perm_artists') == 'on'
+            perm.juries = request.form.get('perm_juries') == 'on'
+            perm.ranking = request.form.get('perm_ranking') == 'on'
+            perm.votes = request.form.get('perm_votes') == 'on'
+            perm.polls = request.form.get('perm_polls') == 'on'
+            perm.finance = request.form.get('perm_finance') == 'on'
+            perm.sponsors = request.form.get('perm_sponsors') == 'on'
+            perm.lyrics = request.form.get('perm_lyrics') == 'on'
+            perm.moments = request.form.get('perm_moments') == 'on'
+            perm.messages = request.form.get('perm_messages') == 'on'
+
+            db.session.commit()
+            flash('Observateur mis à jour avec succès.', 'success')
+            return redirect(url_for('admin.observers'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erreur modification observateur: {e}")
+            current_app.logger.exception("Détail")
+            flash('Une erreur interne est survenue.', 'danger')
+
+    return render_template('admin/observer_form.html', observer=user)
+
+
+@admin_bp.route('/observers/<int:user_id>/toggle-status', methods=['POST'])
+@admin_required
+def toggle_observer_status(user_id):
+    """Activer/désactiver un observateur."""
+    try:
+        user = User.query.filter_by(id=user_id, role='observer').first_or_404()
+
+        if user.account_status == 'ACTIVE':
+            user.account_status = 'INACTIVE'
+            flash(f'{user.full_name()} désactivé.', 'info')
+        else:
+            user.account_status = 'ACTIVE'
+            flash(f'{user.full_name()} activé.', 'success')
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur toggle observer: {e}")
+        flash('Erreur lors de la modification du statut.', 'danger')
+    return redirect(url_for('admin.observers'))
+
+
+@admin_bp.route('/observers/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_observer(user_id):
+    """Supprimer un observateur et ses permissions."""
+    try:
+        user = User.query.filter_by(id=user_id, role='observer').first_or_404()
+        full_name = user.full_name()
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'Observateur {full_name} supprimé.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur suppression observateur: {e}")
+        flash('Erreur lors de la suppression.', 'danger')
+    return redirect(url_for('admin.observers'))
+
+# ═══════════════════════════════════════════════════════════
+# CONFIGURATION DU VOTE — VERSION COMPLÈTE
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/votes/settings', methods=['GET', 'POST'])
+@admin_required
+def vote_settings():
+    """Configuration complète du vote public."""
+    try:
+        config = VoteConfig.query.first()
+        if not config:
+            config = VoteConfig()
+            db.session.add(config)
+            db.session.commit()
+
+        if request.method == 'POST':
+            # ─── Mode ───
+            new_mode = request.form.get('mode', 'PER_SESSION').strip()
+            if new_mode in ('GLOBAL', 'PER_SESSION'):
+                config.mode = new_mode
+
+            config.is_enabled = request.form.get('is_enabled') == 'on'
+            config.closed_message = request.form.get('closed_message', '').strip()[:300]
+
+            # ─── Personnalisation ───
+            config.title = request.form.get('title', '').strip()[:200] or 'Qui va gagner cette édition ?'
+            config.subtitle = request.form.get('subtitle', '').strip()[:300] or 'Votez pour votre artiste préféré'
+            config.cta_text = request.form.get('cta_text', '').strip()[:100] or 'Voter pour cet artiste'
+            config.primary_color = request.form.get('primary_color', '#facc15').strip()[:20]
+
+            # ─── Hero image upload ───
+            if 'hero_image' in request.files and request.files['hero_image'].filename:
+                try:
+                    if config.hero_image:
+                        delete_uploaded_file(config.hero_image, 'votes')
+                    new_img = save_uploaded_file(request.files['hero_image'], 'votes')
+                    if new_img:
+                        config.hero_image = new_img
+                except ValueError as e:
+                    flash(f'Erreur image: {str(e)}', 'danger')
+
+            if request.form.get('remove_hero_image') == 'on' and config.hero_image:
+                delete_uploaded_file(config.hero_image, 'votes')
+                config.hero_image = None
+
+            # ─── Affichage ───
+            config.show_results_live = request.form.get('show_results_live') == 'on'
+            config.show_vote_counts = request.form.get('show_vote_counts') == 'on'
+            config.show_percentages = request.form.get('show_percentages') == 'on'
+            config.show_progress_bars = request.form.get('show_progress_bars') == 'on'
+            config.show_ranking_badge = request.form.get('show_ranking_badge') == 'on'
+
+            # ─── Validation ───
+            config.require_first_name = request.form.get('require_first_name') == 'on'
+            config.require_last_name = request.form.get('require_last_name') == 'on'
+
+            try:
+                max_votes = int(request.form.get('max_votes_per_session', 1))
+                config.max_votes_per_session = max(1, min(10, max_votes))
+            except (ValueError, TypeError):
+                config.max_votes_per_session = 1
+
+            db.session.commit()
+            flash('Configuration du vote mise à jour.', 'success')
+            return redirect(url_for('admin.vote_settings'))
+
+        return render_template('admin/vote_settings.html', config=config, now=datetime.utcnow())
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erreur vote settings: {str(e)}")
+        current_app.logger.exception("Détail")
+        flash('Erreur lors du chargement.', 'danger')
+        return redirect(url_for('admin.votes_dashboard'))

@@ -1,1 +1,1 @@
-web: gunicorn --workers 2 --threads 4 --timeout 120 run:app
+web: gunicorn "app:create_app('production')" --workers 4 --worker-class gevent --worker-connections 500 --bind 0.0.0.0:$PORT --timeout 60 --preload --access-logfile - --error-logfile -

@@ -1,0 +1,63 @@
+{% extends "observer/base.html" %}
+{% block title %}Sondages{% endblock %}
+{% block page_title %}Sondages{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-6">
+
+    <div>
+        <h1 class="text-2xl font-bold text-white">Sondages</h1>
+        <p class="text-sm text-slate-400 mt-1">{{ polls|length }} sondage(s)</p>
+    </div>
+
+    {% if polls %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {% for p in polls %}
+        {% set data = poll_results[p.id] %}
+        <div class="glass-card p-5">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-base font-semibold text-white">{{ p.question }}</h2>
+                    {% if p.description %}
+                    <p class="text-xs text-slate-500 mt-1">{{ p.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                    {% if p.is_active %}
+                        <span class="text-[10px] px-2 py-0.5 rounded-full
+                                     bg-emerald-500/10 text-emerald-400">Actif</span>
+                    {% else %}
+                        <span class="text-[10px] px-2 py-0.5 rounded-full
+                                     bg-slate-500/10 text-slate-400">Inactif</span>
+                    {% endif %}
+                    <span class="text-[10px] text-slate-500">{{ data.total }} vote(s)</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                {% for opt in data.options %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-slate-300">{{ opt.text }}</span>
+                        <span class="text-slate-400 font-mono">
+                            {{ opt.count }} ({{ opt.percentage }}%)
+                        </span>
+                    </div>
+                    <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-brand-500 to-brand-400"
+                             style="width: {{ opt.percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <i class="fas fa-square-poll-vertical text-4xl text-slate-700 mb-3"></i>
+        <p class="text-slate-400">Aucun sondage enregistré.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

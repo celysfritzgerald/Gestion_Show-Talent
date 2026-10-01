@@ -17,51 +17,86 @@ class LoginForm(FlaskForm):
     password = PasswordField("Mot de passe", validators=[DataRequired(), Length(max=128)])
 
 
+# ═══════════════════════════════════════════════════════════
+# HELPER : redirection selon rôle
+# ═══════════════════════════════════════════════════════════
+
+def _redirect_for_role(user):
+    """Retourne la redirection appropriée selon le rôle."""
+    if user.is_admin():    return redirect(url_for("admin.dashboard"))
+    if user.is_jury():     return redirect(url_for("jury.dashboard"))
+    if user.is_artist():   return redirect(url_for("artist.dashboard"))
+    if user.is_observer(): return redirect(url_for("observer.dashboard"))
+    return None
+
+
+# ═══════════════════════════════════════════════════════════
+# LOGIN
+# ═══════════════════════════════════════════════════════════
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 @rate_limit(limit_per_minute=10)
 def login():
+    # Si déjà connecté : rediriger selon rôle
     if "user_id" in session:
         user = db.session.get(User, session["user_id"])
         if user and user.is_active_account() and not user.is_locked():
-            if user.is_admin(): return redirect(url_for("admin.dashboard"))
-            if user.is_jury(): return redirect(url_for("jury.dashboard"))
-            if user.is_artist(): return redirect(url_for("artist.dashboard"))
+            target = _redirect_for_role(user)
+            if target:
+                return target
         session.clear()
 
     form = LoginForm()
     if form.validate_on_submit():
         username = form.username.data.strip()
         user = User.query.filter_by(username=username).first()
-        valid = bool(user and user.is_active_account() and not user.is_locked() and user.check_password(form.password.data))
+
+        # ⚠️ Anti-énumération : on vérifie tout, mais on retourne
+        #    TOUJOURS le même message en cas d'échec.
+        valid = bool(
+            user
+            and user.is_active_account()
+            and not user.is_locked()
+            and user.check_password(form.password.data)
+        )
 
         if valid:
             user.login_attempts = 0
             user.locked_until = None
             user.last_login = datetime.utcnow()
             db.session.commit()
+
             session.clear()
             session.permanent = True
             session["user_id"] = user.id
             session["user_role"] = user.role
             session["user_name"] = user.full_name()
-            if user.is_admin(): return redirect(url_for("admin.dashboard"))
-            if user.is_jury(): return redirect(url_for("jury.dashboard"))
-            if user.is_artist(): return redirect(url_for("artist.dashboard"))
-            session.clear()
 
-        if user and user.is_locked():
-            flash("Nom d'utilisateur ou mot de passe incorrect.", "danger")
-        elif user and not user.is_active_account():
-            flash("Votre compte est désactivé. Veuillez contacter l'administrateur.", "danger")
-        else:
-            if user:
-                user.login_attempts += 1
-                if user.login_attempts >= 5:
-                    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
-                db.session.commit()
-            flash("Nom d'utilisateur ou mot de passe incorrect.", "danger")
+            target = _redirect_for_role(user)
+            if target:
+                return target
+
+            # Rôle inconnu : on coupe tout
+            session.clear()
+            flash("Rôle inconnu. Contactez l'administrateur.", "danger")
+            return redirect(url_for("auth.login"))
+
+        # ─── Échec : on incrémente le compteur si user existe ───
+        if user:
+            user.login_attempts = (user.login_attempts or 0) + 1
+            if user.login_attempts >= 5:
+                user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+            db.session.commit()
+
+        # Message unique (anti-énumération)
+        flash("Nom d'utilisateur ou mot de passe incorrect.", "danger")
+
     return render_template("auth/login.html", form=form)
 
+
+# ═══════════════════════════════════════════════════════════
+# LOGOUT
+# ═══════════════════════════════════════════════════════════
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():

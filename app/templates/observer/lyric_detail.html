@@ -1,0 +1,48 @@
+{% extends "observer/base.html" %}
+{% block title %}{{ lyric.song_title }}{% endblock %}
+{% block page_title %}Parole{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-6 max-w-4xl mx-auto">
+
+    <a href="{{ url_for('observer.lyrics') }}"
+       class="text-sm text-slate-400 hover:text-brand-400 inline-flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i>Retour aux paroles
+    </a>
+
+    <div class="glass-card p-6">
+        <div class="flex items-center gap-4 mb-6">
+            {% if lyric.artist_photo %}
+                <img src="{{ lyric.artist_photo|upload_url('lyrics') }}"
+                     alt="{{ lyric.artist_name }}"
+                     class="w-20 h-20 rounded-xl object-cover">
+            {% else %}
+                <div class="w-20 h-20 rounded-xl bg-slate-800 flex items-center
+                            justify-center text-slate-600 text-2xl">
+                    <i class="fas fa-music"></i>
+                </div>
+            {% endif %}
+            <div>
+                <h1 class="text-2xl font-bold text-white">{{ lyric.song_title }}</h1>
+                <p class="text-sm text-slate-400 mt-1">
+                    {{ lyric.artist_name }} · <span class="font-mono">{{ lyric.artist_code }}</span>
+                </p>
+                <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                    <span><i class="fas fa-eye mr-1"></i>{{ lyric.view_count }} vues</span>
+                    <span>
+                        {% if lyric.is_published %}
+                            <i class="fas fa-check-circle text-emerald-400 mr-1"></i>Publiée
+                        {% else %}
+                            <i class="fas fa-eye-slash mr-1"></i>Brouillon
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-white/5 pt-6">
+            <pre class="text-sm text-slate-300 whitespace-pre-wrap font-sans leading-relaxed">{{ lyric.content }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

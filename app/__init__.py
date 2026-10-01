@@ -55,12 +55,16 @@ def create_app(config_name=None):
     from app.admin_routes import admin_bp
     from app.jury_routes import jury_bp
     from app.artist_routes import artist_bp
+    from app.observer_routes import observer_bp      # ⬅️ AJOUT
+
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(jury_bp, url_prefix='/jury')
     app.register_blueprint(artist_bp, url_prefix='/artist')
+    app.register_blueprint(observer_bp, url_prefix='/observer')              # ⬅️ AJOUT
+
 
     create_upload_directories(app)
     register_error_handlers(app)
@@ -199,7 +203,7 @@ def _setup_logging(app, config_name):
 def create_upload_directories(app):
     """Création sécurisée des dossiers d'upload"""
     upload_base = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-    for subfolder in ['artists', 'moments', 'sponsors', 'lyrics']:
+    for subfolder in ['artists', 'moments', 'sponsors', 'lyrics', 'votes'  ]:
         path = os.path.join(upload_base, subfolder)
         os.makedirs(path, exist_ok=True)
         gitkeep = os.path.join(path, '.gitkeep')

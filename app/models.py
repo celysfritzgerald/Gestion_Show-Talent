@@ -28,7 +28,10 @@ class User(db.Model):
     comments_given = db.relationship("Comment", backref="jury", lazy="dynamic")
 
     __table_args__ = (
-        db.CheckConstraint("role IN ('admin', 'jury', 'artist')", name="check_user_role"),
+        db.CheckConstraint(
+            "role IN ('admin', 'jury', 'artist', 'observer')",
+            name="check_user_role"
+        ),
         db.CheckConstraint("account_status IN ('ACTIVE', 'INACTIVE')", name="check_account_status"),
         db.CheckConstraint("login_attempts >= 0", name="check_login_attempts"),
     )
@@ -46,13 +49,16 @@ class User(db.Model):
         except ValueError:
             return False
 
-    def is_admin(self): return self.role == "admin"
-    def is_jury(self): return self.role == "jury"
-    def is_artist(self): return self.role == "artist"
+    def is_admin(self):    return self.role == "admin"
+    def is_jury(self):     return self.role == "jury"
+    def is_artist(self):   return self.role == "artist"
+    def is_observer(self): return self.role == "observer"
+
     def is_active_account(self): return self.account_status == "ACTIVE"
-    def is_locked(self): return bool(self.locked_until and datetime.utcnow() < self.locked_until)
+    def is_locked(self):         return bool(self.locked_until and datetime.utcnow() < self.locked_until)
+
     def full_name(self): return f"{self.first_name} {self.last_name}"
-    def __repr__(self): return f"<User {self.username} ({self.role})>"
+    def __repr__(self):  return f"<User {self.username} ({self.role})>"
 
 
 class Artist(db.Model):
@@ -179,13 +185,12 @@ class ContactMessage(db.Model):
 
 
 class Lyric(db.Model):
-    """Modèle Paroles de chanson — Totalement indépendant"""
     __tablename__ = "lyrics"
 
     id = db.Column(db.Integer, primary_key=True)
-    artist_name = db.Column(db.String(150), nullable=False)      # Nom saisi manuellement
-    artist_code = db.Column(db.String(20), nullable=False)       # Code saisi manuellement
-    artist_photo = db.Column(db.String(255))                     # Photo uploadée
+    artist_name = db.Column(db.String(150), nullable=False)
+    artist_code = db.Column(db.String(20), nullable=False)
+    artist_photo = db.Column(db.String(255))
     song_title = db.Column(db.String(200), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     is_published = db.Column(db.Boolean, default=True, nullable=False, index=True)
@@ -200,33 +205,46 @@ class Lyric(db.Model):
     def __repr__(self):
         return f"<Lyric {self.song_title} - {self.artist_name}>"
 
-# ============================================================
-# MODULE VOTE PUBLIC — INDÉPENDANT
-# ============================================================
 
 class VoteConfig(db.Model):
-    """Configuration globale du vote — Mode flexible"""
+    """Configuration globale du vote — Mode flexible + personnalisation complète."""
     __tablename__ = "vote_configs"
 
     id = db.Column(db.Integer, primary_key=True)
     mode = db.Column(db.String(20), nullable=False, default="PER_SESSION")
-    # 'GLOBAL' = 1 vote pour toute l'édition
-    # 'PER_SESSION' = 1 vote par soirée
-    
     is_enabled = db.Column(db.Boolean, default=True, nullable=False)
     closed_message = db.Column(db.String(300), default="Le vote du public est actuellement fermé.")
+
+    # ─── Personnalisation de la page ───
+    title = db.Column(db.String(200), default="Qui va gagner cette édition ?")
+    subtitle = db.Column(db.String(300), default="Votez pour votre artiste préféré")
+    cta_text = db.Column(db.String(100), default="Voter pour cet artiste")
+    hero_image = db.Column(db.String(255))
+    primary_color = db.Column(db.String(20), default="#facc15")
+
+    # ─── Affichage ───
+    show_results_live = db.Column(db.Boolean, default=True, nullable=False)
+    show_vote_counts = db.Column(db.Boolean, default=True, nullable=False)
+    show_percentages = db.Column(db.Boolean, default=True, nullable=False)
+    show_progress_bars = db.Column(db.Boolean, default=True, nullable=False)
+    show_ranking_badge = db.Column(db.Boolean, default=True, nullable=False)
+
+    # ─── Validation ───
+    require_first_name = db.Column(db.Boolean, default=True, nullable=False)
+    require_last_name = db.Column(db.Boolean, default=True, nullable=False)
+    max_votes_per_session = db.Column(db.Integer, default=1, nullable=False)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     __table_args__ = (
         db.CheckConstraint("mode IN ('GLOBAL', 'PER_SESSION')", name="check_vote_mode"),
+        db.CheckConstraint("max_votes_per_session >= 1 AND max_votes_per_session <= 10", name="check_max_votes"),
     )
 
     def __repr__(self):
         return f"<VoteConfig mode={self.mode} enabled={self.is_enabled}>"
 
-
 class VoteSession(db.Model):
-    """Session de vote par soirée — Indépendant"""
     __tablename__ = "vote_sessions"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -245,7 +263,6 @@ class VoteSession(db.Model):
 
 
 class PublicVote(db.Model):
-    """Vote du public — Fonctionne en mode GLOBAL ou PER_SESSION"""
     __tablename__ = "public_votes"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -256,18 +273,12 @@ class PublicVote(db.Model):
     voter_user_agent = db.Column(db.String(255))
     artist_id = db.Column(db.Integer, db.ForeignKey("artists.id", ondelete="CASCADE"), nullable=False, index=True)
     session_id = db.Column(db.Integer, db.ForeignKey("vote_sessions.id", ondelete="CASCADE"), nullable=True, index=True)
-    # ↑ NULL quand mode=GLOBAL, renseigné quand mode=PER_SESSION
-    
     mode = db.Column(db.String(20), nullable=False, default="PER_SESSION", index=True)
-    # ↑ Enregistre le mode utilisé au moment du vote (historique)
-    
     edition = db.Column(db.String(20), nullable=False, default="4e", index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     __table_args__ = (
-        # Unicité en mode PER_SESSION : 1 vote par (fingerprint, session)
         db.UniqueConstraint('voter_fingerprint', 'session_id', name='unique_vote_per_session'),
-        # Unicité en mode GLOBAL : 1 vote par (fingerprint, edition)
         db.UniqueConstraint('voter_fingerprint', 'edition', name='unique_vote_per_edition'),
     )
 
@@ -358,3 +369,58 @@ class PollVote(db.Model):
     __table_args__ = (
         db.UniqueConstraint('poll_id', 'voter_fingerprint', name='unique_vote_per_poll'),
     )
+
+
+# ============================================================
+# PERMISSIONS OBSERVATEUR — 100% CONFIGURABLE
+# ============================================================
+
+class ObserverPermission(db.Model):
+    """
+    Permissions granulaires pour chaque observateur.
+    Une ligne par utilisateur observateur.
+    """
+    __tablename__ = "observer_permissions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    # ─── Sections activables ───
+    artists  = db.Column(db.Boolean, default=False, nullable=False)
+    juries   = db.Column(db.Boolean, default=False, nullable=False)
+    ranking  = db.Column(db.Boolean, default=False, nullable=False)
+    votes    = db.Column(db.Boolean, default=False, nullable=False)
+    polls    = db.Column(db.Boolean, default=False, nullable=False)
+    finance  = db.Column(db.Boolean, default=False, nullable=False)
+    sponsors = db.Column(db.Boolean, default=False, nullable=False)
+    lyrics   = db.Column(db.Boolean, default=False, nullable=False)
+    moments  = db.Column(db.Boolean, default=False, nullable=False)
+    messages = db.Column(db.Boolean, default=False, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = db.relationship(
+        "User",
+        backref=db.backref("observer_permission", uselist=False, cascade="all, delete-orphan")
+    )
+
+    SECTIONS = ('artists', 'juries', 'ranking', 'votes', 'polls',
+                'finance', 'sponsors', 'lyrics', 'moments', 'messages')
+
+    def has(self, section: str) -> bool:
+        """Retourne True si la section est activée."""
+        return bool(getattr(self, section, False))
+
+    def enabled_sections(self) -> list:
+        """Retourne la liste des sections activées."""
+        return [s for s in self.SECTIONS if self.has(s)]
+
+    def __repr__(self):
+        return f"<ObserverPermission user_id={self.user_id}>"

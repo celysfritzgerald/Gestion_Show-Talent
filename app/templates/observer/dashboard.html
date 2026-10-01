@@ -1,0 +1,280 @@
+{% extends "observer/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Vue d'ensemble{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-6">
+
+    <!-- ══════════ WELCOME ══════════ -->
+    <div class="glass-card p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-3 mb-2">
+                    <h1 class="text-2xl md:text-3xl font-bold text-white">
+                        👋 Bonjour, {{ session.user_name }}
+                    </h1>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                 bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                        Observateur
+                    </span>
+                </div>
+                <p class="text-slate-400 text-sm md:text-base">
+                    Voici un aperçu des sections auxquelles vous avez accès.
+                </p>
+            </div>
+            <div class="flex items-center gap-3 text-sm text-slate-400">
+                <i class="fas fa-calendar-alt text-brand-400"></i>
+                <span>{{ now.strftime('%d %B %Y') if now else '' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ STAT CARDS ══════════ -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {% set cards = [
+            ('Artistes actifs',   stats.active_artists,    stats.total_artists,    'fa-microphone',     'orange',  'artists'),
+            ('Jurys actifs',      stats.active_juries,     stats.total_juries,     'fa-gavel',          'sky',     'juries'),
+            ('Dimanches terminés',stats.completed_sessions,stats.total_sessions,   'fa-calendar-check', 'emerald', 'ranking'),
+            ('Notes saisies',     stats.total_scores,      '—',                    'fa-star',           'violet',  'artists'),
+        ] %}
+        {% for label, value, total, icon, color, required_section in cards %}
+            {% if required_section in sections or required_section == 'ranking' %}
+            <div class="glass-card p-5 hover:border-{{ color }}-500/40 transition group">
+                <div class="flex items-start justify-between">
+                    <div class="w-10 h-10 rounded-lg bg-{{ color }}-500/10
+                                flex items-center justify-center text-{{ color }}-400
+                                group-hover:scale-110 transition">
+                        <i class="fas {{ icon }}"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-bold text-white">{{ value }}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">
+                        {{ label }}
+                        {% if total != '—' %}
+                            · <span class="text-slate-400">/ {{ total }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- ══════════ GRID PRINCIPAL ══════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Colonne principale -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Progression sessions -->
+            {% if 'ranking' in sections %}
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-calendar-days text-brand-400"></i>
+                    Progression de la compétition
+                </h2>
+
+                {% if sessions %}
+                <div class="space-y-3">
+                    {% for s in sessions %}
+                        {% set status_color = {
+                            'PENDING':     'slate',
+                            'IN_PROGRESS': 'amber',
+                            'COMPLETED':   'emerald'
+                        }[s.status] %}
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-slate-800 flex items-center
+                                        justify-center text-sm font-bold text-slate-300">
+                                D{{ s.number }}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm text-slate-300">
+                                        Dimanche {{ s.number }} — {{ s.date.strftime('%d/%m/%Y') }}
+                                    </span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full
+                                                 bg-{{ status_color }}-500/10 text-{{ status_color }}-400
+                                                 border border-{{ status_color }}-500/20">
+                                        {{ s.status }}
+                                    </span>
+                                </div>
+                                <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-{{ status_color }}-500 rounded-full transition-all"
+                                         style="width: {{ 100 if s.status == 'COMPLETED' else (50 if s.status == 'IN_PROGRESS' else 5) }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 text-center py-6">Aucune session configurée.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Derniers votes -->
+            {% if 'votes' in sections %}
+            <div class="glass-card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-check-to-slot text-sky-400"></i>
+                        Derniers votes publics
+                    </h2>
+                    <a href="{{ url_for('observer.votes') }}"
+                       class="text-xs text-brand-400 hover:text-brand-300">
+                        Voir tout →
+                    </a>
+                </div>
+
+                {% if recent_votes %}
+                <div class="space-y-2">
+                    {% for v in recent_votes %}
+                    <div class="flex items-center gap-3 text-sm py-2
+                                border-b border-slate-800/50 last:border-0">
+                        <div class="w-8 h-8 rounded-full bg-slate-800
+                                    flex items-center justify-center text-xs text-slate-400">
+                            {{ v.voter_first_name[0] }}{{ v.voter_last_name[0] }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-slate-300 truncate">
+                                {{ v.voter_first_name }} {{ v.voter_last_name }}
+                            </div>
+                            <div class="text-[11px] text-slate-500">
+                                → {{ v.artist.code }} · {{ v.artist.user.full_name() }}
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500 whitespace-nowrap">
+                            {{ v.created_at.strftime('%d/%m %H:%M') }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 text-center py-6">Aucun vote récent.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Derniers commentaires -->
+            {% if 'artists' in sections %}
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-comments text-emerald-400"></i>
+                    Derniers commentaires de jurys
+                </h2>
+
+                {% if recent_comments %}
+                <div class="space-y-3">
+                    {% for c in recent_comments %}
+                    <div class="border-b border-slate-800/50 last:border-0 pb-3 last:pb-0">
+                        <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                            <i class="fas fa-gavel text-slate-600"></i>
+                            <span>{{ c.jury.full_name() }}</span>
+                            <span class="text-slate-600">·</span>
+                            <span>→ {{ c.artist.code }}</span>
+                            <span class="text-slate-600 ml-auto">
+                                {{ c.created_at.strftime('%d/%m %H:%M') }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-300 line-clamp-2">{{ c.comment }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 text-center py-6">Aucun commentaire.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="space-y-6">
+
+            <!-- Alerte messages -->
+            {% if 'messages' in sections and new_messages_count %}
+            <a href="{{ url_for('observer.messages') }}"
+               class="block glass-card p-4 border-l-4 border-amber-500/50 hover:bg-white/[0.05] transition">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-envelope text-amber-400 text-xl"></i>
+                    <div>
+                        <div class="text-sm font-medium text-amber-300">
+                            {{ new_messages_count }} nouveau(x) message(s)
+                        </div>
+                        <div class="text-xs text-amber-400/70">Boîte de contact →</div>
+                    </div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Finance -->
+            {% if 'finance' in sections %}
+            <div class="glass-card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-coins text-emerald-400"></i>
+                        Finance récente
+                    </h2>
+                    <a href="{{ url_for('observer.finance') }}"
+                       class="text-xs text-brand-400 hover:text-brand-300">
+                        Détails →
+                    </a>
+                </div>
+
+                {% if recent_transactions %}
+                <div class="space-y-3">
+                    {% for t in recent_transactions %}
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="min-w-0 flex-1">
+                            <div class="text-slate-300 truncate">{{ t.description }}</div>
+                            <div class="text-[10px] text-slate-500">
+                                {{ t.transaction_date.strftime('%d/%m/%Y') }}
+                            </div>
+                        </div>
+                        <span class="font-semibold whitespace-nowrap ml-2
+                            {{ 'text-emerald-400' if t.type == 'income' else 'text-red-400' }}">
+                            {{ '+' if t.type == 'income' else '−' }}{{ '%.2f'|format(t.amount) }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-500 text-center py-4">Aucune transaction.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Info accès -->
+            <div class="glass-card p-5">
+                <h2 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-brand-400"></i>
+                    Vos accès
+                </h2>
+                <div class="space-y-2 text-xs">
+                    {% set section_labels = {
+                        'artists':  'Artistes & notes',
+                        'juries':   'Jurys',
+                        'ranking':  'Classement',
+                        'votes':    'Votes publics',
+                        'polls':    'Sondages',
+                        'finance':  'Finance',
+                        'sponsors': 'Sponsors',
+                        'lyrics':   'Paroles',
+                        'moments':  'Moments',
+                        'messages': 'Messages',
+                    } %}
+                    {% for sec in sections %}
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i class="fas fa-check text-emerald-400 text-[10px]"></i>
+                        <span>{{ section_labels.get(sec, sec) }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if not sections %}
+                    <p class="text-slate-500 italic">Aucune section autorisée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

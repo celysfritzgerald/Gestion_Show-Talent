@@ -1,0 +1,193 @@
+{% extends "observer/base.html" %}
+{% block title %}{{ artist.user.full_name() }}{% endblock %}
+{% block page_title %}Fiche artiste{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-5">
+
+    <a href="{{ url_for('observer.artists') }}"
+       class="text-sm text-slate-400 hover:text-brand-400 inline-flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i>Retour aux artistes
+    </a>
+
+    <!-- Header -->
+    <div class="glass-card p-5 sm:p-6 flex flex-col sm:flex-row gap-5">
+        {% if artist.photo %}
+            <img src="{{ artist.photo|upload_url('artists') }}"
+                 alt="{{ artist.user.full_name() }}"
+                 class="w-32 h-32 rounded-xl object-cover flex-shrink-0">
+        {% else %}
+            <div class="w-32 h-32 rounded-xl bg-slate-800 flex items-center justify-center
+                        text-slate-600 text-4xl flex-shrink-0">
+                <i class="fas fa-microphone"></i>
+            </div>
+        {% endif %}
+
+        <div class="flex-1">
+            <div class="flex items-start justify-between flex-wrap gap-3">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">{{ artist.user.full_name() }}</h1>
+                    <div class="text-sm text-slate-400 font-mono mt-1">
+                        {{ artist.code }}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    {% if artist.competition_status == 'ACTIVE' %}
+                        <span class="px-3 py-1 text-xs rounded-full
+                                     bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Actif
+                        </span>
+                    {% else %}
+                        <span class="px-3 py-1 text-xs rounded-full
+                                     bg-red-500/10 text-red-400 border border-red-500/20">
+                            Éliminé
+                        </span>
+                    {% endif %}
+
+                    {% if artist_rank %}
+                        <span class="px-3 py-1 text-xs rounded-full
+                                     bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                            Rang #{{ artist_rank }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if artist.address %}
+            <div class="text-sm text-slate-400 mt-3">
+                <i class="fas fa-location-dot mr-2"></i>{{ artist.address }}
+            </div>
+            {% endif %}
+
+            {% if artist.biography %}
+            <p class="text-sm text-slate-400 mt-3 leading-relaxed">{{ artist.biography }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats du classement -->
+    {% if artist_entry %}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card p-4">
+            <div class="text-xs text-slate-500 uppercase tracking-wider">Score total</div>
+            <div class="text-2xl font-bold text-white mt-1">
+                {{ '%.1f'|format(artist_entry.total_score) }}
+            </div>
+        </div>
+        <div class="glass-card p-4">
+            <div class="text-xs text-slate-500 uppercase tracking-wider">Moyenne</div>
+            <div class="text-2xl font-bold text-white mt-1">
+                {{ '%.2f'|format(artist_entry.average_score) }}
+            </div>
+        </div>
+        <div class="glass-card p-4">
+            <div class="text-xs text-slate-500 uppercase tracking-wider">Notes</div>
+            <div class="text-2xl font-bold text-white mt-1">{{ artist_entry.scores_count }}</div>
+        </div>
+        <div class="glass-card p-4">
+            <div class="text-xs text-slate-500 uppercase tracking-wider">Critères</div>
+            <div class="text-2xl font-bold text-white mt-1">{{ artist_entry.criteria_count }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes par session -->
+    <div class="glass-card p-5">
+        <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-star text-amber-400"></i>
+            Notes par dimanche
+        </h2>
+
+        {% if session_scores %}
+        <div class="space-y-4">
+            {% for s in sessions %}
+                {% if s.id in session_scores %}
+                    {% set data = session_scores[s.id] %}
+                    <div class="border border-white/5 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-white">Dimanche {{ s.number }}</span>
+                                <span class="text-xs text-slate-500">{{ s.date.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                {% if data.complete %}
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full
+                                                 bg-emerald-500/10 text-emerald-400">
+                                        ✓ Complet
+                                    </span>
+                                {% else %}
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full
+                                                 bg-amber-500/10 text-amber-400">
+                                        Incomplet
+                                    </span>
+                                {% endif %}
+                                <span class="text-sm font-bold text-white">
+                                    {{ '%.1f'|format(data.total) }} / {{ data.max_possible }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="text-slate-500 uppercase text-[10px] tracking-wider">
+                                        <th class="text-left py-2">Critère</th>
+                                        <th class="text-right py-2">Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sc in data.scores %}
+                                    <tr class="border-t border-white/5">
+                                        <td class="py-1.5 text-slate-300">
+                                            {{ sc.criterion.name if sc.criterion else '—' }}
+                                        </td>
+                                        <td class="py-1.5 text-right font-mono text-white">
+                                            {{ '%.1f'|format(sc.score) }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 text-center py-6">
+            Aucune note pour cet artiste.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Commentaires -->
+    {% if comments %}
+    <div class="glass-card p-5">
+        <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-comments text-emerald-400"></i>
+            Commentaires ({{ comments|length }})
+        </h2>
+
+        <div class="space-y-3">
+            {% for c in comments %}
+            <div class="border border-white/5 rounded-lg p-3">
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-gavel text-slate-600"></i>
+                        <span class="text-slate-300 font-medium">
+                            {{ c.jury.full_name() if c.jury else '—' }}
+                        </span>
+                        <span class="text-slate-600">·</span>
+                        <span>Session #{{ c.session_id }}</span>
+                    </div>
+                    <span>{{ c.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                </div>
+                <p class="text-sm text-slate-300">{{ c.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

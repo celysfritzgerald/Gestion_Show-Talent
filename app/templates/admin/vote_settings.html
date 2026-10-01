@@ -1,0 +1,285 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Configuration du vote · Admin{% endblock %}
+
+{% block content %}
+<div class="section-dark py-8">
+    <div class="container mx-auto px-4 max-w-4xl">
+
+        <!-- Retour -->
+        <a href="{{ url_for('admin.votes_dashboard') }}"
+           class="inline-flex items-center gap-2 text-gray-400 hover:text-yellow-400 text-sm mb-5 transition">
+            <i class="fas fa-arrow-left"></i>
+            Retour aux votes
+        </a>
+
+        <!-- En-tête -->
+        <div class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                <i class="fas fa-cog text-yellow-400"></i>
+                Configuration du vote
+            </h1>
+            <p class="text-gray-400 text-sm mt-1">
+                Personnalisez entièrement l'expérience de vote du public.
+            </p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- ═══════ MODE ═══════ -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Mode de vote</h2>
+                        <p class="text-xs text-gray-500">Comment les visiteurs peuvent voter</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="flex items-start gap-3 p-4 rounded-xl cursor-pointer
+                                  bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition">
+                        <input type="radio" name="mode" value="GLOBAL"
+                               {{ 'checked' if config.mode == 'GLOBAL' else '' }}
+                               class="mt-1 w-4 h-4 text-blue-500">
+                        <div>
+                            <div class="font-medium text-white text-sm">🌍 Global</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                1 vote par personne pour toute l'édition
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 rounded-xl cursor-pointer
+                                  bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition">
+                        <input type="radio" name="mode" value="PER_SESSION"
+                               {{ 'checked' if config.mode == 'PER_SESSION' else '' }}
+                               class="mt-1 w-4 h-4 text-blue-500">
+                        <div>
+                            <div class="font-medium text-white text-sm">📅 Par soirée</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                1 vote par personne par dimanche
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mt-4 flex items-center gap-3">
+                    <input type="checkbox" name="is_enabled" id="is_enabled"
+                           {{ 'checked' if config.is_enabled else '' }}
+                           class="w-4 h-4 rounded bg-white/5 border-white/10 text-yellow-500">
+                    <label for="is_enabled" class="text-sm text-gray-300 cursor-pointer">
+                        ✅ Activer le vote public
+                    </label>
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm text-gray-400 mb-2">Message si le vote est fermé</label>
+                    <textarea name="closed_message" rows="2" maxlength="300"
+                              class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                     text-white placeholder-gray-500 focus:border-yellow-400 outline-none">{{ config.closed_message or '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- ═══════ PERSONNALISATION ═══════ -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Personnalisation</h2>
+                        <p class="text-xs text-gray-500">Textes et apparence de la page</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Titre principal</label>
+                        <input type="text" name="title" maxlength="200"
+                               value="{{ config.title or '' }}"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                      text-white focus:border-yellow-400 outline-none"
+                               placeholder="Qui va gagner cette édition ?">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Sous-titre</label>
+                        <input type="text" name="subtitle" maxlength="300"
+                               value="{{ config.subtitle or '' }}"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                      text-white focus:border-yellow-400 outline-none"
+                               placeholder="Votez pour votre artiste préféré">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Texte du bouton de vote</label>
+                        <input type="text" name="cta_text" maxlength="100"
+                               value="{{ config.cta_text or '' }}"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                      text-white focus:border-yellow-400 outline-none"
+                               placeholder="Voter pour cet artiste">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Couleur principale (hex)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="primary_color"
+                                   value="{{ config.primary_color or '#facc15' }}"
+                                   class="w-14 h-12 rounded cursor-pointer bg-white/5 border border-white/10">
+                            <input type="text" readonly
+                                   value="{{ config.primary_color or '#facc15' }}"
+                                   class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                          text-white font-mono text-sm w-32">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Image d'arrière-plan (optionnelle)</label>
+                        {% if config.hero_image %}
+                        <div class="mb-3 flex items-center gap-3">
+                            <img src="{{ config.hero_image|upload_url('votes') }}"
+                                 alt="Image actuelle"
+                                 class="w-24 h-16 object-cover rounded-lg border border-white/10">
+                            <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                                <input type="checkbox" name="remove_hero_image"
+                                       class="w-4 h-4 rounded bg-white/5 border-white/10 text-red-500">
+                                Supprimer l'image actuelle
+                            </label>
+                        </div>
+                        {% endif %}
+                        <input type="file" name="hero_image" accept="image/*"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                      text-gray-400 text-sm file:mr-4 file:py-2 file:px-4
+                                      file:rounded-lg file:border-0 file:bg-yellow-400/20
+                                      file:text-yellow-400 file:font-bold
+                                      hover:file:bg-yellow-400/30 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════ AFFICHAGE ═══════ -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Éléments à afficher</h2>
+                        <p class="text-xs text-gray-500">Ce que les visiteurs peuvent voir</p>
+                    </div>
+                </div>
+
+                {% set displays = [
+                    ('show_results_live',   'Résultats en direct',       'Trier les artistes par nombre de votes'),
+                    ('show_vote_counts',    'Nombre de votes',           'Afficher le compteur de votes'),
+                    ('show_percentages',    'Pourcentages',              'Afficher le % de chaque artiste'),
+                    ('show_progress_bars',  'Barres de progression',     'Barres visuelles du pourcentage'),
+                    ('show_ranking_badge',  'Badges 🥇🥈🥉',             'Badges pour le top 3'),
+                ] %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for name, title, desc in displays %}
+                    <label class="flex items-start gap-3 p-4 rounded-xl cursor-pointer
+                                  bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition">
+                        <input type="checkbox" name="{{ name }}"
+                               {{ 'checked' if config|attr(name) else '' }}
+                               class="mt-1 w-4 h-4 rounded bg-white/10 border-white/20 text-emerald-500">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-white text-sm">{{ title }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">{{ desc }}</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ═══════ VALIDATION ═══════ -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Validation du vote</h2>
+                        <p class="text-xs text-gray-500">Quelles informations demander aux votants</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="flex items-start gap-3 p-4 rounded-xl cursor-pointer
+                                  bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition">
+                        <input type="checkbox" name="require_first_name"
+                               {{ 'checked' if config.require_first_name else '' }}
+                               class="mt-1 w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500">
+                        <div>
+                            <div class="font-medium text-white text-sm">Prénom obligatoire</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Le votant doit saisir son prénom</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 rounded-xl cursor-pointer
+                                  bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition">
+                        <input type="checkbox" name="require_last_name"
+                               {{ 'checked' if config.require_last_name else '' }}
+                               class="mt-1 w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500">
+                        <div>
+                            <div class="font-medium text-white text-sm">Nom obligatoire</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Le votant doit saisir son nom</div>
+                        </div>
+                    </label>
+
+                    <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                        <label class="block font-medium text-white text-sm mb-2">
+                            Nombre de votes maximum par session
+                        </label>
+                        <input type="number" name="max_votes_per_session"
+                               value="{{ config.max_votes_per_session or 1 }}"
+                               min="1" max="10"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                                      text-white focus:border-purple-400 outline-none">
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Entre 1 et 10 votes par personne
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════ ACTIONS ═══════ -->
+            <div class="flex flex-wrap items-center gap-3 justify-end">
+                <a href="{{ url_for('admin.votes_dashboard') }}"
+                   class="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10
+                          text-gray-300 rounded-lg font-medium transition">
+                    Annuler
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-2.5
+                               bg-yellow-400 hover:bg-yellow-500 text-[#0B1120]
+                               font-bold rounded-lg transition">
+                    <i class="fas fa-save"></i>
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+    var colorInput = document.querySelector('input[type="color"][name="primary_color"]');
+    if (colorInput) {
+        var textInput = colorInput.parentElement.querySelector('input[type="text"]');
+        colorInput.addEventListener('input', function() {
+            if (textInput) textInput.value = this.value;
+        });
+    }
+})();
+</script>
+{% endblock %}

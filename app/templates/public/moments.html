@@ -1,0 +1,953 @@
+{% extends "base.html" %}
+
+{% block title %}Moments forts — Show Talent 4e Édition | ACDA Haïti{% endblock %}
+
+{% block meta_description %}
+Découvrez les moments forts du concours Show Talent 4e Édition : performances, émotions et souvenirs en images. Galerie photo officielle de la compétition musicale d'ACDA Haïti.
+{% endblock %}
+
+{% block meta_keywords %}
+moments forts show talent, galerie photo concours, ACDA Haïti, compétition musicale, photos événement, artistes haïtiens
+{% endblock %}
+
+{% block meta_robots %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block og_title %}Moments forts — Show Talent 4e Édition{% endblock %}
+{% block og_description %}Découvrez les moments forts du concours en images.{% endblock %}
+{% block og_type %}website{% endblock %}
+
+{% block twitter_card %}summary_large_image{% endblock %}
+{% block twitter_title %}Moments forts — Show Talent{% endblock %}
+{% block twitter_description %}Galerie photo officielle du concours.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ═══════════════════════════════════════════════════════════
+       SECTION MOMENTS
+       ═══════════════════════════════════════════════════════════ */
+    .moments-section {
+        background: #0B1120;
+        min-height: 100vh;
+        padding: 32px 16px;
+    }
+
+    /* Grille */
+    .moments-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    @media (min-width: 640px) {
+        .moments-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    }
+
+    @media (min-width: 1024px) {
+        .moments-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+    }
+
+    /* Carte moment */
+    .moment-card {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+        content-visibility: auto;
+        contain-intrinsic-size: 250px;
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .moment-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(250, 204, 21, 0.4);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .moment-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .moment-card:hover img {
+        transform: scale(1.08);
+    }
+
+    .moment-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top,
+            rgba(11, 17, 32, 0.95) 0%,
+            rgba(11, 17, 32, 0.6) 40%,
+            transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: flex-end;
+        padding: 16px;
+    }
+
+    .moment-card:hover .moment-overlay { opacity: 1; }
+
+    .moment-caption {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .session-badge {
+        position: absolute;
+        top: 10px; left: 10px;
+        z-index: 2;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(11, 17, 32, 0.85);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(250, 204, 21, 0.3);
+        color: #facc15;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .zoom-btn {
+        position: absolute;
+        top: 10px; right: 10px;
+        z-index: 2;
+        width: 32px; height: 32px;
+        border-radius: 999px;
+        background: rgba(11, 17, 32, 0.85);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
+        cursor: pointer;
+    }
+
+    .moment-card:hover .zoom-btn { opacity: 1; }
+    .zoom-btn:hover { background: #facc15; color: #0B1120; transform: scale(1.1); }
+
+    /* Filtres */
+    .session-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.25s ease;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: #94a3b8;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .session-filter:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        border-color: rgba(250, 204, 21, 0.3);
+    }
+
+    .session-filter.active {
+        background: linear-gradient(135deg, #facc15, #f59e0b);
+        color: #0B1120;
+        border-color: #facc15;
+        box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3);
+    }
+
+    /* Pagination */
+    .pagination-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .pagination-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        border-color: rgba(250, 204, 21, 0.3);
+    }
+
+    .pagination-btn.active {
+        background: linear-gradient(135deg, #facc15, #f59e0b);
+        color: #0B1120;
+        border-color: #facc15;
+    }
+
+    .pagination-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+    /* ═══════════════════════════════════════════════════════════
+       LIGHTBOX / CARROUSEL PLEIN ÉCRAN
+       ═══════════════════════════════════════════════════════════ */
+    .lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.96);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.35s ease;
+    }
+
+    .lightbox.open {
+        display: flex;
+        opacity: 1;
+        animation: lightboxFadeIn 0.35s ease;
+    }
+
+    @keyframes lightboxFadeIn {
+        from { opacity: 0; backdrop-filter: blur(0); }
+        to   { opacity: 1; backdrop-filter: blur(12px); }
+    }
+
+    .lightbox-content {
+        position: relative;
+        max-width: 95vw;
+        max-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lightbox-image-wrapper {
+        position: relative;
+        max-width: 95vw;
+        max-height: 85vh;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+        animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes zoomIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+    }
+
+    .lightbox-image {
+        max-width: 95vw;
+        max-height: 85vh;
+        display: block;
+        object-fit: contain;
+    }
+
+    /* Légende */
+    .lightbox-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px 24px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        color: #fff;
+        text-align: center;
+        animation: slideUpCaption 0.5s ease 0.15s both;
+    }
+
+    @keyframes slideUpCaption {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .lightbox-caption p {
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 6px;
+    }
+
+    .lightbox-caption .lightbox-session {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(250, 204, 21, 0.2);
+        border: 1px solid rgba(250, 204, 21, 0.4);
+        color: #facc15;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Boutons navigation */
+    .lightbox-close,
+    .lightbox-nav {
+        position: absolute;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
+    }
+
+    .lightbox.open .lightbox-close,
+    .lightbox.open .lightbox-nav {
+        opacity: 1;
+    }
+
+    .lightbox-close {
+        top: 20px; right: 20px;
+        width: 44px; height: 44px;
+        animation: fadeIn 0.4s ease 0.2s both;
+    }
+
+    .lightbox-close:hover {
+        background: rgba(239, 68, 68, 0.9);
+        border-color: rgba(239, 68, 68, 0.9);
+        transform: rotate(90deg) scale(1.1);
+    }
+
+    .lightbox-nav {
+        top: 50%;
+        transform: translateY(-50%);
+        width: 52px; height: 52px;
+    }
+
+    .lightbox-nav.prev { left: 20px; }
+    .lightbox-nav.next { right: 20px; }
+
+    .lightbox-nav:hover {
+        background: rgba(250, 204, 21, 0.95);
+        color: #0B1120;
+        border-color: #facc15;
+        transform: translateY(-50%) scale(1.15);
+    }
+
+    .lightbox-nav:active { transform: translateY(-50%) scale(0.95); }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* Compteur */
+    .lightbox-counter {
+        position: absolute;
+        top: 20px; left: 20px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(11, 17, 32, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-size: 13px;
+        font-family: monospace;
+        animation: fadeIn 0.4s ease 0.2s both;
+    }
+
+    .lightbox-counter .current {
+        color: #facc15;
+        font-weight: 700;
+    }
+
+    /* Barre de progression */
+    .lightbox-progress {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 20;
+        overflow: hidden;
+    }
+
+    .lightbox-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #facc15, #f59e0b);
+        width: 0%;
+        transition: width 0.1s linear;
+    }
+
+    /* Animation de transition entre images */
+    .lightbox-image-wrapper.transitioning {
+        animation: slideOutIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideOutIn {
+        0%   { opacity: 1; transform: translateX(0) scale(1); }
+        50%  { opacity: 0; transform: translateX(-30px) scale(0.95); }
+        51%  { opacity: 0; transform: translateX(30px) scale(0.95); }
+        100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* Vignettes en bas */
+    .lightbox-thumbs {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(11, 17, 32, 0.8);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 80vw;
+        overflow-x: auto;
+        animation: fadeIn 0.4s ease 0.3s both;
+    }
+
+    .lightbox-thumbs::-webkit-scrollbar { height: 3px; }
+    .lightbox-thumbs::-webkit-scrollbar-thumb {
+        background: rgba(250, 204, 21, 0.4);
+        border-radius: 999px;
+    }
+
+    .lightbox-thumb {
+        flex-shrink: 0;
+        width: 48px; height: 48px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        opacity: 0.5;
+        transition: all 0.25s ease;
+    }
+
+    .lightbox-thumb img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .lightbox-thumb:hover { opacity: 0.85; }
+
+    .lightbox-thumb.active {
+        border-color: #facc15;
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+        .moments-section { padding: 20px 12px; }
+        .lightbox-close { top: 12px; right: 12px; width: 40px; height: 40px; }
+        .lightbox-nav { width: 42px; height: 42px; }
+        .lightbox-nav.prev { left: 8px; }
+        .lightbox-nav.next { right: 8px; }
+        .lightbox-counter { top: 12px; left: 12px; font-size: 11px; padding: 6px 12px; }
+        .lightbox-thumbs { max-width: 90vw; bottom: 12px; }
+        .lightbox-thumb { width: 40px; height: 40px; }
+        .lightbox-caption { padding: 14px 16px; }
+        .lightbox-caption p { font-size: 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .lightbox,
+        .lightbox-image-wrapper,
+        .lightbox-caption,
+        .lightbox-close,
+        .lightbox-nav,
+        .lightbox-thumb,
+        .lightbox-progress-fill { transition: none !important; animation: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="moments-section" role="main">
+    <div class="container mx-auto max-w-7xl">
+
+        <!-- Retour accueil -->
+        <div class="mb-6">
+            <a href="{{ url_for('main.index') }}"
+               class="inline-flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-400/40 text-gray-300 hover:text-yellow-400 rounded-full font-semibold text-sm transition-all group">
+                <i class="fas fa-arrow-left text-yellow-400 group-hover:-translate-x-1 transition-transform" aria-hidden="true"></i>
+                <span>Retour à l'accueil</span>
+            </a>
+        </div>
+
+        <!-- En-tête -->
+        <header class="text-center mb-8 sm:mb-12">
+            <span class="inline-block px-5 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full text-yellow-400 text-xs sm:text-sm font-bold uppercase tracking-wider mb-5">
+                📸 Galerie officielle
+            </span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-5 leading-tight">
+                Moments <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">forts</span>
+            </h1>
+            <p class="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto px-2">
+                Revivez les meilleurs instants du concours Show Talent 4ème édition.
+            </p>
+            <div class="w-24 h-1.5 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-6 rounded-full"></div>
+        </header>
+
+        <!-- Filtres par session -->
+        {% if sessions %}
+        <nav class="flex flex-wrap gap-2 mb-8 justify-center" aria-label="Filtrer par dimanche">
+            <a href="{{ url_for('main.moments') }}"
+               class="session-filter {{ 'active' if not current_session_id else '' }}">
+                <i class="fas fa-globe" aria-hidden="true"></i>
+                Tous
+            </a>
+            {% for s in sessions %}
+            <a href="{{ url_for('main.moments', session_id=s.id) }}"
+               class="session-filter {{ 'active' if current_session_id == s.id else '' }}">
+                <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                Dimanche {{ s.number }}
+            </a>
+            {% endfor %}
+        </nav>
+        {% endif %}
+
+        <!-- Grille des moments -->
+        {% if moments %}
+        <div class="moments-grid" id="momentsGrid">
+            {% for m in moments %}
+            <article class="moment-card"
+                     data-moment-id="{{ m.id }}"
+                     data-moment-src="{{ m.image|upload_url('moments') }}"
+                     data-moment-caption="{{ m.caption|e if m.caption else '' }}"
+                     data-moment-session="{{ m.session.number if m.session else '' }}"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Agrandir : {{ m.caption|e if m.caption else 'Moment fort' }}">
+
+                {% if m.session %}
+                <span class="session-badge">D{{ m.session.number }}</span>
+                {% endif %}
+
+                <img src="{{ m.image|upload_url('moments') }}"
+                     alt="{{ m.caption|e if m.caption else 'Moment fort du concours' }}"
+                     loading="lazy"
+                     decoding="async"
+                     width="400"
+                     height="400"
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22%3E%3Crect fill=%22%230f1729%22 width=%22400%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23475569%22 font-family=%22sans-serif%22 font-size=%2240%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%F0%9F%93%B7%3C/text%3E%3C/svg%3E'">
+
+                {% if m.caption %}
+                <div class="moment-overlay">
+                    <p class="moment-caption">{{ m.caption }}</p>
+                </div>
+                {% endif %}
+
+                <button type="button"
+                        class="zoom-btn"
+                        aria-label="Agrandir l'image"
+                        onclick="event.stopPropagation(); openLightbox({{ loop.index0 }});">
+                    <i class="fas fa-expand text-xs" aria-hidden="true"></i>
+                </button>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav class="flex flex-wrap items-center justify-center gap-2 mt-10" aria-label="Pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('main.moments', page=pagination.prev_num, session_id=current_session_id) }}"
+               class="pagination-btn">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                <span class="hidden sm:inline">Précédent</span>
+            </a>
+            {% else %}
+            <span class="pagination-btn disabled">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                <span class="hidden sm:inline">Précédent</span>
+            </span>
+            {% endif %}
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <span class="pagination-btn active">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('main.moments', page=p, session_id=current_session_id) }}"
+                       class="pagination-btn">{{ p }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="text-gray-600 px-2">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('main.moments', page=pagination.next_num, session_id=current_session_id) }}"
+               class="pagination-btn">
+                <span class="hidden sm:inline">Suivant</span>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <span class="pagination-btn disabled">
+                <span class="hidden sm:inline">Suivant</span>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </span>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- État vide -->
+        <div class="glass-card rounded-3xl p-12 text-center max-w-md mx-auto">
+            <i class="fas fa-images text-5xl text-gray-600 mb-4" aria-hidden="true"></i>
+            <h2 class="text-xl font-bold text-white mb-3">Aucun moment disponible</h2>
+            <p class="text-gray-400 text-sm">
+                Les photos seront publiées prochainement.
+            </p>
+        </div>
+        {% endif %}
+
+    </div>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LIGHTBOX / CARROUSEL PLEIN ÉCRAN
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Galerie plein écran">
+
+    <!-- Barre de progression -->
+    <div class="lightbox-progress">
+        <div class="lightbox-progress-fill" id="lightboxProgress"></div>
+    </div>
+
+    <!-- Compteur -->
+    <div class="lightbox-counter">
+        <span class="current" id="lightboxCounterCurrent">1</span>
+        <span class="text-white/50"> / </span>
+        <span id="lightboxCounterTotal">{{ moments|length }}</span>
+    </div>
+
+    <!-- Bouton fermer -->
+    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Fermer la galerie">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Image + caption -->
+    <div class="lightbox-content">
+        <button type="button" class="lightbox-nav prev" id="lightboxPrev" aria-label="Image précédente">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="lightbox-image-wrapper" id="lightboxImageWrapper">
+            <img src="" alt="" class="lightbox-image" id="lightboxImage">
+
+            <div class="lightbox-caption" id="lightboxCaption" style="display: none;">
+                <span class="lightbox-session" id="lightboxSession" style="display: none;"></span>
+                <p id="lightboxCaptionText"></p>
+            </div>
+        </div>
+
+        <button type="button" class="lightbox-nav next" id="lightboxNext" aria-label="Image suivante">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Vignettes -->
+    {% if moments|length > 1 %}
+    <div class="lightbox-thumbs" id="lightboxThumbs">
+        {% for m in moments %}
+        <button type="button"
+                class="lightbox-thumb"
+                data-thumb-index="{{ loop.index0 }}"
+                aria-label="Aller à l'image {{ loop.index }}">
+            <img src="{{ m.image|upload_url('moments') }}"
+                 alt=""
+                 loading="lazy"
+                 decoding="async">
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+
+    // ═══════════════════════════════════════════════════════════
+    // DONNÉES DES IMAGES (depuis les cartes)
+    // ═══════════════════════════════════════════════════════════
+    var cards = Array.from(document.querySelectorAll('.moment-card'));
+    var slides = cards.map(function(card) {
+        return {
+            src: card.dataset.momentSrc,
+            caption: card.dataset.momentCaption || '',
+            session: card.dataset.momentSession || ''
+        };
+    });
+
+    if (slides.length === 0) return;
+
+    // ═══════════════════════════════════════════════════════════
+    // ÉLÉMENTS
+    // ═══════════════════════════════════════════════════════════
+    var lightbox = document.getElementById('lightbox');
+    var lightboxImage = document.getElementById('lightboxImage');
+    var lightboxImageWrapper = document.getElementById('lightboxImageWrapper');
+    var lightboxCaption = document.getElementById('lightboxCaption');
+    var lightboxCaptionText = document.getElementById('lightboxCaptionText');
+    var lightboxSession = document.getElementById('lightboxSession');
+    var lightboxClose = document.getElementById('lightboxClose');
+    var lightboxPrev = document.getElementById('lightboxPrev');
+    var lightboxNext = document.getElementById('lightboxNext');
+    var lightboxCounterCurrent = document.getElementById('lightboxCounterCurrent');
+    var lightboxCounterTotal = document.getElementById('lightboxCounterTotal');
+    var lightboxProgress = document.getElementById('lightboxProgress');
+    var lightboxThumbs = document.getElementById('lightboxThumbs');
+
+    lightboxCounterTotal.textContent = String(slides.length);
+
+    var currentIndex = 0;
+    var lastFocused = null;
+    var autoplayInterval = null;
+    var progressInterval = null;
+    var progressStartTime = 0;
+    var isPaused = false;
+    var AUTOPLAY_DELAY = 6000;
+    var PROGRESS_TICK = 50;
+
+    // ═══════════════════════════════════════════════════════════
+    // AFFICHER UNE IMAGE
+    // ═══════════════════════════════════════════════════════════
+    function showImage(index, animate) {
+        if (index < 0) index = slides.length - 1;
+        if (index >= slides.length) index = 0;
+
+        var slide = slides[index];
+
+        function applyImage() {
+            lightboxImage.src = slide.src;
+            lightboxImage.alt = slide.caption || 'Moment fort';
+
+            // Légende
+            if (slide.caption || slide.session) {
+                lightboxCaption.style.display = 'block';
+                if (slide.session) {
+                    lightboxSession.textContent = 'Dimanche ' + slide.session;
+                    lightboxSession.style.display = 'inline-block';
+                } else {
+                    lightboxSession.style.display = 'none';
+                }
+                lightboxCaptionText.textContent = slide.caption || '';
+            } else {
+                lightboxCaption.style.display = 'none';
+            }
+
+            // Compteur
+            lightboxCounterCurrent.textContent = String(index + 1);
+
+            // Vignettes
+            if (lightboxThumbs) {
+                Array.from(lightboxThumbs.children).forEach(function(t, i) {
+                    t.classList.toggle('active', i === index);
+                    if (i === index) {
+                        t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+            }
+
+            currentIndex = index;
+        }
+
+        if (animate) {
+            lightboxImageWrapper.classList.add('transitioning');
+            setTimeout(function() {
+                applyImage();
+                lightboxImageWrapper.classList.remove('transitioning');
+            }, 200);
+        } else {
+            applyImage();
+        }
+
+        // Reset progress
+        resetProgress();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PROGRESSION
+    // ═══════════════════════════════════════════════════════════
+    function resetProgress() {
+        if (progressInterval) clearInterval(progressInterval);
+        if (isPaused) {
+            lightboxProgress.style.width = '0%';
+            return;
+        }
+        progressStartTime = Date.now();
+        progressInterval = setInterval(function() {
+            var elapsed = Date.now() - progressStartTime;
+            var percent = Math.min((elapsed / AUTOPLAY_DELAY) * 100, 100);
+            lightboxProgress.style.width = percent + '%';
+        }, PROGRESS_TICK);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // AUTOPLAY
+    // ═══════════════════════════════════════════════════════════
+    function startAutoplay() {
+        stopAutoplay();
+        if (isPaused) return;
+        autoplayInterval = setInterval(function() {
+            showImage(currentIndex + 1, true);
+        }, AUTOPLAY_DELAY);
+        resetProgress();
+    }
+
+    function stopAutoplay() {
+        if (autoplayInterval) {
+            clearInterval(autoplayInterval);
+            autoplayInterval = null;
+        }
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // OUVRIR / FERMER
+    // ═══════════════════════════════════════════════════════════
+    window.openLightbox = function(index) {
+        lastFocused = document.activeElement;
+        showImage(index, false);
+        lightbox.classList.add('open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        lightboxClose.focus();
+        startAutoplay();
+    };
+
+    function closeLightbox() {
+        lightbox.classList.remove('open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        lightboxImage.src = '';
+        stopAutoplay();
+        if (lastFocused) lastFocused.focus();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════════
+    function goPrev() {
+        showImage(currentIndex - 1, true);
+        if (!isPaused) { stopAutoplay(); startAutoplay(); }
+    }
+
+    function goNext() {
+        showImage(currentIndex + 1, true);
+        if (!isPaused) { stopAutoplay(); startAutoplay(); }
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxPrev.addEventListener('click', function(e) { e.stopPropagation(); goPrev(); });
+    lightboxNext.addEventListener('click', function(e) { e.stopPropagation(); goNext(); });
+
+    // Clic sur le fond → fermer
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // CLIC SUR UNE CARTE
+    // ═══════════════════════════════════════════════════════════
+    cards.forEach(function(card, index) {
+        card.addEventListener('click', function() { openLightbox(index); });
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openLightbox(index);
+            }
+        });
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // VIGNETTES
+    // ═══════════════════════════════════════════════════════════
+    if (lightboxThumbs) {
+        Array.from(lightboxThumbs.children).forEach(function(thumb, i) {
+            thumb.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showImage(i, true);
+                if (!isPaused) { stopAutoplay(); startAutoplay(); }
+            });
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CLAVIER
+    // ═══════════════════════════════════════════════════════════
+    document.addEventListener('keydown', function(e) {
+        if (!lightbox.classList.contains('open')) return;
+
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') goPrev();
+        else if (e.key === 'ArrowRight') goNext();
+        else if (e.key === ' ') {
+            e.preventDefault();
+            isPaused = !isPaused;
+            if (isPaused) {
+                stopAutoplay();
+                lightboxProgress.style.width = '0%';
+            } else {
+                startAutoplay();
+            }
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // SWIPE MOBILE
+    // ═══════════════════════════════════════════════════════════
+    var touchStartX = 0;
+    lightbox.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', function(e) {
+        var diff = touchStartX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) goNext();
+            else goPrev();
+        }
+    }, { passive: true });
+
+    // ═══════════════════════════════════════════════════════════
+    // PAUSE AU SURVOL
+    // ═══════════════════════════════════════════════════════════
+    lightbox.addEventListener('mouseenter', function() {
+        if (!isPaused) stopAutoplay();
+    });
+    lightbox.addEventListener('mouseleave', function() {
+        if (!isPaused && lightbox.classList.contains('open')) startAutoplay();
+    });
+
+})();
+</script>
+{% endblock %}

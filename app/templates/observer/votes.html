@@ -1,0 +1,129 @@
+{% extends "observer/base.html" %}
+{% block title %}Votes publics{% endblock %}
+{% block page_title %}Votes publics{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-6">
+
+    <div>
+        <h1 class="text-2xl font-bold text-white">Votes publics</h1>
+        <p class="text-sm text-slate-400 mt-1">
+            Mode : <strong class="text-brand-400">{{ config.mode }}</strong>
+            · {{ 'Activé' if config.is_enabled else 'Désactivé' }}
+        </p>
+    </div>
+
+    <!-- Sélecteur de session -->
+    {% if config.mode == 'PER_SESSION' and sessions %}
+    <div class="flex flex-wrap gap-2">
+        {% for s in sessions %}
+        <a href="{{ url_for('observer.votes', session_id=s.id) }}"
+           class="px-4 py-2 rounded-xl text-sm font-medium transition
+                  {% if current_session and current_session.id == s.id %}
+                      bg-brand-500 text-white
+                  {% else %}
+                      bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10
+                  {% endif %}">
+            Dimanche {{ s.number }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="glass-card p-5">
+        <div class="text-xs text-slate-500 uppercase tracking-wider">Total des votes</div>
+        <div class="text-4xl font-black text-white mt-2">{{ total_votes }}</div>
+    </div>
+
+    <!-- Résultats -->
+    {% if results %}
+    <div class="glass-card p-5">
+        <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-bar text-brand-400"></i>
+            Résultats
+        </h2>
+
+        <div class="space-y-3">
+            {% for r in results %}
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center
+                            text-xs font-bold
+                    {% if loop.index == 1 %} bg-amber-500/20 text-amber-400
+                    {% elif loop.index == 2 %} bg-slate-400/20 text-slate-300
+                    {% elif loop.index == 3 %} bg-orange-700/30 text-orange-400
+                    {% else %} bg-white/5 text-gray-500 {% endif %}">
+                    {{ loop.index }}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm text-white font-medium truncate">
+                            {{ r.artist.user.full_name() }}
+                            <span class="text-slate-500 font-mono text-xs ml-2">
+                                {{ r.artist.code }}
+                            </span>
+                        </div>
+                        <div class="text-sm font-bold text-white whitespace-nowrap ml-2">
+                            {{ r.votes }}
+                            <span class="text-xs text-slate-500 font-normal">
+                                ({{ r.percentage }}%)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-brand-500 to-brand-400
+                                    rounded-full transition-all"
+                             style="width: {{ r.percentage }}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Liste des votants -->
+    <div class="glass-card overflow-hidden">
+        <div class="p-4 border-b border-white/5 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-users text-brand-400"></i>
+                Votants récents
+            </h2>
+            <span class="text-xs text-slate-500">{{ voters|length }} votant(s)</span>
+        </div>
+
+        {% if voters %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-white/[0.02]">
+                    <tr class="text-left text-xs uppercase text-slate-500">
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Votant</th>
+                        <th class="px-4 py-3">Artiste choisi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for v in voters %}
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-4 py-2.5 text-slate-400 text-xs whitespace-nowrap">
+                            {{ v.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-300">
+                            {{ v.voter_first_name }} {{ v.voter_last_name }}
+                        </td>
+                        <td class="px-4 py-2.5">
+                            <span class="text-slate-200">{{ v.artist.user.full_name() }}</span>
+                            <span class="text-slate-500 font-mono text-xs ml-2">{{ v.artist.code }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center text-slate-500 text-sm">Aucun votant.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "observer/base.html" %}
+{% block title %}Artistes{% endblock %}
+{% block page_title %}Artistes{% endblock %}
+
+{% block content %}
+<div class="py-6 px-4 lg:px-6 space-y-5">
+
+    <!-- Filtres -->
+    <div class="flex items-center justify-between flex-wrap gap-3">
+        <p class="text-sm text-slate-400">
+            {{ artists|length }} artiste(s) affiché(s)
+        </p>
+        <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox"
+                   {{ 'checked' if show_eliminated else '' }}
+                   onchange="window.location.href='{{ url_for('observer.artists') }}{{ '?eliminated=1' if not show_eliminated else '' }}'"
+                   class="w-4 h-4 rounded bg-slate-800 border-slate-700
+                          text-brand-500 focus:ring-brand-500 focus:ring-offset-slate-900">
+            <span class="text-slate-400">Inclure les éliminés</span>
+        </label>
+    </div>
+
+    <!-- Grille -->
+    {% if artists %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        {% for a in artists %}
+        <a href="{{ url_for('observer.artist_detail', artist_id=a.id) }}"
+           class="group glass-card overflow-hidden hover:border-brand-500/50 hover:-translate-y-0.5 transition">
+            <div class="aspect-square bg-slate-800 relative overflow-hidden">
+                {% if a.photo %}
+                    <img src="{{ a.photo|upload_url('artists') }}"
+                         alt="{{ a.user.full_name() }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center
+                                text-slate-600 text-5xl">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                {% endif %}
+
+                <!-- Badge statut -->
+                <div class="absolute top-2 left-2">
+                    {% if a.competition_status == 'ACTIVE' %}
+                        <span class="px-2 py-0.5 text-[10px] rounded-full
+                                     bg-emerald-500/90 text-white font-medium backdrop-blur">
+                            Actif
+                        </span>
+                    {% else %}
+                        <span class="px-2 py-0.5 text-[10px] rounded-full
+                                     bg-red-500/90 text-white font-medium backdrop-blur">
+                            Éliminé
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Code -->
+                <div class="absolute top-2 right-2 px-2 py-0.5 text-[10px]
+                            rounded-full bg-slate-900/80 text-slate-300
+                            font-mono backdrop-blur">
+                    {{ a.code }}
+                </div>
+            </div>
+
+            <div class="p-3">
+                <div class="text-sm font-medium text-white truncate
+                            group-hover:text-brand-400 transition">
+                    {{ a.user.full_name() }}
+                </div>
+                {% if a.address %}
+                <div class="text-xs text-slate-500 truncate mt-0.5">
+                    <i class="fas fa-location-dot mr-1"></i>{{ a.address }}
+                </div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <i class="fas fa-microphone-slash text-4xl text-slate-700 mb-3"></i>
+        <p class="text-slate-400">Aucun artiste à afficher.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
