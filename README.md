@@ -743,7 +743,7 @@ Toute reproduction, distribution ou utilisation commerciale sans autorisation é
 |---|---|
 | 📧 **Email** | [celysfritzgerald39@gmail.com](mailto:celysfritzgerald39@gmail.com) |
 | 📱 **Téléphone** | +509 3910-2160 |
-| 🌐 **Site** | [tondomaine.com](https://tondomaine.com) |
+| 🌐 **Site** | |
 | 📍 **Localisation** | Desbas d'Aquin, Haïti 🇭🇹 |
 
 </div>
