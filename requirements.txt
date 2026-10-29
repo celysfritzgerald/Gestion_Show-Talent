@@ -35,3 +35,4 @@ typing_extensions==4.16.0
 urllib3==2.8.0
 Werkzeug==2.3.6
 WTForms==3.0.1
+gevent>=24.0.0
