@@ -107,8 +107,6 @@ def upgrade():
         batch_op.alter_column('updated_at',
                existing_type=sa.DATETIME(),
                nullable=False)
-        batch_op.drop_constraint(batch_op.f('unique_score_per_evaluator'), type_='unique')
-        batch_op.create_unique_constraint('unique_score', ['artist_id', 'session_id', 'criterion_id'])
 
     with op.batch_alter_table('sponsors', schema=None) as batch_op:
         batch_op.alter_column('created_at',
@@ -158,8 +156,6 @@ def downgrade():
                nullable=True)
 
     with op.batch_alter_table('scores', schema=None) as batch_op:
-        batch_op.drop_constraint('unique_score', type_='unique')
-        batch_op.create_unique_constraint(batch_op.f('unique_score_per_evaluator'), ['artist_id', 'session_id', 'criterion_id', 'evaluator_id'])
         batch_op.alter_column('updated_at',
                existing_type=sa.DATETIME(),
                nullable=True)
