@@ -7,6 +7,7 @@ Create Date: 2026-09-25 16:14:39.098619
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -100,6 +101,9 @@ def upgrade():
                existing_type=sa.DATETIME(),
                nullable=False)
 
+    # ═══════════════════════════════════════════════════════════
+    # BLOC CORRIGÉ POUR 'scores'
+    # ═══════════════════════════════════════════════════════════
     with op.batch_alter_table('scores', schema=None) as batch_op:
         batch_op.alter_column('created_at',
                existing_type=sa.DATETIME(),
@@ -107,7 +111,16 @@ def upgrade():
         batch_op.alter_column('updated_at',
                existing_type=sa.DATETIME(),
                nullable=False)
-        batch_op.drop_constraint(batch_op.f('unique_score_per_evaluator'), type_='unique')
+        
+        # Vérification conditionnelle de la contrainte avant suppression
+        conn = op.get_bind()
+        result = conn.execute(text(
+            "SELECT 1 FROM pg_constraint WHERE conname = 'unique_score_per_evaluator'"
+        )).fetchone()
+        
+        if result:
+            batch_op.drop_constraint(batch_op.f('unique_score_per_evaluator'), type_='unique')
+            
         batch_op.create_unique_constraint('unique_score', ['artist_id', 'session_id', 'criterion_id'])
 
     with op.batch_alter_table('sponsors', schema=None) as batch_op:
