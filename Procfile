@@ -1,1 +1,1 @@
-web: python creer_admin.py && gunicorn "app:create_app('production')" --workers 4 --worker-class gevent --worker-connections 500 --bind 0.0.0.0:$PORT --timeout 60 --preload --access-logfile - --error-logfile -
+web: python -m flask db upgrade && gunicorn "app:create_app('production')" --workers 4 --worker-class gevent --worker-connections 500 --bind 0.0.0.0:$PORT --timeout 60 --preload --access-logfile - --error-logfile -
