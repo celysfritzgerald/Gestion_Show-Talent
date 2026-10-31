@@ -2289,3 +2289,37 @@ def vote_settings():
         current_app.logger.exception("Détail")
         flash('Erreur lors du chargement.', 'danger')
         return redirect(url_for('admin.votes_dashboard'))
+
+# ═══════════════════════════════════════════════════════════
+# GESTION DES COMMENTAIRES DES JURYS
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/comments')
+@admin_required
+@rate_limit(limit_per_minute=120)
+def comments():
+    """Vue globale de tous les commentaires laissés par les jurys."""
+    try:
+        # Pagination pour éviter de surcharger la page
+        page = request.args.get('page', 1, type=int)
+        
+        # Récupération des commentaires avec les relations (jury, artiste, session)
+        pagination = (
+            Comment.query
+            .join(User, Comment.jury_id == User.id)
+            .join(Artist, Comment.artist_id == Artist.id)
+            .join(CompetitionSession, Comment.session_id == CompetitionSession.id)
+            .order_by(Comment.created_at.desc())
+            .paginate(page=page, per_page=30, error_out=False)
+        )
+
+        return render_template(
+            'admin/comments.html',
+            comments=pagination.items,
+            pagination=pagination,
+            now=datetime.utcnow(),
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur admin.comments: {e}")
+        flash("Erreur lors du chargement des commentaires.", "danger")
+        return redirect(url_for('admin.dashboard'))

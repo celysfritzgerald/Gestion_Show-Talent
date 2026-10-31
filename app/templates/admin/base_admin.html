@@ -184,6 +184,11 @@
     <i class="fas fa-cog w-5 text-center"></i>
     <span class="font-medium">Config. vote</span>
 </a>
+<a href="{{ url_for('admin.comments') }}"
+   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white {% if request.endpoint == 'admin.comments' %}active{% endif %}">
+    <i class="fas fa-comments w-5 text-center"></i>
+    <span class="font-medium">Commentaires Jurys</span>
+</a>
 
                 <!-- ═══ SECTION ANALYSE ═══ -->
                 <div class="pt-3 mt-3 border-t border-white/5">

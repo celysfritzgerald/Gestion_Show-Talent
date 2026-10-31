@@ -1,0 +1,102 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Commentaires des Jurys · Admin{% endblock %}
+
+{% block content %}
+<div class="section-dark py-8">
+    <div class="container mx-auto px-4 max-w-5xl">
+
+        <!-- En-tête -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                    <i class="fas fa-comments text-yellow-400"></i>
+                    Commentaires des Jurys
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">
+                    Retrouvez ici l'intégralité des retours laissés par les membres du jury.
+                </p>
+            </div>
+            <div class="text-sm text-gray-400">
+                <i class="fas fa-calendar-alt mr-1"></i> {{ now.strftime('%d/%m/%Y') if now else '' }}
+            </div>
+        </div>
+
+        {% if comments %}
+        <div class="space-y-4">
+            {% for c in comments %}
+            <div class="glass-card p-5 hover:border-yellow-400/30 transition">
+                
+                <!-- En-tête du commentaire -->
+                <div class="flex flex-wrap items-start justify-between gap-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">
+                            {{ c.jury.first_name[0] }}{{ c.jury.last_name[0] }}
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-white">
+                                {{ c.jury.full_name() }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Jury
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg">
+                        <span class="text-yellow-400"><i class="fas fa-user mr-1"></i> {{ c.artist.user.full_name() }}</span>
+                        <span class="text-gray-600">|</span>
+                        <span><i class="fas fa-calendar-day mr-1"></i> Dimanche {{ c.session.number }}</span>
+                    </div>
+                </div>
+
+                <!-- Contenu du commentaire -->
+                <div class="bg-white/[0.02] border border-white/5 rounded-xl p-4 mb-3">
+                    <p class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{{ c.comment }}</p>
+                </div>
+
+                <!-- Date et heure -->
+                <div class="flex items-center justify-end text-[10px] text-gray-500 font-mono">
+                    <i class="fas fa-clock mr-1"></i>
+                    {{ c.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav class="flex flex-wrap items-center justify-center gap-2 mt-8">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin.comments', page=pagination.prev_num) }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 transition">
+                <i class="fas fa-chevron-left mr-1"></i> Précédent
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 bg-yellow-400 text-[#0B1120] font-bold rounded-lg">
+                {{ pagination.page }} / {{ pagination.pages }}
+            </span>
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin.comments', page=pagination.next_num) }}" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 transition">
+                Suivant <i class="fas fa-chevron-right ml-1"></i>
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- État vide -->
+        <div class="glass-card rounded-2xl p-12 text-center">
+            <i class="fas fa-comment-slash text-5xl text-gray-600 mb-4"></i>
+            <h2 class="text-xl font-bold text-white mb-2">Aucun commentaire</h2>
+            <p class="text-gray-400 text-sm">
+                Les jurys n'ont pas encore laissé de commentaires.
+            </p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
