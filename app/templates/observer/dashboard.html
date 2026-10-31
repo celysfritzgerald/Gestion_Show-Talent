@@ -156,35 +156,7 @@
             </div>
             {% endif %}
 
-            <!-- Derniers commentaires -->
-            {% if 'artists' in sections %}
-            <div class="glass-card p-5">
-                <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                    <i class="fas fa-comments text-emerald-400"></i>
-                    Derniers commentaires de jurys
-                </h2>
-
-                {% if recent_comments %}
-                <div class="space-y-3">
-                    {% for c in recent_comments %}
-                    <div class="border-b border-slate-800/50 last:border-0 pb-3 last:pb-0">
-                        <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
-                            <i class="fas fa-gavel text-slate-600"></i>
-                            <span>{{ c.jury.full_name() }}</span>
-                            <span class="text-slate-600">·</span>
-                            <span>→ {{ c.artist.code }}</span>
-                            <span class="text-slate-600 ml-auto">
-                                {{ c.created_at.strftime('%d/%m %H:%M') }}
-                            </span>
-                        </div>
-                        <p class="text-sm text-slate-300 line-clamp-2">{{ c.comment }}</p>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-sm text-slate-500 text-center py-6">Aucun commentaire.</p>
-                {% endif %}
-            </div>
+            
             {% endif %}
         </div>
 

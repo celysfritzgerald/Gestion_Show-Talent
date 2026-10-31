@@ -161,33 +161,6 @@
         {% endif %}
     </div>
 
-    <!-- Commentaires -->
-    {% if comments %}
-    <div class="glass-card p-5">
-        <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-comments text-emerald-400"></i>
-            Commentaires ({{ comments|length }})
-        </h2>
-
-        <div class="space-y-3">
-            {% for c in comments %}
-            <div class="border border-white/5 rounded-lg p-3">
-                <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-gavel text-slate-600"></i>
-                        <span class="text-slate-300 font-medium">
-                            {{ c.jury.full_name() if c.jury else '—' }}
-                        </span>
-                        <span class="text-slate-600">·</span>
-                        <span>Session #{{ c.session_id }}</span>
-                    </div>
-                    <span>{{ c.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
-                </div>
-                <p class="text-sm text-slate-300">{{ c.comment }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+    
 </div>
 {% endblock %}

@@ -119,7 +119,7 @@ def create_app(config_name=None):
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "script-src 'self' 'unsafe-inline'  "
                 "https://cdn.tailwindcss.com "
                 "https://cdnjs.cloudflare.com "
                 "https://cdn.jsdelivr.net; "

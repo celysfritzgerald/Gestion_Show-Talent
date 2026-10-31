@@ -13,7 +13,7 @@ from sqlalchemy import func
 from app import db
 from app.models import (
     User, Artist, CompetitionSession, Criterion,
-    Assignment, Score, Comment,
+    Assignment, Score,
     Sponsor, FinanceCategory, FinanceTransaction,
     PublicVote, VoteConfig, VoteSession,
     Lyric, Poll, PollOption, PollVote,
@@ -66,7 +66,6 @@ def dashboard():
         new_messages_count = 0
         recent_votes = []
         recent_transactions = []
-        recent_comments = []
 
         if 'messages' in sections:
             new_messages_count = ContactMessage.query.filter_by(status='NEW').count()
@@ -85,13 +84,6 @@ def dashboard():
                 .limit(5).all()
             )
 
-        if 'artists' in sections:
-            recent_comments = (
-                Comment.query
-                .order_by(Comment.created_at.desc())
-                .limit(5).all()
-            )
-
         return render_template(
             'observer/dashboard.html',
             sections=sections,
@@ -99,7 +91,6 @@ def dashboard():
             sessions=sessions,
             recent_votes=recent_votes,
             recent_transactions=recent_transactions,
-            recent_comments=recent_comments,
             new_messages_count=new_messages_count,
             now=datetime.utcnow(),
         )
@@ -120,10 +111,13 @@ def dashboard():
 @rate_limit(limit_per_minute=120)
 def artists():
     try:
-        show_eliminated = request.args.get('eliminated', '0') == '1'
+        # Par défaut, on affiche TOUT LE MONDE (y compris les éliminés)
+        show_eliminated = request.args.get('eliminated', '1') == '1' 
+        
         q = Artist.query
         if not show_eliminated:
             q = q.filter(Artist.competition_status == 'ACTIVE')
+            
         artists_list = q.order_by(Artist.code).all()
 
         return render_template(
@@ -167,12 +161,7 @@ def artist_detail(artist_id):
                     'complete': len(scores) == 10,
                 }
 
-        comments = (
-            Comment.query
-            .filter_by(artist_id=artist.id)
-            .order_by(Comment.created_at.desc())
-            .all()
-        )
+        # NOTE: Les commentaires des jurys ne sont PAS chargés pour l'observateur
 
         ranking = compute_ranking(include_eliminated=True)
         artist_rank = next(
@@ -189,7 +178,6 @@ def artist_detail(artist_id):
             sections=get_observer_sections(),
             artist=artist,
             session_scores=session_scores,
-            comments=comments,
             artist_rank=artist_rank,
             artist_entry=artist_entry,
             sessions=sessions,
