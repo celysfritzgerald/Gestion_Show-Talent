@@ -66,7 +66,6 @@
 <div class="flex min-h-screen">
 
     <!-- ══════════ SIDEBAR ══════════ -->
-    <!-- Ajout de "transition-transform" et de l'ID "sidebar" -->
     <aside id="sidebar"
         class="fixed lg:static inset-y-0 left-0 z-40 w-64
                bg-[#0f1729] border-r border-white/5
@@ -84,9 +83,8 @@
                 </div>
             </div>
 
-            <!-- Bouton fermer (mobile) -->
-            <button type="button" onclick="toggleSidebar()"
-                    class="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-400 transition">
+            <!-- Bouton fermer sur mobile -->
+            <button type="button" onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-400 transition">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -108,7 +106,8 @@
                 ('messages', 'observer.messages', 'Messages',         'fa-envelope'),
             ] %}
 
-            <a href="{{ url_for('observer.dashboard') }}"
+            <!-- Dashboard -->
+            <a href="{{ url_for('observer.dashboard') }}" onclick="closeSidebar()"
                class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                       hover:text-white text-sm
                       {% if request.endpoint == 'observer.dashboard' %}active{% endif %}">
@@ -124,7 +123,7 @@
                 {% for perm_key, endpoint, label, icon in all_nav %}
                     {% if perm_key == 'scores' %}
                         {% if 'artists' in sections %}
-                        <a href="{{ url_for(endpoint) }}"
+                        <a href="{{ url_for(endpoint) }}" onclick="closeSidebar()"
                            class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                                   hover:text-white text-sm
                                   {% if request.endpoint == endpoint %}active{% endif %}">
@@ -134,7 +133,7 @@
                         {% endif %}
                     {% else %}
                         {% if perm_key in sections %}
-                        <a href="{{ url_for(endpoint) }}"
+                        <a href="{{ url_for(endpoint) }}" onclick="closeSidebar()"
                            class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                                   hover:text-white text-sm
                                   {% if request.endpoint == endpoint %}active{% endif %}">
@@ -160,8 +159,8 @@
         </nav>
     </aside>
 
-    <!-- Overlay mobile (caché par défaut) -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()"
+    <!-- ══════════ OVERLAY mobile ══════════ -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden hidden"></div>
 
     <!-- ══════════ MAIN ══════════ -->
@@ -173,8 +172,8 @@
                        sticky top-0 z-20">
             <div class="flex items-center gap-3">
 
-                <!-- Bouton hamburger -->
-                <button type="button" onclick="toggleSidebar()"
+                <!-- ✅ BOUTON HAMBURGER -->
+                <button type="button" onclick="openSidebar()"
                         class="lg:hidden p-2 rounded-lg hover:bg-white/5 text-gray-300 transition active:scale-95"
                         aria-label="Ouvrir le menu">
                     <i class="fas fa-bars text-xl"></i>
@@ -235,32 +234,36 @@
     </div>
 </div>
 
-<!-- ══════════ LE SCRIPT QUI FÈ MENI AN MACHE (SANS ALPINE) ══════════ -->
+<!-- ══════════ JAVASCRIPT NATIF (SANS ALPINE.JS) ══════════ -->
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        
-        // Si la sidebar est cachée (sur mobile), on l'affiche
-        if (sidebar.classList.contains('-translate-x-full')) {
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
-            overlay.classList.remove('hidden');
-        } else {
-            // Sinon on la cache
-            sidebar.classList.add('-translate-x-full');
-            sidebar.classList.remove('translate-x-0');
-            overlay.classList.add('hidden');
-        }
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    // Fonction pour ouvrir le menu
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        overlay.classList.remove('hidden');
     }
 
-    // Fermer avec la touche Echap
+    // Fonction pour fermer le menu
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('translate-x-0');
+        overlay.classList.add('hidden');
+    }
+
+    // Fermer avec la touche Échap
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
-                toggleSidebar();
-            }
+            closeSidebar();
+        }
+    });
+
+    // Fermer automatiquement si on redimensionne vers un écran PC
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            closeSidebar();
         }
     });
 </script>
