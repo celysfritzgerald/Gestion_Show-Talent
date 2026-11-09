@@ -57,14 +57,12 @@ def create_app(config_name=None):
     from app.artist_routes import artist_bp
     from app.observer_routes import observer_bp      # ⬅️ AJOUT
 
-
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(jury_bp, url_prefix='/jury')
     app.register_blueprint(artist_bp, url_prefix='/artist')
     app.register_blueprint(observer_bp, url_prefix='/observer')              # ⬅️ AJOUT
-
 
     create_upload_directories(app)
     register_error_handlers(app)
@@ -115,11 +113,11 @@ def create_app(config_name=None):
         response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
 
-        # ─── CSP resserrée (unsafe-eval retiré, connect-src restreint) ───
+        # ─── CSP ───
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'unsafe-eval  "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "  # ⬅️ ESPAS LA AJOUTE
                 "https://cdn.tailwindcss.com "
                 "https://cdnjs.cloudflare.com "
                 "https://cdn.jsdelivr.net; "
@@ -203,7 +201,7 @@ def _setup_logging(app, config_name):
 def create_upload_directories(app):
     """Création sécurisée des dossiers d'upload"""
     upload_base = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-    for subfolder in ['artists', 'moments', 'sponsors', 'lyrics', 'votes'  ]:
+    for subfolder in ['artists', 'moments', 'sponsors', 'lyrics', 'votes']:
         path = os.path.join(upload_base, subfolder)
         os.makedirs(path, exist_ok=True)
         gitkeep = os.path.join(path, '.gitkeep')
