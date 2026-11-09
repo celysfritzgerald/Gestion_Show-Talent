@@ -63,10 +63,11 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="min-h-screen" x-data="{ sidebarOpen: false }">
+<!-- ⚠️ On utilise le composant déclaré dans le script plus bas -->
+<body class="min-h-screen" x-data="observerSidebar">
 
-<!-- Alpine.js -->
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- 1. Version CSP d'Alpine.js (Pas besoin de 'unsafe-eval') -->
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/csp@3.x.x/dist/cdn.min.js"></script>
 
 <div class="flex min-h-screen">
 
@@ -93,13 +94,13 @@
             </div>
 
             <!-- Fermer sur mobile -->
-            <button type="button" @click="sidebarOpen = false"
+            <button type="button" @click="close()"
                     class="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-400 transition">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
 
-        <!-- Menu -->
+        <!-- Menu (filtré selon permissions) -->
         <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
 
             {% set all_nav = [
@@ -117,7 +118,7 @@
             ] %}
 
             <!-- Dashboard -->
-            <a href="{{ url_for('observer.dashboard') }}" @click="sidebarOpen = false"
+            <a href="{{ url_for('observer.dashboard') }}" @click="close()"
                class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                       hover:text-white text-sm
                       {% if request.endpoint == 'observer.dashboard' %}active{% endif %}">
@@ -133,7 +134,7 @@
                 {% for perm_key, endpoint, label, icon in all_nav %}
                     {% if perm_key == 'scores' %}
                         {% if 'artists' in sections %}
-                        <a href="{{ url_for(endpoint) }}" @click="sidebarOpen = false"
+                        <a href="{{ url_for(endpoint) }}" @click="close()"
                            class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                                   hover:text-white text-sm
                                   {% if request.endpoint == endpoint %}active{% endif %}">
@@ -143,7 +144,7 @@
                         {% endif %}
                     {% else %}
                         {% if perm_key in sections %}
-                        <a href="{{ url_for(endpoint) }}" @click="sidebarOpen = false"
+                        <a href="{{ url_for(endpoint) }}" @click="close()"
                            class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300
                                   hover:text-white text-sm
                                   {% if request.endpoint == endpoint %}active{% endif %}">
@@ -171,7 +172,7 @@
 
     <!-- Overlay mobile -->
     <div x-show="sidebarOpen" x-cloak x-transition.opacity.duration.200ms
-         @click="sidebarOpen = false"
+         @click="close()"
          class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"></div>
 
     <!-- ══════════ MAIN ══════════ -->
@@ -182,9 +183,11 @@
                        bg-[#0f1729]/80 backdrop-blur border-b border-white/5
                        sticky top-0 z-20">
             <div class="flex items-center gap-3">
-                <!-- Bouton hamburger -->
-                <button type="button" @click="sidebarOpen = !sidebarOpen"
-                        class="lg:hidden p-2 rounded-lg hover:bg-white/5 text-gray-300 transition active:scale-95"
+
+                <!-- ✅ Bouton hamburger -->
+                <button type="button" @click="toggle()"
+                        class="lg:hidden p-2 rounded-lg hover:bg-white/5 text-gray-300
+                               transition active:scale-95"
                         aria-label="Ouvrir le menu">
                     <i class="fas fa-bars text-xl" x-show="!sidebarOpen"></i>
                     <i class="fas fa-times text-xl" x-show="sidebarOpen" x-cloak></i>
@@ -250,24 +253,14 @@
     </div>
 </div>
 
-<!-- Script fermeture auto -->
+<!-- 2. Déclaration des fonctions pour la version CSP (Sans unsafe-eval) -->
 <script>
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 1024) {
-            var sidebar = document.getElementById('observer-sidebar');
-            if (sidebar && sidebar.__x) {
-                sidebar.__x.$data.sidebarOpen = false;
-            }
-        }
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            var sidebar = document.getElementById('observer-sidebar');
-            if (sidebar && sidebar.__x) {
-                sidebar.__x.$data.sidebarOpen = false;
-            }
-        }
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('observerSidebar', () => ({
+            sidebarOpen: false,
+            toggle() { this.sidebarOpen = !this.sidebarOpen },
+            close() { this.sidebarOpen = false }
+        }))
     });
 </script>
 
