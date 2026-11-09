@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Artistes · Show Talent</title>
+    <title>{% block title %}Observateur{% endblock %} · Show Talent</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -57,6 +57,8 @@
         ::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.2); border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(249, 115, 22, 0.35); }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 
 <body class="min-h-screen">
@@ -91,7 +93,7 @@
         <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
 
             <!-- Dashboard -->
-            <a href="/observer/" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+            <a href="/observer/" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.dashboard' %}active{% endif %}">
                 <i class="fas fa-home w-5 text-center"></i>
                 <span class="font-medium">Dashboard</span>
             </a>
@@ -101,58 +103,57 @@
                     Sections autorisées
                 </div>
 
-                <a href="/observer/artists" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm active">
+                <!-- Atik yo -->
+                <a href="/observer/artists" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.artists' %}active{% endif %}">
                     <i class="fas fa-microphone w-5 text-center"></i>
                     <span class="font-medium">Artistes</span>
                 </a>
-                <a href="/observer/scores" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/scores" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.scores' %}active{% endif %}">
                     <i class="fas fa-table-list w-5 text-center"></i>
                     <span class="font-medium">Notes détaillées</span>
                 </a>
-                <a href="/observer/juries" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/juries" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.juries' %}active{% endif %}">
                     <i class="fas fa-gavel w-5 text-center"></i>
                     <span class="font-medium">Jurys</span>
                 </a>
-                <a href="/observer/ranking" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/ranking" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.ranking' %}active{% endif %}">
                     <i class="fas fa-trophy w-5 text-center"></i>
                     <span class="font-medium">Classement</span>
                 </a>
-                <a href="/observer/sponsors" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/sponsors" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.sponsors' %}active{% endif %}">
                     <i class="fas fa-handshake w-5 text-center"></i>
                     <span class="font-medium">Sponsors</span>
                 </a>
-                <a href="/observer/finance" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/finance" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.finance' %}active{% endif %}">
                     <i class="fas fa-coins w-5 text-center"></i>
                     <span class="font-medium">Finance</span>
                 </a>
-                <a href="/observer/votes" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/votes" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.votes' %}active{% endif %}">
                     <i class="fas fa-check-to-slot w-5 text-center"></i>
                     <span class="font-medium">Votes publics</span>
                 </a>
-                <a href="/observer/polls" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/polls" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.polls' %}active{% endif %}">
                     <i class="fas fa-square-poll-vertical w-5 text-center"></i>
                     <span class="font-medium">Sondages</span>
                 </a>
-                <a href="/observer/lyrics" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/lyrics" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.lyrics' %}active{% endif %}">
                     <i class="fas fa-music w-5 text-center"></i>
                     <span class="font-medium">Paroles</span>
                 </a>
-                <a href="/observer/moments" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/moments" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.moments' %}active{% endif %}">
                     <i class="fas fa-images w-5 text-center"></i>
                     <span class="font-medium">Moments</span>
                 </a>
-                <a href="/observer/messages" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm">
+                <a href="/observer/messages" class="nav-link sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-300 hover:text-white text-sm {% if request.endpoint == 'observer.messages' %}active{% endif %}">
                     <i class="fas fa-envelope w-5 text-center"></i>
                     <span class="font-medium">Messages</span>
                 </a>
             </div>
 
             <div class="pt-3 mt-3 border-t border-white/5">
-                <form action="/auth/logout" method="POST">
-                    <input type="hidden" name="csrf_token" value="IjJjNTJmNzY1MjQ5Yzk3NGJmMDEwODU5ZWZmM2RmMzM0MGVhNzY2MjAi.avHwvA.t58QaRcb7Zv_UZF93R_HFNK7EZc">
-                    <button type="submit"
-                            class="sidebar-link w-full flex items-center gap-3 px-4 py-2.5
-                                   rounded-lg text-gray-400 hover:text-red-400 text-sm">
+                <form action="{{ url_for('auth.logout') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="sidebar-link w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-400 hover:text-red-400 text-sm">
                         <i class="fas fa-right-from-bracket w-5 text-center"></i>
                         <span class="font-medium">Déconnexion</span>
                     </button>
@@ -181,18 +182,18 @@
                 </button>
 
                 <h1 class="text-base font-semibold text-white">
-                    Artistes
+                    {% block page_title %}Observateur{% endblock %}
                 </h1>
             </div>
 
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block">
-                    <div class="text-xs font-medium text-white">Wensley wensley</div>
+                    <div class="text-xs font-medium text-white">{{ session.user_name }}</div>
                     <div class="text-[10px] text-orange-400">Observateur</div>
                 </div>
                 <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-600
                             flex items-center justify-center text-white text-sm font-bold">
-                    W
+                    {{ session.user_name[0] if session.user_name else '?' }}
                 </div>
             </div>
         </header>
@@ -208,14 +209,34 @@
             </span>
         </div>
 
-        <!-- Contenu -->
+        <!-- Flash messages -->
+        <div class="px-4 lg:px-6 pt-4 space-y-2">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm
+                        {% if category == 'success' %} bg-emerald-500/10 border-emerald-500/30 text-emerald-300
+                        {% elif category == 'danger'  %} bg-red-500/10     border-red-500/30     text-red-300
+                        {% elif category == 'warning' %} bg-amber-500/10   border-amber-500/30   text-amber-300
+                        {% else %}                       bg-slate-800/60   border-slate-700      text-slate-300 {% endif %}">
+                        <i class="fas
+                            {% if category == 'success' %}fa-circle-check
+                            {% elif category == 'danger'  %}fa-circle-exclamation
+                            {% elif category == 'warning' %}fa-triangle-exclamation
+                            {% else %}fa-circle-info{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endwith %}
+        </div>
+
+        <!-- ✅ KONTNI PAJ LA -->
         <main class="flex-1 overflow-y-auto">
             {% block content %}{% endblock %}
         </main>
     </div>
 </div>
 
-<!-- ══════════ SCRIPT SANS ERREUR CSP ══════════ -->
+<!-- ══════════ SCRIPT SAN ERÈ CSP ══════════ -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
@@ -224,7 +245,6 @@
         const btnClose = document.getElementById('close-sidebar-btn');
         const navLinks = document.querySelectorAll('.nav-link');
 
-        // Ouvrir le menu
         if (btnOpen) {
             btnOpen.addEventListener('click', function() {
                 sidebar.classList.remove('-translate-x-full');
@@ -233,30 +253,25 @@
             });
         }
 
-        // Fonction pour fermer le menu
         function closeSidebar() {
             sidebar.classList.add('-translate-x-full');
             sidebar.classList.remove('translate-x-0');
             overlay.classList.add('hidden');
         }
 
-        // Fermer avec le bouton X
         if (btnClose) btnClose.addEventListener('click', closeSidebar);
-
-        // Fermer en cliquant sur l'overlay
         if (overlay) overlay.addEventListener('click', closeSidebar);
 
-        // Fermer automatiquement quand on clique sur un lien
         navLinks.forEach(function(link) {
             link.addEventListener('click', closeSidebar);
         });
 
-        // Fermer avec la touche Echap
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeSidebar();
         });
     });
 </script>
 
+{% block scripts %}{% endblock %}
 </body>
 </html>
