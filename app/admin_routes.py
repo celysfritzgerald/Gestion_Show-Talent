@@ -2333,10 +2333,10 @@ def analytics():
         from datetime import datetime, timedelta
         from sqlalchemy import func, distinct
 
-        # Période d'analyse : 30 derniers jours
+        # Période : 30 derniers jours
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
-        # 1. Métriques Principales
+        # 1. Métriques Principales (avec des valeurs par défaut à 0)
         total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
         
         unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
@@ -2346,12 +2346,15 @@ def analytics():
             .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
 
         # Taux de rebond (Sessions avec 1 seule page vue)
-        sessions_with_one_view = db.session.query(VisitorLog.session_id)\
+        # On utilise une sous-requête pour éviter les erreurs SQLAlchemy
+        subq = db.session.query(VisitorLog.session_id)\
             .filter(VisitorLog.timestamp >= thirty_days_ago)\
             .group_by(VisitorLog.session_id)\
-            .having(func.count(VisitorLog.id) == 1).count()
+            .having(func.count(VisitorLog.id) == 1).subquery()
+        
+        sessions_with_one_view = db.session.query(subq).count()
             
-        bounce_rate = round((sessions_with_one_view / total_sessions * 100), 1) if total_sessions > 0 else 0
+        bounce_rate = round((sessions_with_one_view / total_sessions * 100), 1) if total_sessions > 0 else 0.0
 
         # 2. Utilisateurs en temps réel (5 dernières minutes)
         five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
@@ -2378,6 +2381,10 @@ def analytics():
          .group_by(VisitorLog.referrer)\
          .order_by(func.count(VisitorLog.id).desc()).limit(5).all()
 
+        # Si aucun appareil trouvé, on met une liste vide pour le graphique
+        if not devices:
+            devices = [('Desktop', 0)]
+
         return render_template(
             'admin/analytics.html',
             total_pageviews=total_pageviews,
@@ -2391,6 +2398,9 @@ def analytics():
             now=datetime.utcnow()
         )
     except Exception as e:
-        current_app.logger.error(f"Erreur analytics: {e}")
-        flash("Erreur lors du chargement des statistiques.", "danger")
+        db.session.rollback()
+        # Affiche l'erreur EXACTE dans les logs Railway
+        current_app.logger.error(f"Erreur analytics: {str(e)}")
+        current_app.logger.exception("Détail de l'erreur")
+        flash(f"Erreur: {str(e)}", "danger") # <-- Affiche l'erreur réelle sur l'écran
         return redirect(url_for('admin.dashboard'))
