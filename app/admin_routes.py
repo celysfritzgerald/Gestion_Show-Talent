@@ -2324,83 +2324,43 @@ def comments():
         flash("Erreur lors du chargement des commentaires.", "danger")
         return redirect(url_for('admin.dashboard'))
 
-@admin_bp.route('/analytics')
+@admin_bp.route('/api/analytics-data')
 @admin_required
-def analytics():
-    """Tableau de bord Analytics inspiré de Google Analytics."""
+def api_analytics_data():
+    """API pour rafraîchir les statistiques en temps réel."""
     try:
         from app.models import VisitorLog
         from datetime import datetime, timedelta
         from sqlalchemy import func, distinct
 
-        # Période : 30 derniers jours
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
 
-        # 1. Métriques Principales (avec des valeurs par défaut à 0)
+        # Chif prensipal yo
         total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
-        
         unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
             .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-            
         total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
             .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-
-        # Taux de rebond (Sessions avec 1 seule page vue)
-        # On utilise une sous-requête pour éviter les erreurs SQLAlchemy
-        subq = db.session.query(VisitorLog.session_id)\
-            .filter(VisitorLog.timestamp >= thirty_days_ago)\
-            .group_by(VisitorLog.session_id)\
-            .having(func.count(VisitorLog.id) == 1).subquery()
-        
-        sessions_with_one_view = db.session.query(subq).count()
-            
-        bounce_rate = round((sessions_with_one_view / total_sessions * 100), 1) if total_sessions > 0 else 0.0
-
-        # 2. Utilisateurs en temps réel (5 dernières minutes)
-        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
         active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
             .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
 
-        # 3. Top Pages
-        top_pages = db.session.query(
-            VisitorLog.path, func.count(VisitorLog.id).label('views')
-        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
-         .group_by(VisitorLog.path)\
-         .order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+        # Dènye 10 vizitè yo pou tablo an
+        latest_logs = VisitorLog.query.order_by(VisitorLog.timestamp.desc()).limit(10).all()
+        logs_data = [{
+            'time': log.timestamp.strftime('%H:%M:%S'),
+            'path': log.path,
+            'ip': log.ip_address,
+            'device': log.device_type
+        } for log in latest_logs]
 
-        # 4. Répartition par Appareil
-        devices = db.session.query(
-            VisitorLog.device_type, func.count(VisitorLog.id)
-        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
-         .group_by(VisitorLog.device_type).all()
-
-        # 5. Sources de trafic
-        sources = db.session.query(
-            VisitorLog.referrer, func.count(VisitorLog.id)
-        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
-         .group_by(VisitorLog.referrer)\
-         .order_by(func.count(VisitorLog.id).desc()).limit(5).all()
-
-        # Si aucun appareil trouvé, on met une liste vide pour le graphique
-        if not devices:
-            devices = [('Desktop', 0)]
-
-        return render_template(
-            'admin/analytics.html',
-            total_pageviews=total_pageviews,
-            unique_visitors=unique_visitors,
-            total_sessions=total_sessions,
-            bounce_rate=bounce_rate,
-            active_users=active_users,
-            top_pages=top_pages,
-            devices=devices,
-            sources=sources,
-            now=datetime.utcnow()
-        )
+        return jsonify({
+            'success': True,
+            'active_users': active_users,
+            'total_pageviews': total_pageviews,
+            'unique_visitors': unique_visitors,
+            'total_sessions': total_sessions,
+            'latest_logs': logs_data
+        })
     except Exception as e:
-        db.session.rollback()
-        # Affiche l'erreur EXACTE dans les logs Railway
-        current_app.logger.error(f"Erreur analytics: {str(e)}")
-        current_app.logger.exception("Détail de l'erreur")
-        flash(f"Erreur: {str(e)}", "danger") # <-- Affiche l'erreur réelle sur l'écran
-        return redirect(url_for('admin.dashboard'))
+        return jsonify({'success': False, 'error': str(e)}), 500
