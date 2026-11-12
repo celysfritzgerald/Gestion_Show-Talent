@@ -425,7 +425,7 @@ class ObserverPermission(db.Model):
     def __repr__(self):
         return f"<ObserverPermission user_id={self.user_id}>"
 
- class VisitorLog(db.Model):
+class VisitorLog(db.Model):
     __tablename__ = 'visitor_logs'
 
     id = db.Column(db.Integer, primary_key=True)
