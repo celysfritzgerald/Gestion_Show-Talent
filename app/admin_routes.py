@@ -2324,47 +2324,6 @@ def comments():
         flash("Erreur lors du chargement des commentaires.", "danger")
         return redirect(url_for('admin.dashboard'))
 
-@admin_bp.route('/api/analytics-data')
-@admin_required
-def api_analytics_data():
-    """API pour rafraîchir les statistiques en temps réel."""
-    try:
-        from app.models import VisitorLog
-        from datetime import datetime, timedelta
-        from sqlalchemy import func, distinct
-
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
-
-        # Chif prensipal yo
-        total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
-        unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
-            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-        total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
-            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-        active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
-            .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
-
-        # Dènye 10 vizitè yo pou tablo an
-        latest_logs = VisitorLog.query.order_by(VisitorLog.timestamp.desc()).limit(10).all()
-        logs_data = [{
-            'time': log.timestamp.strftime('%H:%M:%S'),
-            'path': log.path,
-            'ip': log.ip_address,
-            'device': log.device_type
-        } for log in latest_logs]
-
-        return jsonify({
-            'success': True,
-            'active_users': active_users,
-            'total_pageviews': total_pageviews,
-            'unique_visitors': unique_visitors,
-            'total_sessions': total_sessions,
-            'latest_logs': logs_data
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-    
 # ═══════════════════════════════════════════════════════════
 # TABLEAU DE BORD ANALYTICS
 # ═══════════════════════════════════════════════════════════
@@ -2432,10 +2391,11 @@ def analytics():
         flash(f"Erreur: {str(e)}", "danger")
         return redirect(url_for('admin.dashboard'))
 
+
 @admin_bp.route('/api/analytics-data')
 @admin_required
 def api_analytics_data():
-    """API pour rafraîchir les statistiques en temps réel."""
+    """API pour rafraîchir les statistiques en temps réel (AJAX)."""
     try:
         from app.models import VisitorLog
         from datetime import datetime, timedelta
@@ -2461,8 +2421,7 @@ def api_analytics_data():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-# ═══════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════
 # CORRECTION MANUELLE DES SCORES (ADMIN OVERRIDE)
 # ═══════════════════════════════════════════════════════════
 
