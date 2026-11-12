@@ -3,7 +3,7 @@
 {% block title %}Analytics · Admin{% endblock %}
 
 {% block extra_css %}
-<!-- Chart.js pou grafiki yo -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
@@ -11,7 +11,7 @@
 <div class="section-dark py-8">
     <div class="container mx-auto px-4">
 
-        <!-- En-tête ak Badge Temps Réel -->
+        <!-- En-tête -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
@@ -20,21 +20,17 @@
                 </h1>
                 <p class="text-gray-400 text-sm mt-1">Analyse des 30 derniers jours</p>
             </div>
-            
             <!-- Badge Live -->
             <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl text-emerald-400">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="text-sm font-semibold">
-                    <span id="live-active-users">{{ active_users }}</span> utilisateur(s) en ligne
-                </span>
+                <span class="text-sm font-semibold"><span id="live-active-users">{{ active_users }}</span> utilisateur(s) en ligne</span>
             </div>
         </div>
 
         <!-- KPIs (Cartes du haut) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            
             <!-- Visiteurs Uniques -->
-            <div class="glass-card p-5 rounded-2xl border-t-2 border-blue-500 hover:-translate-y-1 transition">
+            <div class="glass-card p-5 rounded-2xl border-t-2 border-blue-500">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wider">Visiteurs Uniques</p>
@@ -47,7 +43,7 @@
             </div>
 
             <!-- Sessions -->
-            <div class="glass-card p-5 rounded-2xl border-t-2 border-purple-500 hover:-translate-y-1 transition">
+            <div class="glass-card p-5 rounded-2xl border-t-2 border-purple-500">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wider">Sessions</p>
@@ -60,7 +56,7 @@
             </div>
 
             <!-- Pages Vues -->
-            <div class="glass-card p-5 rounded-2xl border-t-2 border-orange-500 hover:-translate-y-1 transition">
+            <div class="glass-card p-5 rounded-2xl border-t-2 border-orange-500">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wider">Pages Vues</p>
@@ -73,7 +69,7 @@
             </div>
 
             <!-- Taux de Rebond -->
-            <div class="glass-card p-5 rounded-2xl border-t-2 border-red-500 hover:-translate-y-1 transition">
+            <div class="glass-card p-5 rounded-2xl border-t-2 border-red-500">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wider">Taux de Rebond</p>
@@ -88,18 +84,17 @@
 
         <!-- Graphiques -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            
-            <!-- Top Pages (Barre) -->
+            <!-- Top Pages -->
             <div class="lg:col-span-2 glass-card p-5 rounded-2xl">
                 <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <i class="fas fa-fire text-orange-400"></i> Pages les plus visitées (30j)
+                    <i class="fas fa-fire text-orange-400"></i> Pages les plus visitées
                 </h2>
                 <div class="h-64 relative">
                     <canvas id="pagesChart"></canvas>
                 </div>
             </div>
 
-            <!-- Répartition Appareils (Doughnut) -->
+            <!-- Appareils -->
             <div class="glass-card p-5 rounded-2xl">
                 <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
                     <i class="fas fa-mobile-alt text-blue-400"></i> Appareils
@@ -130,16 +125,13 @@
                                 {% if source == 'Direct' %}
                                     <i class="fas fa-link text-gray-500 mr-2"></i> Accès Direct
                                 {% else %}
-                                    <i class="fas fa-external-link-alt text-blue-400 mr-2"></i> 
-                                    <span class="truncate max-w-xs inline-block align-bottom">{{ source }}</span>
+                                    <i class="fas fa-external-link-alt text-blue-400 mr-2"></i> {{ source }}
                                 {% endif %}
                             </td>
-                            <td class="px-4 py-3 text-right font-mono font-bold text-white">{{ count }}</td>
+                            <td class="px-4 py-3 text-right font-mono">{{ count }}</td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="2" class="px-4 py-8 text-center text-gray-500">Aucune source enregistrée.</td>
-                        </tr>
+                        <tr><td colspan="2" class="px-4 py-4 text-center">Aucune source.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -149,17 +141,12 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SCRIPT POU GRAFIK YO AK MIzAJOU TEMPS RÉEL
-     ═══════════════════════════════════════════════════════════ -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
-        // 1. KONFIGIRASYON GRAFIK YO (Chart.js)
+        // 1. Initialisation des graphiques (Statiques)
         const topPages = JSON.parse('{{ top_pages | tojson | safe }}');
         const devices = JSON.parse('{{ devices | tojson | safe }}');
 
-        // Graf ki montre Top Pages yo
         const pagesCtx = document.getElementById('pagesChart').getContext('2d');
         new Chart(pagesCtx, {
             type: 'bar',
@@ -175,9 +162,7 @@
                 }]
             },
             options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
@@ -186,7 +171,6 @@
             }
         });
 
-        // Graf ki montre Aparèy yo
         const devicesCtx = document.getElementById('devicesChart').getContext('2d');
         new Chart(devicesCtx, {
             type: 'doughnut',
@@ -199,23 +183,17 @@
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#94a3b8' } }
-                }
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
             }
         });
 
-        // 2. MIzAJOU AN TAN REYÈL (AJAX Polling)
+        // 2. Mise à jour en temps réel (AJAX Polling)
         function refreshAnalytics() {
-            // Nou rele API a nou te kreye a
             fetch('/admin/api/analytics-data')
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        // Mete chif yo ajou san rafrechi paj la
                         document.getElementById('live-active-users').innerText = data.active_users;
                         document.getElementById('live-unique-visitors').innerText = data.unique_visitors;
                         document.getElementById('live-pageviews').innerText = data.total_pageviews;
@@ -225,7 +203,7 @@
                 .catch(err => console.error('Erreur live update:', err));
         }
 
-        // Rele fonksyon an chak 5 segond (5000 ms)
+        // Rele chak 5 segond
         setInterval(refreshAnalytics, 5000);
     });
 </script>

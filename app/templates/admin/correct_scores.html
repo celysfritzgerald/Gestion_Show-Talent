@@ -1,0 +1,80 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Correction des Notes · Admin{% endblock %}
+
+{% block content %}
+<div class="section-dark py-8">
+    <div class="container mx-auto px-4 max-w-3xl">
+        
+        <div class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                <i class="fas fa-pen-to-square text-yellow-400"></i>
+                Correction Manuelle des Notes
+            </h1>
+            <p class="text-gray-400 text-sm mt-1">
+                Modifiez les 3 critères spécifiques d'un artiste pour un dimanche donné.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Sélection Artiste & Session -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Artiste</label>
+                        <select name="artist_id" required class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:border-yellow-400">
+                            <option value="">Sélectionnez un artiste</option>
+                            {% for artist in artists %}
+                            <option value="{{ artist.id }}">{{ artist.code }} - {{ artist.user.full_name() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Dimanche (Session)</label>
+                        <select name="session_id" required class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:border-yellow-400">
+                            <option value="">Sélectionnez un dimanche</option>
+                            {% for session in sessions %}
+                            <option value="{{ session.id }}">Dimanche {{ session.number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Les 3 Critères à modifier -->
+                <div class="space-y-4 border-t border-white/10 pt-6">
+                    <h2 class="text-sm font-bold text-white mb-4">Notes des 3 critères</h2>
+                    
+                    {% for i in range(3) %}
+                    <div class="flex items-center gap-4 bg-white/[0.02] p-3 rounded-lg border border-white/5">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Critère {{ i + 1 }}</label>
+                            <select name="criterion_id[]" class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm outline-none focus:border-yellow-400">
+                                <option value="">Choisir un critère</option>
+                                {% for crit in criteria %}
+                                <option value="{{ crit.id }}">{{ crit.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="w-24">
+                            <label class="block text-xs text-gray-500 mb-1">Note (0-10)</label>
+                            <input type="number" name="score[]" step="0.1" min="0" max="10" 
+                                   class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-center font-bold outline-none focus:border-yellow-400" 
+                                   placeholder="0.0">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-[#0B1120] font-bold rounded-lg transition">
+                        <i class="fas fa-save mr-2"></i> Enregistrer les corrections
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

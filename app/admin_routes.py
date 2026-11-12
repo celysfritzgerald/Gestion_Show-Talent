@@ -2364,3 +2364,174 @@ def api_analytics_data():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+# ═══════════════════════════════════════════════════════════
+# TABLEAU DE BORD ANALYTICS
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/analytics')
+@admin_required
+def analytics():
+    """Statistiques de fréquentation du site."""
+    try:
+        from app.models import VisitorLog
+        from datetime import datetime, timedelta
+        from sqlalchemy import func, distinct
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+
+        total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
+        unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
+        total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
+        
+        subq = db.session.query(VisitorLog.session_id)\
+            .filter(VisitorLog.timestamp >= thirty_days_ago)\
+            .group_by(VisitorLog.session_id)\
+            .having(func.count(VisitorLog.id) == 1).subquery()
+        sessions_with_one_view = db.session.query(subq).count()
+        bounce_rate = round((sessions_with_one_view / total_sessions * 100), 1) if total_sessions > 0 else 0.0
+
+        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
+        active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
+
+        top_pages = db.session.query(
+            VisitorLog.path, func.count(VisitorLog.id).label('views')
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.path).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+
+        devices = db.session.query(
+            VisitorLog.device_type, func.count(VisitorLog.id)
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.device_type).all()
+
+        sources = db.session.query(
+            VisitorLog.referrer, func.count(VisitorLog.id)
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.referrer).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+
+        if not devices:
+            devices = [('Desktop', 0)]
+
+        return render_template(
+            'admin/analytics.html',
+            total_pageviews=total_pageviews,
+            unique_visitors=unique_visitors,
+            total_sessions=total_sessions,
+            bounce_rate=bounce_rate,
+            active_users=active_users,
+            top_pages=top_pages,
+            devices=devices,
+            sources=sources,
+            now=datetime.utcnow()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur analytics: {str(e)}")
+        flash(f"Erreur: {str(e)}", "danger")
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/api/analytics-data')
+@admin_required
+def api_analytics_data():
+    """API pour rafraîchir les statistiques en temps réel."""
+    try:
+        from app.models import VisitorLog
+        from datetime import datetime, timedelta
+        from sqlalchemy import func, distinct
+
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
+
+        total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
+        unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
+        total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
+        active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
+
+        return jsonify({
+            'success': True,
+            'active_users': active_users,
+            'total_pageviews': total_pageviews,
+            'unique_visitors': unique_visitors,
+            'total_sessions': total_sessions
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+# ═══════════════════════════════════════════════════════════
+# CORRECTION MANUELLE DES SCORES (ADMIN OVERRIDE)
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/scores/correct', methods=['GET', 'POST'])
+@admin_required
+def correct_scores():
+    """Permet à l'admin de corriger manuellement 3 critères pour un artiste."""
+    if request.method == 'POST':
+        try:
+            artist_id = request.form.get('artist_id')
+            session_id = request.form.get('session_id')
+            criterion_ids = request.form.getlist('criterion_id[]')
+            scores = request.form.getlist('score[]')
+
+            if not artist_id or not session_id:
+                flash("Artiste et Session requis.", "danger")
+                return redirect(url_for('admin.correct_scores'))
+
+            admin_user = db.session.get(User, session['user_id'])
+
+            for crit_id, score_val in zip(criterion_ids, scores):
+                if not crit_id or score_val == '':
+                    continue
+                
+                score_float = float(score_val)
+                if score_float < 0 or score_float > 10:
+                    flash("Les notes doivent être entre 0 et 10.", "danger")
+                    return redirect(url_for('admin.correct_scores'))
+
+                # Vérifier si le score existe déjà
+                existing_score = Score.query.filter_by(
+                    artist_id=artist_id,
+                    session_id=session_id,
+                    criterion_id=crit_id,
+                    evaluator_id=admin_user.id
+                ).first()
+
+                if existing_score:
+                    existing_score.score = score_float
+                    existing_score.updated_at = datetime.utcnow()
+                else:
+                    new_score = Score(
+                        artist_id=artist_id,
+                        session_id=session_id,
+                        criterion_id=crit_id,
+                        evaluator_id=admin_user.id,
+                        score=score_float
+                    )
+                    db.session.add(new_score)
+
+            db.session.commit()
+            invalidate_ranking_cache()
+            flash("Notes corrigées avec succès !", "success")
+            return redirect(url_for('admin.correct_scores'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erreur correction scores: {e}")
+            flash("Erreur lors de la correction.", "danger")
+
+    # GET : Afficher le formulaire
+    sessions = CompetitionSession.query.order_by(CompetitionSession.number).all()
+    artists = Artist.query.order_by(Artist.code).all()
+    criteria = Criterion.query.all()
+
+    return render_template(
+        'admin/correct_scores.html',
+        sessions=sessions,
+        artists=artists,
+        criteria=criteria,
+        now=datetime.utcnow()
+    )
