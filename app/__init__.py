@@ -99,48 +99,80 @@ def create_app(config_name=None):
             now=datetime.utcnow(),
         )
 
-    # ═══════════════════════════════════════════════════════════
-    # MIDDLEWARE : SUIVI DES VISITEURS (ANALYTICS)
+        # ═══════════════════════════════════════════════════════════
+    # MIDDLEWARE : ANALYTICS (Style Google Analytics)
     # ═══════════════════════════════════════════════════════════
     @app.before_request
     def track_visitor():
-        # Pa anrejistre fichye statik, api, ni paj admin yo pou l pa twòp lou
+        # Ignorer les fichiers statiques, API et requêtes non-GET
         if (request.path.startswith('/static') or 
             request.path.startswith('/uploads') or 
             request.path.startswith('/api/') or
-            request.path.startswith('/admin')):
-            return
-
-        if request.method != 'GET':
+            request.method != 'GET'):
             return
 
         try:
             from app.models import VisitorLog
+            import hashlib
             import re
+            from datetime import datetime, timedelta
             
+            # 1. IDENTIFICATION DU VISITEUR (Empreinte IP + Navigateur)
             ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
-            ua_string = request.headers.get('User-Agent', '')[:255]
+            ua_string = request.headers.get('User-Agent', '')
+            secret = current_app.config.get('SECRET_KEY', 'fallback')
             
-            device = 'Desktop'
-            if re.search(r'(Mobi|Android|iPhone|iPad)', ua_string, re.IGNORECASE):
-                device = 'Mobile'
-            if re.search(r'(iPad|Tablet)', ua_string, re.IGNORECASE):
-                device = 'Tablet'
+            raw_visitor = f"{ip}|{ua_string}|{secret}"
+            visitor_id = hashlib.sha256(raw_visitor.encode()).hexdigest()[:32]
 
+            # 2. GESTION DE LA SESSION (Expire après 30 min d'inactivité)
+            now = datetime.utcnow()
+            # On crée un ID de session basé sur le visiteur et la tranche de 30 minutes
+            time_block = int(now.timestamp() // 1800) # 1800 sec = 30 min
+            raw_session = f"{visitor_id}|{time_block}"
+            session_id = hashlib.sha256(raw_session.encode()).hexdigest()[:32]
+
+            # 3. DÉTECTION APPAREIL / OS / BROWSER
+            device = 'Desktop'
+            os_name = 'Inconnu'
+            browser = 'Inconnu'
+
+            ua_lower = ua_string.lower()
+            
+            # Appareil
+            if re.search(r'(mobi|android|iphone)', ua_lower): device = 'Mobile'
+            if re.search(r'(ipad|tablet)', ua_lower): device = 'Tablet'
+
+            # OS
+            if 'windows' in ua_lower: os_name = 'Windows'
+            elif 'mac os' in ua_lower: os_name = 'macOS'
+            elif 'android' in ua_lower: os_name = 'Android'
+            elif 'ios' in ua_lower or 'iphone' in ua_lower: os_name = 'iOS'
+            elif 'linux' in ua_lower: os_name = 'Linux'
+
+            # Browser
+            if 'edg' in ua_lower: browser = 'Edge'
+            elif 'chrome' in ua_lower and 'safari' in ua_lower: browser = 'Chrome'
+            elif 'firefox' in ua_lower: browser = 'Firefox'
+            elif 'safari' in ua_lower: browser = 'Safari'
+
+            # 4. ENREGISTREMENT
             log = VisitorLog(
+                visitor_id=visitor_id,
+                session_id=session_id,
                 ip_address=ip,
-                user_agent=ua_string,
+                user_agent=ua_string[:255],
                 path=request.path,
-                referrer=request.referrer[:255] if request.referrer else None,
-                device_type=device
+                referrer=request.referrer[:255] if request.referrer else 'Direct',
+                device_type=device,
+                browser=browser,
+                os=os_name
             )
             db.session.add(log)
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            # Silencieux pou l pa bloke paj la
-            pass
-
+            pass # On ignore silencieusement pour ne pas casser le site
     # ═══════════════════════════════════════════════════════════
     # HEADERS DE SÉCURITÉ + SEO
     # ═══════════════════════════════════════════════════════════

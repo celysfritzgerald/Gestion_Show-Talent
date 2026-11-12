@@ -2324,39 +2324,70 @@ def comments():
         flash("Erreur lors du chargement des commentaires.", "danger")
         return redirect(url_for('admin.dashboard'))
 
-# ═══════════════════════════════════════════════════════════
-# TABLEAU DE BORD ANALYTICS
-# ═══════════════════════════════════════════════════════════
-
 @admin_bp.route('/analytics')
 @admin_required
 def analytics():
-    """Statistiques de fréquentation du site."""
+    """Tableau de bord Analytics inspiré de Google Analytics."""
     try:
         from app.models import VisitorLog
-        from datetime import datetime
-        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        from sqlalchemy import func, distinct
 
-        today = datetime.utcnow().date()
+        # Période d'analyse : 30 derniers jours
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
-        total_visits = VisitorLog.query.count()
-        today_visits = VisitorLog.query.filter(func.date(VisitorLog.timestamp) == today).count()
-        unique_visitors = db.session.query(VisitorLog.ip_address).distinct().count()
+        # 1. Métriques Principales
+        total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
         
-        top_pages = db.session.query(
-            VisitorLog.path, func.count(VisitorLog.id).label('count')
-        ).group_by(VisitorLog.path).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+        unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
+            
+        total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
+            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
 
-        page = request.args.get('page', 1, type=int)
-        logs = VisitorLog.query.order_by(VisitorLog.timestamp.desc()).paginate(page=page, per_page=50, error_out=False)
+        # Taux de rebond (Sessions avec 1 seule page vue)
+        sessions_with_one_view = db.session.query(VisitorLog.session_id)\
+            .filter(VisitorLog.timestamp >= thirty_days_ago)\
+            .group_by(VisitorLog.session_id)\
+            .having(func.count(VisitorLog.id) == 1).count()
+            
+        bounce_rate = round((sessions_with_one_view / total_sessions * 100), 1) if total_sessions > 0 else 0
+
+        # 2. Utilisateurs en temps réel (5 dernières minutes)
+        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
+        active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
+            .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
+
+        # 3. Top Pages
+        top_pages = db.session.query(
+            VisitorLog.path, func.count(VisitorLog.id).label('views')
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.path)\
+         .order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+
+        # 4. Répartition par Appareil
+        devices = db.session.query(
+            VisitorLog.device_type, func.count(VisitorLog.id)
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.device_type).all()
+
+        # 5. Sources de trafic
+        sources = db.session.query(
+            VisitorLog.referrer, func.count(VisitorLog.id)
+        ).filter(VisitorLog.timestamp >= thirty_days_ago)\
+         .group_by(VisitorLog.referrer)\
+         .order_by(func.count(VisitorLog.id).desc()).limit(5).all()
 
         return render_template(
             'admin/analytics.html',
-            total_visits=total_visits,
-            today_visits=today_visits,
+            total_pageviews=total_pageviews,
             unique_visitors=unique_visitors,
+            total_sessions=total_sessions,
+            bounce_rate=bounce_rate,
+            active_users=active_users,
             top_pages=top_pages,
-            logs=logs,
+            devices=devices,
+            sources=sources,
             now=datetime.utcnow()
         )
     except Exception as e:
