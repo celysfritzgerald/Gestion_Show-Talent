@@ -424,3 +424,22 @@ class ObserverPermission(db.Model):
 
     def __repr__(self):
         return f"<ObserverPermission user_id={self.user_id}>"
+
+        
+# ============================================================
+# SYSTÈME DE SUIVI DES VISITEURS (ANALYTICS)
+# ============================================================
+
+class VisitorLog(db.Model):
+    __tablename__ = 'visitor_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), index=True)
+    user_agent = db.Column(db.String(255))
+    path = db.Column(db.String(255), index=True)
+    referrer = db.Column(db.String(255))
+    device_type = db.Column(db.String(20))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return f"<VisitorLog {self.ip_address} - {self.path}>"

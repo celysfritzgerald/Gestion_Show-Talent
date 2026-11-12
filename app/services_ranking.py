@@ -24,27 +24,40 @@ from app.models import (
 
 
 # ═══════════════════════════════════════════════════════════════
-# CACHE MÉMOIRE (par worker)
+# CACHE MÉMOIRE
 # ═══════════════════════════════════════════════════════════════
+# ⚠️ NOTE POUR LA PRODUCTION (RAILWAY/GUNICORN) :
+# Ce cache est en mémoire (RAM). Si vous utilisez plusieurs workers Gunicorn
+# (ex: --workers 4), chaque worker aura son propre cache.
+# Lorsqu'un score est modifié, le worker qui reçoit la requête vide SON cache.
+# Les autres workers garderont l'ancien cache pendant 60s maximum.
+# Pour un système 100% temps réel, il faudrait utiliser Redis, mais pour 
+# les besoins de ce concours, ce TTL de 60s est un excellent compromis.
 
 _ranking_cache: Dict[str, tuple] = {}
+_matrix_cache: Dict[str, tuple] = {}
+
 _RANKING_CACHE_TTL = 60  # secondes
 _RANKING_CACHE_MAX = 100  # nombre max d'entrées
 
 
 def invalidate_ranking_cache():
     """
-    Vide le cache du classement.
-    ⚠️ À appeler APRÈS chaque modification de score :
+    Vide TOUS les caches (classement + matrice).
+    ⚠️ À appeler APRÈS chaque modification :
     - admin_save_score / admin_delete_score
     - jury save_score / delete_score
     - modification d'artiste / session / critère
     """
     _ranking_cache.clear()
+    _matrix_cache.clear()
 
 
-def _cache_key(session_id, evaluator_id, include_eliminated, include_details):
-    return f"{session_id}|{evaluator_id}|{include_eliminated}|{include_details}"
+def _ranking_cache_key(session_id, evaluator_id, include_eliminated, include_details):
+    return f"rank|{session_id}|{evaluator_id}|{include_eliminated}|{include_details}"
+
+def _matrix_cache_key(session_id, evaluator_id):
+    return f"matrix|{session_id}|{evaluator_id}"
 
 
 # ─────────────────────────────────────────────────────────
@@ -93,11 +106,9 @@ def compute_ranking(
     include_details: bool = True,
 ) -> List[ArtistRankingEntry]:
     """
-    Calcule le classement des artistes.
-    ✅ Avec cache mémoire (TTL 60 secondes).
+    Calcule le classement des artistes avec mise en cache.
     """
-    # ✅ CACHE : vérifier d'abord
-    key = _cache_key(session_id, evaluator_id, include_eliminated, include_details)
+    key = _ranking_cache_key(session_id, evaluator_id, include_eliminated, include_details)
     now_ts = time.time()
 
     if key in _ranking_cache:
@@ -227,8 +238,16 @@ def get_global_stats() -> Dict[str, Any]:
 def get_matrix_for_session(session_id: int, evaluator_id: Optional[int] = None):
     """
     Construit une matrice : artistes × critères → notes
-    pour une session donnée.
+    pour une session donnée. (Avec Cache)
     """
+    key = _matrix_cache_key(session_id, evaluator_id)
+    now_ts = time.time()
+
+    if key in _matrix_cache:
+        cached_at, data = _matrix_cache[key]
+        if now_ts - cached_at < _RANKING_CACHE_TTL:
+            return data
+
     session_obj = CompetitionSession.query.get(session_id)
     if not session_obj:
         return None
@@ -294,9 +313,19 @@ def get_matrix_for_session(session_id: int, evaluator_id: Optional[int] = None):
     for cid in totals_by_criterion:
         totals_by_criterion[cid] = round(totals_by_criterion[cid], 1)
 
-    return {
+    result = {
         'session': session_obj,
         'criteria': criteria,
         'rows': rows,
         'totals_by_criterion': totals_by_criterion,
     }
+
+    # ✅ CACHE : stocker
+    _matrix_cache[key] = (now_ts, result)
+    
+    # Nettoyage
+    if len(_matrix_cache) > _RANKING_CACHE_MAX:
+        oldest_key = min(_matrix_cache.items(), key=lambda x: x[1][0])[0]
+        _matrix_cache.pop(oldest_key, None)
+
+    return result

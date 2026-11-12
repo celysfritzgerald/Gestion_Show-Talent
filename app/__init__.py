@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask import Flask, render_template, send_from_directory, request, jsonify, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -55,14 +55,14 @@ def create_app(config_name=None):
     from app.admin_routes import admin_bp
     from app.jury_routes import jury_bp
     from app.artist_routes import artist_bp
-    from app.observer_routes import observer_bp      # ⬅️ AJOUT
+    from app.observer_routes import observer_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(jury_bp, url_prefix='/jury')
     app.register_blueprint(artist_bp, url_prefix='/artist')
-    app.register_blueprint(observer_bp, url_prefix='/observer')              # ⬅️ AJOUT
+    app.register_blueprint(observer_bp, url_prefix='/observer')
 
     create_upload_directories(app)
     register_error_handlers(app)
@@ -100,11 +100,52 @@ def create_app(config_name=None):
         )
 
     # ═══════════════════════════════════════════════════════════
+    # MIDDLEWARE : SUIVI DES VISITEURS (ANALYTICS)
+    # ═══════════════════════════════════════════════════════════
+    @app.before_request
+    def track_visitor():
+        # Pa anrejistre fichye statik, api, ni paj admin yo pou l pa twòp lou
+        if (request.path.startswith('/static') or 
+            request.path.startswith('/uploads') or 
+            request.path.startswith('/api/') or
+            request.path.startswith('/admin')):
+            return
+
+        if request.method != 'GET':
+            return
+
+        try:
+            from app.models import VisitorLog
+            import re
+            
+            ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+            ua_string = request.headers.get('User-Agent', '')[:255]
+            
+            device = 'Desktop'
+            if re.search(r'(Mobi|Android|iPhone|iPad)', ua_string, re.IGNORECASE):
+                device = 'Mobile'
+            if re.search(r'(iPad|Tablet)', ua_string, re.IGNORECASE):
+                device = 'Tablet'
+
+            log = VisitorLog(
+                ip_address=ip,
+                user_agent=ua_string,
+                path=request.path,
+                referrer=request.referrer[:255] if request.referrer else None,
+                device_type=device
+            )
+            db.session.add(log)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            # Silencieux pou l pa bloke paj la
+            pass
+
+    # ═══════════════════════════════════════════════════════════
     # HEADERS DE SÉCURITÉ + SEO
     # ═══════════════════════════════════════════════════════════
     @app.after_request
     def add_security_headers(response):
-        # ─── Headers de base ───
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("X-XSS-Protection", "1; mode=block")
@@ -113,11 +154,11 @@ def create_app(config_name=None):
         response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
 
-        # ─── CSP ───
+        # ⚠️ CSP KORIJE (Espas ant 'unsafe-inline' ak 'unsafe-eval' ajoute)
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "  # ⬅️ ESPAS LA AJOUTE
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
                 "https://cdn.tailwindcss.com "
                 "https://cdnjs.cloudflare.com "
                 "https://cdn.jsdelivr.net; "
@@ -142,11 +183,9 @@ def create_app(config_name=None):
             "upgrade-insecure-requests"
         )
 
-        # ─── SEO : noindex sur les zones privées ───
         if request.path.startswith(('/admin', '/jury', '/artist', '/observer', '/uploads')):
             response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
 
-        # ─── HSTS (HTTPS uniquement) ───
         if request.is_secure:
             response.headers.setdefault(
                 "Strict-Transport-Security",
@@ -155,13 +194,9 @@ def create_app(config_name=None):
 
         return response
 
-    # ═══════════════════════════════════════════════════════════
-    # CACHE HTTP intelligent
-    # ═══════════════════════════════════════════════════════════
     @app.after_request
     def add_cache_headers(response):
         path = request.path
-
         if path.startswith('/uploads/'):
             response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
         elif path in ('/sitemap.xml', '/robots.txt'):
@@ -170,36 +205,21 @@ def create_app(config_name=None):
             response.headers['Cache-Control'] = 'public, max-age=86400'
         elif path.startswith('/api/'):
             response.headers['Cache-Control'] = 'no-store, must-revalidate'
-
         return response
 
     return app
 
-
-# ═══════════════════════════════════════════════════════════════
-# HELPERS
-# ═══════════════════════════════════════════════════════════════
-
 def _setup_logging(app, config_name):
-    """Configure le logging selon l'environnement."""
     if config_name == 'production':
         if not os.path.exists('logs'):
             os.makedirs('logs')
-        file_handler = RotatingFileHandler(
-            'logs/showtalent.log',
-            maxBytes=10 * 1024 * 1024,
-            backupCount=10
-        )
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s [%(name)s] %(message)s'
-        ))
+        file_handler = RotatingFileHandler('logs/showtalent.log', maxBytes=10 * 1024 * 1024, backupCount=10)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s'))
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
 
-
 def create_upload_directories(app):
-    """Création sécurisée des dossiers d'upload"""
     upload_base = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
     for subfolder in ['artists', 'moments', 'sponsors', 'lyrics', 'votes']:
         path = os.path.join(upload_base, subfolder)
@@ -213,22 +233,13 @@ def create_upload_directories(app):
         except OSError:
             pass
 
-
 def register_error_handlers(app):
-    """Gestionnaires d'erreurs sécurisés"""
-
     @app.errorhandler(403)
-    def forbidden(e):
-        return render_template('errors/403.html'), 403
-
+    def forbidden(e): return render_template('errors/403.html'), 403
     @app.errorhandler(404)
-    def not_found(e):
-        return render_template('errors/404.html'), 404
-
+    def not_found(e): return render_template('errors/404.html'), 404
     @app.errorhandler(429)
-    def too_many_requests(e):
-        return render_template('errors/404.html'), 429
-
+    def too_many_requests(e): return render_template('errors/404.html'), 429
     @app.errorhandler(500)
     def internal_error(e):
         db.session.rollback()

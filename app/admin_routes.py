@@ -2323,3 +2323,43 @@ def comments():
         current_app.logger.error(f"Erreur admin.comments: {e}")
         flash("Erreur lors du chargement des commentaires.", "danger")
         return redirect(url_for('admin.dashboard'))
+
+# ═══════════════════════════════════════════════════════════
+# TABLEAU DE BORD ANALYTICS
+# ═══════════════════════════════════════════════════════════
+
+@admin_bp.route('/analytics')
+@admin_required
+def analytics():
+    """Statistiques de fréquentation du site."""
+    try:
+        from app.models import VisitorLog
+        from datetime import datetime
+        from sqlalchemy import func
+
+        today = datetime.utcnow().date()
+
+        total_visits = VisitorLog.query.count()
+        today_visits = VisitorLog.query.filter(func.date(VisitorLog.timestamp) == today).count()
+        unique_visitors = db.session.query(VisitorLog.ip_address).distinct().count()
+        
+        top_pages = db.session.query(
+            VisitorLog.path, func.count(VisitorLog.id).label('count')
+        ).group_by(VisitorLog.path).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+
+        page = request.args.get('page', 1, type=int)
+        logs = VisitorLog.query.order_by(VisitorLog.timestamp.desc()).paginate(page=page, per_page=50, error_out=False)
+
+        return render_template(
+            'admin/analytics.html',
+            total_visits=total_visits,
+            today_visits=today_visits,
+            unique_visitors=unique_visitors,
+            top_pages=top_pages,
+            logs=logs,
+            now=datetime.utcnow()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur analytics: {e}")
+        flash("Erreur lors du chargement des statistiques.", "danger")
+        return redirect(url_for('admin.dashboard'))
