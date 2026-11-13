@@ -289,10 +289,10 @@
                             </h3>
                         </header>
 
-                        <!-- Liste unifiée -->
+                        <!-- Liste unifiée compacte -->
                         <ul class="divide-y divide-white/[0.04]">
                             {% for crit in criteria %}
-                            <li class="criterion-row flex gap-2.5 py-2 hover:bg-white/[0.02] transition-colors rounded px-1 -mx-1"
+                            <li class="criterion-row flex gap-2 py-1.5 hover:bg-white/[0.02] transition-colors rounded px-1 -mx-1"
                                 style="--i: {{ loop.index0 * 40 }}ms">
                                 
                                 <!-- Numéro à gauche -->
@@ -300,18 +300,19 @@
                                     {{ "%02d"|format(loop.index) }}
                                 </div>
 
-                                <!-- Contenu aligné à gauche -->
+                                <!-- Contenu aligné et justifié -->
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-[0.8rem] font-bold text-white leading-tight mb-0.5">
                                         {{ crit.name }}
                                     </h4>
-                                    <p class="text-[0.7rem] text-slate-400 leading-relaxed text-left break-words whitespace-pre-wrap">
+                                    <!-- text-justify pour justifier, suppression de whitespace-pre-wrap pour éviter les écrasements -->
+                                    <p class="text-[0.7rem] text-slate-400 leading-relaxed text-justify break-words">
                                         {{ crit.description if crit.description else 'Aucune description fournie.' }}
                                     </p>
                                 </div>
                             </li>
                             {% else %}
-                            <li class="text-center text-slate-500 py-4">
+                            <li class="text-center text-slate-500 py-3">
                                 <p class="text-xs">Aucun critère configuré.</p>
                             </li>
                             {% endfor %}
