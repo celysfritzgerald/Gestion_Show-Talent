@@ -106,18 +106,17 @@
     .scrollable-list::-webkit-scrollbar-track { background: transparent; }
     .scrollable-list::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 9999px; }
 
-    /* ═══ CRITÈRES — animation légère liste ═══ */
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to   { opacity: 1; transform: translateY(0); }
+    /* ═══ ANIMATION LÉGÈRE POUR LA LISTE ═══ */
+    @keyframes fadeInRight {
+        from { opacity: 0; transform: translateX(-8px); }
+        to   { opacity: 1; transform: translateX(0); }
     }
-    .criterion-item {
-        animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    .criterion-row {
+        animation: fadeInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
         animation-delay: var(--i, 0ms);
-        will-change: transform, opacity;
     }
     @media (prefers-reduced-motion: reduce) {
-        .criterion-item { animation: none; will-change: auto; }
+        .criterion-row { animation: none; }
     }
 
     @media (max-width: 768px) {
@@ -274,13 +273,13 @@
                     {% endif %}
                 </div>
 
-                <!-- ══════════ 10 CRITÈRES — LISTE SIMPLE (après classement) ══════════ -->
-                <section class="relative bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 sm:p-6 overflow-hidden">
+                <!-- ══════════ 10 CRITÈRES — LISTE SANS CARD ══════════ -->
+                <section class="relative bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 sm:p-6 overflow-hidden">
                     <!-- Liseré haut dégradé -->
                     <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-purple-600 via-purple-400 to-amber-400 opacity-70"></div>
 
                     <!-- En-tête -->
-                    <header class="flex items-center gap-3 mb-4 pb-3 border-b border-white/[0.06]">
+                    <header class="flex items-center gap-3 mb-2 pb-3 border-b border-white/[0.06]">
                         <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-300/10 border border-purple-500/25 flex items-center justify-center text-purple-300 shrink-0">
                             <i class="fas fa-list-check text-xs" aria-hidden="true"></i>
                         </div>
@@ -289,34 +288,34 @@
                         </h3>
                     </header>
 
-                    <!-- Liste -->
-                    {% if criteria %}
-                    <ol class="divide-y divide-white/[0.05]">
+                    <!-- Liste unifiée (style image) -->
+                    <ul class="divide-y divide-white/[0.05]">
                         {% for crit in criteria %}
-                        <li class="criterion-item py-3 first:pt-0 last:pb-0"
+                        <li class="criterion-row flex gap-4 py-4 hover:bg-white/[0.02] transition-colors rounded-lg px-2 -mx-2"
                             style="--i: {{ loop.index0 * 40 }}ms">
-                            <div class="flex items-start gap-3">
-                                <span class="text-[0.7rem] font-extrabold text-purple-400/70 tabular-nums tracking-wide pt-0.5 shrink-0 w-6" aria-hidden="true">
-                                    {{ "%02d"|format(loop.index) }}
-                                </span>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="text-[0.88rem] font-bold text-white leading-tight mb-1">
-                                        {{ crit.name }}
-                                    </h4>
-                                    <p class="text-[0.8rem] text-slate-300 leading-relaxed text-justify whitespace-pre-wrap">
-                                        {{ crit.description if crit.description else 'Aucune description fournie.' }}
-                                    </p>
-                                </div>
+                            
+                            <!-- Icône / Numéro à gauche -->
+                            <div class="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 font-bold text-sm shrink-0 mt-0.5">
+                                {{ "%02d"|format(loop.index) }}
+                            </div>
+
+                            <!-- Contenu à droite -->
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[0.95rem] font-bold text-white leading-tight mb-1">
+                                    {{ crit.name }}
+                                </h4>
+                                <p class="text-sm text-slate-400 leading-relaxed text-justify whitespace-pre-wrap">
+                                    {{ crit.description if crit.description else 'Aucune description fournie.' }}
+                                </p>
                             </div>
                         </li>
+                        {% else %}
+                        <li class="text-center text-slate-500 py-6">
+                            <i class="fas fa-inbox text-xl mb-2 block text-slate-600" aria-hidden="true"></i>
+                            <p class="text-sm">Aucun critère configuré pour le moment.</p>
+                        </li>
                         {% endfor %}
-                    </ol>
-                    {% else %}
-                    <div class="text-center text-slate-500 py-6">
-                        <i class="fas fa-inbox text-xl mb-2 block text-slate-600" aria-hidden="true"></i>
-                        <p class="text-sm">Aucun critère configuré pour le moment.</p>
-                    </div>
-                    {% endif %}
+                    </ul>
                 </section>
 
             </div>
