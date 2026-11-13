@@ -105,6 +105,21 @@
     .scrollable-list::-webkit-scrollbar { width: 4px; }
     .scrollable-list::-webkit-scrollbar-track { background: transparent; }
     .scrollable-list::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 9999px; }
+
+    /* ═══ CRITÈRES — animation légère (Tailwind fait le reste) ═══ */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .criterion-card {
+        animation: fadeUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+        animation-delay: var(--i, 0ms);
+        will-change: transform, opacity;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .criterion-card { animation: none; will-change: auto; }
+    }
+
     @media (max-width: 768px) {
         .profile-avatar { width: 80px; height: 80px; }
         .result-card .result-total { font-size: 1.5rem; }
@@ -178,7 +193,7 @@
                 </div>
             </div>
 
-            <!-- RÉSULTATS + COMMENTAIRES + CLASSEMENT + CRITÈRES -->
+            <!-- RÉSULTATS + CRITÈRES + COMMENTAIRES + CLASSEMENT -->
             <div class="lg:col-span-2 space-y-6">
 
                 <!-- Résultats -->
@@ -212,31 +227,62 @@
                 </div>
 
                 <!-- ══════════ 10 CRITÈRES ══════════ -->
-                <div class="glass-card p-5 sm:p-6">
-                    <div class="flex items-center gap-3 mb-5 border-b border-white/5 pb-3">
-                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
-                            <i class="fas fa-list-check"></i>
+                <section class="relative bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 sm:p-7 overflow-hidden">
+                    <!-- Liseré haut dégradé -->
+                    <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-purple-600 via-purple-400 to-amber-400 opacity-70"></div>
+
+                    <!-- En-tête -->
+                    <header class="flex items-center gap-3.5 mb-6 pb-4 border-b border-white/[0.06]">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-300/10 border border-purple-500/25 flex items-center justify-center text-purple-400 shrink-0">
+                            <i class="fas fa-list-check" aria-hidden="true"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-white">Les 10 Critères d'Évaluation</h3>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="min-w-0">
+                            <h3 class="text-base sm:text-lg font-bold text-white leading-tight">
+                                Les 10 Critères d'Évaluation
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5 truncate">
+                                Chaque performance est notée sur {{ criteria[0].max_score if criteria else 10 }} pts par critère
+                            </p>
+                        </div>
+                    </header>
+
+                    <!-- Grille critères -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         {% for crit in criteria %}
-                        <div class="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex items-start gap-3 hover:bg-white/[0.04] transition">
-                            <div class="w-7 h-7 rounded-md bg-purple-500/10 text-purple-400 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                                {{ loop.index }}
-                            </div>
-                            <div class="flex-1">
-                                <div class="text-sm font-semibold text-white mb-1">{{ crit.name }}</div>
-                                <div class="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
-                                    {{ crit.description if crit.description else 'Aucune description fournie.' }}
+                        <article class="criterion-card group relative bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 pl-5 overflow-hidden transition-all duration-300 hover:bg-purple-500/[0.06] hover:border-purple-500/25 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(124,58,237,0.14)]"
+                                 style="--i: {{ loop.index0 * 50 }}ms">
+
+                            <!-- Barre d'accent gauche -->
+                            <span aria-hidden="true"
+                                  class="absolute left-0 inset-y-0 w-0.5 bg-gradient-to-b from-purple-600 to-purple-400 opacity-40 group-hover:opacity-100 transition-opacity duration-300"></span>
+
+                            <div class="flex items-center gap-3 mb-2.5">
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/25 to-purple-300/10 border border-purple-500/30 flex items-center justify-center text-xs font-extrabold text-purple-300 shrink-0 tabular-nums tracking-wide">
+                                    {{ "%02d"|format(loop.index) }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-[0.92rem] font-bold text-white leading-tight break-words">
+                                        {{ crit.name }}
+                                    </h4>
+                                    <span class="inline-flex items-center gap-1 mt-1 text-[0.68rem] font-semibold text-amber-300 px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20">
+                                        <i class="fas fa-star text-[0.58rem]" aria-hidden="true"></i>
+                                        {{ crit.max_score }} pts max
+                                    </span>
                                 </div>
                             </div>
-                        </div>
+
+                            <p class="text-[0.8rem] text-slate-400 leading-relaxed whitespace-pre-wrap">
+                                {{ crit.description if crit.description else 'Aucune description fournie.' }}
+                            </p>
+                        </article>
                         {% else %}
-                        <div class="col-span-full text-center text-gray-500 py-4">Aucun critère configuré pour le moment.</div>
+                        <div class="col-span-full text-center text-slate-500 py-8">
+                            <i class="fas fa-inbox text-2xl mb-2 block text-slate-600" aria-hidden="true"></i>
+                            <p class="text-sm">Aucun critère configuré pour le moment.</p>
+                        </div>
                         {% endfor %}
                     </div>
-                </div>
+                </section>
 
                 <!-- Commentaires -->
                 <div class="profile-card">
