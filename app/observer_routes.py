@@ -13,7 +13,7 @@ from sqlalchemy import func
 from app import db
 from app.models import (
     User, Artist, CompetitionSession, Criterion,
-    Assignment, Score,
+    Assignment, Score, criteria,
     Sponsor, FinanceCategory, FinanceTransaction,
     PublicVote, VoteConfig, VoteSession,
     Lyric, Poll, PollOption, PollVote,
@@ -90,6 +90,7 @@ def dashboard():
             stats=stats,
             sessions=sessions,
             recent_votes=recent_votes,
+             criteria=criteria,
             recent_transactions=recent_transactions,
             new_messages_count=new_messages_count,
             now=datetime.utcnow(),
@@ -315,7 +316,6 @@ def ranking():
             sections=get_observer_sections(),
             entries=entries,
             sessions=sessions,
-            criteria=criteria,
             current_session=session_obj,
             include_eliminated=include_eliminated,
             now=datetime.utcnow(),
@@ -494,6 +494,7 @@ def votes():
             voters=voters,
             total_votes=total_votes,
             edition=edition,
+            criteria=criteria,
             now=datetime.utcnow(),
         )
     except Exception as e:

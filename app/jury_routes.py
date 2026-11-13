@@ -34,6 +34,7 @@ def dashboard():
         return render_template(
             'jury/dashboard.html',
             sessions=sessions,
+            criteria=criteria,
             now=datetime.utcnow(),
         )
     except Exception as e:

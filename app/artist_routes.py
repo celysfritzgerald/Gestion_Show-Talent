@@ -97,6 +97,7 @@ def dashboard():
                              session_scores=session_scores,
                              comments=comments,
                              ranking=ranking,
+                              criteria=criteria,
                              artist_rank=artist_rank)
                              
     except Exception as e:
