@@ -106,7 +106,7 @@
     .scrollable-list::-webkit-scrollbar-track { background: transparent; }
     .scrollable-list::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 9999px; }
 
-    /* ═══ ANIMATION LÉGÈRE POUR LA LISTE ═══ */
+    /* ═══ ANIMATION LISTE ═══ */
     @keyframes fadeInRight {
         from { opacity: 0; transform: translateX(-8px); }
         to   { opacity: 1; transform: translateX(0); }
@@ -273,50 +273,51 @@
                     {% endif %}
                 </div>
 
-                <!-- ══════════ 10 CRITÈRES — LISTE COMPACTE ══════════ -->
-                <section class="relative bg-white/[0.02] border border-white/[0.05] rounded-2xl p-4 sm:p-5 overflow-hidden">
-                    <!-- Liseré haut dégradé -->
-                    <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-purple-600 via-purple-400 to-amber-400 opacity-70"></div>
+                <!-- ══════════ 10 CRITÈRES — PETITE CARD COMPACTE ══════════ -->
+                <div class="w-full max-w-xl mx-auto">
+                    <section class="relative bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 sm:p-4 overflow-hidden">
+                        <!-- Liseré haut dégradé -->
+                        <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-purple-600 via-purple-400 to-amber-400 opacity-70"></div>
 
-                    <!-- En-tête compact -->
-                    <header class="flex items-center gap-3 mb-2 pb-3 border-b border-white/[0.06]">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-300/10 border border-purple-500/25 flex items-center justify-center text-purple-300 shrink-0">
-                            <i class="fas fa-list-check text-[0.7rem]" aria-hidden="true"></i>
-                        </div>
-                        <h3 class="text-sm sm:text-base font-bold text-purple-300 leading-tight">
-                            Les 10 Critères d'Évaluation
-                        </h3>
-                    </header>
-
-                    <!-- Liste unifiée et réduite -->
-                    <ul class="divide-y divide-white/[0.05]">
-                        {% for crit in criteria %}
-                        <li class="criterion-row flex gap-3 py-2.5 hover:bg-white/[0.02] transition-colors rounded-lg px-2 -mx-2"
-                            style="--i: {{ loop.index0 * 40 }}ms">
-                            
-                            <!-- Icône / Numéro compact -->
-                            <div class="w-7 h-7 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 font-bold text-[0.65rem] shrink-0 mt-0.5">
-                                {{ "%02d"|format(loop.index) }}
+                        <!-- En-tête ultra compact -->
+                        <header class="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.06]">
+                            <div class="w-6 h-6 rounded bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 shrink-0">
+                                <i class="fas fa-list-check text-[0.6rem]" aria-hidden="true"></i>
                             </div>
+                            <h3 class="text-xs sm:text-sm font-bold text-purple-300 leading-tight">
+                                Les 10 Critères d'Évaluation
+                            </h3>
+                        </header>
 
-                            <!-- Contenu aligné à gauche -->
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-[0.85rem] font-bold text-white leading-tight mb-0.5">
-                                    {{ crit.name }}
-                                </h4>
-                                <p class="text-xs text-slate-400 leading-relaxed text-left whitespace-pre-wrap">
-                                    {{ crit.description if crit.description else 'Aucune description fournie.' }}
-                                </p>
-                            </div>
-                        </li>
-                        {% else %}
-                        <li class="text-center text-slate-500 py-4">
-                            <i class="fas fa-inbox text-lg mb-1.5 block text-slate-600" aria-hidden="true"></i>
-                            <p class="text-xs">Aucun critère configuré.</p>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </section>
+                        <!-- Liste unifiée -->
+                        <ul class="divide-y divide-white/[0.04]">
+                            {% for crit in criteria %}
+                            <li class="criterion-row flex gap-2.5 py-2 hover:bg-white/[0.02] transition-colors rounded px-1 -mx-1"
+                                style="--i: {{ loop.index0 * 40 }}ms">
+                                
+                                <!-- Numéro à gauche -->
+                                <div class="w-5 h-5 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 font-bold text-[0.55rem] shrink-0 mt-0.5">
+                                    {{ "%02d"|format(loop.index) }}
+                                </div>
+
+                                <!-- Contenu aligné à gauche -->
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-[0.8rem] font-bold text-white leading-tight mb-0.5">
+                                        {{ crit.name }}
+                                    </h4>
+                                    <p class="text-[0.7rem] text-slate-400 leading-relaxed text-left break-words whitespace-pre-wrap">
+                                        {{ crit.description if crit.description else 'Aucune description fournie.' }}
+                                    </p>
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="text-center text-slate-500 py-4">
+                                <p class="text-xs">Aucun critère configuré.</p>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </div>
 
             </div>
         </div>
