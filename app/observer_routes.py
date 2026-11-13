@@ -13,7 +13,7 @@ from sqlalchemy import func
 from app import db
 from app.models import (
     User, Artist, CompetitionSession, Criterion,
-    Assignment, Score, criteria,
+    Assignment, Score,
     Sponsor, FinanceCategory, FinanceTransaction,
     PublicVote, VoteConfig, VoteSession,
     Lyric, Poll, PollOption, PollVote,
