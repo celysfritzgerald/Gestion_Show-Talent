@@ -166,52 +166,7 @@
         </div>
     </div>
 
-    <!-- ══════════ 10 CRITÈRES — PETITE CARD COMPACTE ══════════ -->
-    <div class="w-full max-w-xl mx-auto mb-8">
-        <section class="relative bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 sm:p-4 overflow-hidden">
-            <!-- Liseré haut dégradé -->
-            <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-600 via-blue-400 to-amber-400 opacity-70"></div>
-
-            <!-- En-tête ultra compact -->
-            <header class="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.06]">
-                <div class="w-6 h-6 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-300 shrink-0">
-                    <i class="fas fa-list-check text-[0.6rem]" aria-hidden="true"></i>
-                </div>
-                <h3 class="text-xs sm:text-sm font-bold text-blue-300 leading-tight">
-                    Les 10 Critères d'Évaluation
-                </h3>
-            </header>
-
-            <!-- Liste unifiée compacte -->
-            <ul class="divide-y divide-white/[0.04]">
-                {% for crit in criteria %}
-                <li class="criterion-row flex gap-2 py-1.5 hover:bg-white/[0.02] transition-colors rounded px-1 -mx-1"
-                    style="--i: {{ loop.index0 * 40 }}ms">
-                    
-                    <!-- Numéro à gauche -->
-                    <div class="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-300 font-bold text-[0.55rem] shrink-0 mt-0.5">
-                        {{ "%02d"|format(loop.index) }}
-                    </div>
-
-                    <!-- Contenu aligné et justifié -->
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-[0.8rem] font-bold text-white leading-tight mb-0.5">
-                            {{ crit.name }}
-                        </h4>
-                        <p class="text-[0.75rem] text-slate-300 leading-relaxed text-left md:text-justify break-words">
-                            {{ crit.description if crit.description else 'Aucune description fournie.' }}
-                        </p>
-                    </div>
-                </li>
-                {% else %}
-                <li class="text-center text-slate-500 py-3">
-                    <p class="text-xs">Aucun critère configuré.</p>
-                </li>
-                {% endfor %}
-            </ul>
-        </section>
-    </div>
-
+    
     <!-- STATISTIQUES -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="stat-mini">
@@ -312,5 +267,51 @@
         </div>
         {% endif %}
     </div>
+    <!-- ══════════ 10 CRITÈRES — PETITE CARD COMPACTE ══════════ -->
+    <div class="w-full max-w-xl mx-auto mb-8">
+        <section class="relative bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 sm:p-4 overflow-hidden">
+            <!-- Liseré haut dégradé -->
+            <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-600 via-blue-400 to-amber-400 opacity-70"></div>
+
+            <!-- En-tête ultra compact -->
+            <header class="flex items-center gap-2 mb-2 pb-2 border-b border-white/[0.06]">
+                <div class="w-6 h-6 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-300 shrink-0">
+                    <i class="fas fa-list-check text-[0.6rem]" aria-hidden="true"></i>
+                </div>
+                <h3 class="text-xs sm:text-sm font-bold text-blue-300 leading-tight">
+                    Les 10 Critères d'Évaluation
+                </h3>
+            </header>
+
+            <!-- Liste unifiée compacte -->
+            <ul class="divide-y divide-white/[0.04]">
+                {% for crit in criteria %}
+                <li class="criterion-row flex gap-2 py-1.5 hover:bg-white/[0.02] transition-colors rounded px-1 -mx-1"
+                    style="--i: {{ loop.index0 * 40 }}ms">
+                    
+                    <!-- Numéro à gauche -->
+                    <div class="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-300 font-bold text-[0.55rem] shrink-0 mt-0.5">
+                        {{ "%02d"|format(loop.index) }}
+                    </div>
+
+                    <!-- Contenu aligné et justifié -->
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-[0.8rem] font-bold text-white leading-tight mb-0.5">
+                            {{ crit.name }}
+                        </h4>
+                        <p class="text-[0.75rem] text-slate-300 leading-relaxed text-left md:text-justify break-words">
+                            {{ crit.description if crit.description else 'Aucune description fournie.' }}
+                        </p>
+                    </div>
+                </li>
+                {% else %}
+                <li class="text-center text-slate-500 py-3">
+                    <p class="text-xs">Aucun critère configuré.</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+
 </div>
 {% endblock %}
