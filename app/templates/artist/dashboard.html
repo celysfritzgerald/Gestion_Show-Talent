@@ -305,8 +305,8 @@
                                     <h4 class="text-[0.8rem] font-bold text-white leading-tight mb-0.5">
                                         {{ crit.name }}
                                     </h4>
-                                    <!-- text-justify pour justifier, suppression de whitespace-pre-wrap pour éviter les écrasements -->
-                                    <p class="text-[0.7rem] text-slate-400 leading-relaxed text-justify break-words">
+                                    <!-- text-slate-300 pour meilleur contraste, text-left sur mobile et md:text-justify sur desktop -->
+                                    <p class="text-[0.75rem] text-slate-300 leading-relaxed text-left md:text-justify break-words">
                                         {{ crit.description if crit.description else 'Aucune description fournie.' }}
                                     </p>
                                 </div>
