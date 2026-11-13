@@ -83,7 +83,7 @@ def dashboard():
                 .order_by(FinanceTransaction.created_at.desc())
                 .limit(5).all()
             )
-
+        criteria = Criterion.query.order_by(Criterion.id).all()
         return render_template(
             'observer/dashboard.html',
             sections=sections,

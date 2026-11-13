@@ -90,7 +90,7 @@ def dashboard():
             if item['artist'].id == artist.id:
                 artist_rank = item['rank']
                 break
-        
+        criteria = Criterion.query.order_by(Criterion.id).all()
         return render_template('artist/dashboard.html',
                              artist=artist,
                              sessions=sessions,

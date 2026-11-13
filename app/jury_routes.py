@@ -31,6 +31,7 @@ def dashboard():
     try:
         user_id = session['user_id']
         sessions = get_jury_sessions(user_id)
+        criteria = Criterion.query.order_by(Criterion.id).all()
         return render_template(
             'jury/dashboard.html',
             sessions=sessions,
