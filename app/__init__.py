@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, send_from_directory, request, jsonify, session
+from flask import Flask, render_template, send_from_directory, request, jsonify, session, current_app
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -99,7 +99,7 @@ def create_app(config_name=None):
             now=datetime.utcnow(),
         )
 
-        # ═══════════════════════════════════════════════════════════
+    # ═══════════════════════════════════════════════════════════
     # MIDDLEWARE : ANALYTICS (Style Google Analytics)
     # ═══════════════════════════════════════════════════════════
     @app.before_request
@@ -115,7 +115,6 @@ def create_app(config_name=None):
             from app.models import VisitorLog
             import hashlib
             import re
-            from datetime import datetime, timedelta
             
             # 1. IDENTIFICATION DU VISITEUR (Empreinte IP + Navigateur)
             ip = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
@@ -172,7 +171,8 @@ def create_app(config_name=None):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            pass # On ignore silencieusement pour ne pas casser le site
+            app.logger.error(f"Erreur tracking analytics: {e}")
+
     # ═══════════════════════════════════════════════════════════
     # HEADERS DE SÉCURITÉ + SEO
     # ═══════════════════════════════════════════════════════════
