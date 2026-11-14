@@ -2324,10 +2324,6 @@ def comments():
         flash("Erreur lors du chargement des commentaires.", "danger")
         return redirect(url_for('admin.dashboard'))
 
-# ═══════════════════════════════════════════════════════════
-# TABLEAU DE BORD ANALYTICS
-# ═══════════════════════════════════════════════════════════
-
 @admin_bp.route('/analytics')
 @admin_required
 def analytics():
@@ -2356,20 +2352,24 @@ def analytics():
         active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
             .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
 
-        top_pages = db.session.query(
+        # ✅ CORRECTION ICI : On convertit les objets Row en simples tuples
+        top_pages_raw = db.session.query(
             VisitorLog.path, func.count(VisitorLog.id).label('views')
         ).filter(VisitorLog.timestamp >= thirty_days_ago)\
          .group_by(VisitorLog.path).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+        top_pages = [(row[0], row[1]) for row in top_pages_raw]
 
-        devices = db.session.query(
+        devices_raw = db.session.query(
             VisitorLog.device_type, func.count(VisitorLog.id)
         ).filter(VisitorLog.timestamp >= thirty_days_ago)\
          .group_by(VisitorLog.device_type).all()
+        devices = [(row[0], row[1]) for row in devices_raw]
 
-        sources = db.session.query(
+        sources_raw = db.session.query(
             VisitorLog.referrer, func.count(VisitorLog.id)
         ).filter(VisitorLog.timestamp >= thirty_days_ago)\
          .group_by(VisitorLog.referrer).order_by(func.count(VisitorLog.id).desc()).limit(5).all()
+        sources = [(row[0], row[1]) for row in sources_raw]
 
         if not devices:
             devices = [('Desktop', 0)]
@@ -2390,37 +2390,6 @@ def analytics():
         current_app.logger.error(f"Erreur analytics: {str(e)}")
         flash(f"Erreur: {str(e)}", "danger")
         return redirect(url_for('admin.dashboard'))
-
-
-@admin_bp.route('/api/analytics-data')
-@admin_required
-def api_analytics_data():
-    """API pour rafraîchir les statistiques en temps réel (AJAX)."""
-    try:
-        from app.models import VisitorLog
-        from datetime import datetime, timedelta
-        from sqlalchemy import func, distinct
-
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
-
-        total_pageviews = VisitorLog.query.filter(VisitorLog.timestamp >= thirty_days_ago).count()
-        unique_visitors = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
-            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-        total_sessions = db.session.query(func.count(distinct(VisitorLog.session_id)))\
-            .filter(VisitorLog.timestamp >= thirty_days_ago).scalar() or 0
-        active_users = db.session.query(func.count(distinct(VisitorLog.visitor_id)))\
-            .filter(VisitorLog.timestamp >= five_mins_ago).scalar() or 0
-
-        return jsonify({
-            'success': True,
-            'active_users': active_users,
-            'total_pageviews': total_pageviews,
-            'unique_visitors': unique_visitors,
-            'total_sessions': total_sessions
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
     # ═══════════════════════════════════════════════════════════
 # CORRECTION MANUELLE DES SCORES (ADMIN OVERRIDE)
 # ═══════════════════════════════════════════════════════════
