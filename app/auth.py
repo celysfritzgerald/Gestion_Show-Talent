@@ -18,6 +18,30 @@ class LoginForm(FlaskForm):
 
 
 # ═══════════════════════════════════════════════════════════
+# AJOUT : VÉRIFICATION DE L'EXPIRATION DE LA SESSION
+# ═══════════════════════════════════════════════════════════
+@auth_bp.before_app_request
+def check_session_expiration():
+    # Si l'utilisateur est connecté
+    if "user_id" in session:
+        last_activity = session.get("last_activity")
+        
+        if last_activity:
+            # On convertit le texte en objet datetime
+            last_activity_dt = datetime.fromisoformat(last_activity)
+            
+            # On définit le temps d'inactivité maximum (ici 30 minutes)
+            # Ou ka chanje 30 a pou w mete kantite minit ou vle a
+            if datetime.utcnow() - last_activity_dt > timedelta(minutes=30):
+                session.clear()
+                flash("Votre session a expiré en raison d'une inactivité. Veuillez vous reconnecter.", "warning")
+                return redirect(url_for("auth.login"))
+        
+        # Si la session est toujours valide, on met à jour le chrono
+        session["last_activity"] = datetime.utcnow().isoformat()
+
+
+# ═══════════════════════════════════════════════════════════
 # HELPER : redirection selon rôle
 # ═══════════════════════════════════════════════════════════
 
@@ -28,6 +52,7 @@ def _redirect_for_role(user):
     if user.is_artist():   return redirect(url_for("artist.dashboard"))
     if user.is_observer(): return redirect(url_for("observer.dashboard"))
     return None
+
 
 
 # ═══════════════════════════════════════════════════════════
@@ -71,6 +96,7 @@ def login():
             session["user_id"] = user.id
             session["user_role"] = user.role
             session["user_name"] = user.full_name()
+            session["last_activity"] = datetime.utcnow().isoformat() # ✅ AJOUT : Démarre le chrono
 
             target = _redirect_for_role(user)
             if target:

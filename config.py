@@ -19,7 +19,8 @@ class Config:
     ALLOWED_MIME_TYPES = {"image/png", "image/jpeg", "image/gif", "image/webp"}
     MAX_IMAGE_DIMENSIONS = (4096, 4096)
 
-    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    SESSION_REFRESH_EACH_REQUEST = True
     SESSION_COOKIE_NAME = "show_talent_session"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", False)
